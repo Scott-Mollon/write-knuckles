@@ -8,11 +8,15 @@ import Loading from './pages/Loading'
 import './index.css'
 
 const ProtectedRoute = lazy(() => import('./components/ProtectedRoute'))
+const ApprovedRoute = lazy(() => import('./components/ApprovedRoute'))
+const AdminRoute = lazy(() => import('./components/AdminRoute'))
 const SigninPage = lazy(() => import('./pages/SigninPage'))
 const ResetPage = lazy(() => import('./pages/ResetPage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const NewTalePage = lazy(() => import('./pages/NewTalePage'))
 const TaleEditorPage = lazy(() => import('./pages/TaleEditorPage'))
+const AccessPendingPage = lazy(() => import('./pages/AccessPendingPage'))
+const AccessAdminPage = lazy(() => import('./pages/AccessAdminPage'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,27 +37,43 @@ const App = () => (
             <Route path="/signin" element={<SigninPage />} />
             <Route path="/reset" element={<ResetPage />} />
             <Route
-              path="/"
+              path="/access-pending"
               element={
                 <ProtectedRoute>
-                  <DashboardPage />
+                  <AccessPendingPage />
                 </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/"
+              element={
+                <ApprovedRoute>
+                  <DashboardPage />
+                </ApprovedRoute>
               }
             />
             <Route
               path="/new"
               element={
-                <ProtectedRoute>
+                <ApprovedRoute>
                   <NewTalePage />
-                </ProtectedRoute>
+                </ApprovedRoute>
               }
             />
             <Route
               path="/tale/:taleId"
               element={
-                <ProtectedRoute>
+                <ApprovedRoute>
                   <TaleEditorPage />
-                </ProtectedRoute>
+                </ApprovedRoute>
+              }
+            />
+            <Route
+              path="/admin/access"
+              element={
+                <AdminRoute>
+                  <AccessAdminPage />
+                </AdminRoute>
               }
             />
           </Routes>

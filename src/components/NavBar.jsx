@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 const NavBar = () => {
-  const { isSignedIn, signout, user } = useAuth()
+  const { isSignedIn, signout, user, admin, approved } = useAuth()
 
   return (
     <nav className="flex items-center justify-between border-b border-bronze-dark px-6 py-3 font-ui uppercase tracking-wide">
@@ -12,7 +12,14 @@ const NavBar = () => {
       <div className="flex items-center gap-4 text-sm text-cream/80">
         {isSignedIn() ? (
           <>
-            <span className="hidden sm:inline">{user?.email}</span>
+            {admin && (
+              <Link to="/admin/access" className="hover:text-bronze">
+                Access
+              </Link>
+            )}
+            {approved && (
+              <span className="hidden sm:inline">{user?.email}</span>
+            )}
             <button
               type="button"
               onClick={() => signout()}

@@ -32,6 +32,22 @@ supabase/migrations/001_write_knuckles_schema.sql
 supabase/migrations/002_terminology_rename.sql
 ```
 
+   For invite-only access control:
+
+```
+supabase/migrations/003_approved_users.sql
+supabase/migrations/004_list_registered_users.sql
+```
+
+   Then add yourself to the invite list (replace with your email):
+
+```sql
+insert into write.approved_users (email, notes)
+values ('you@example.com', 'Founder');
+```
+
+   Manage approvals in the app at `/admin/access` (magazine admins only).
+
    Verify applied migrations:
 
 ```sql

@@ -1,17 +1,27 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useTale } from '../hooks/useTales'
 import { useTaleStructure } from '../hooks/useTaleStructure'
+import { useAutosave } from '../hooks/useAutosave'
 import { TALE_MODES, SCENE_STATUS_COLORS } from '../constants/taleEditor'
+import Rack from '../components/rack/Rack'
+import SceneEditor from '../components/editor/SceneEditor'
+import Inspector from '../components/inspector/Inspector'
 import Loading from './Loading'
 
 const TaleEditorPage = () => {
   const { taleId } = useParams()
   const [mode, setMode] = useState(TALE_MODES.WRITE)
   const [activeSceneId, setActiveSceneId] = useState(null)
+  const [liveWordCount, setLiveWordCount] = useState(null)
 
   const { data: tale, isLoading: taleLoading } = useTale(taleId)
   const { data: structure, isLoading: structureLoading } = useTaleStructure(taleId)
+
+  const activeScene = structure?.scenes?.find((s) => s.id === activeSceneId)
+    || structure?.scenes?.[0]
+
+  const autosave = useAutosave(activeScene?.id, taleId)
 
   useEffect(() => {
     if (!activeSceneId && structure?.scenes?.[0]) {
@@ -19,13 +29,24 @@ const TaleEditorPage = () => {
     }
   }, [activeSceneId, structure?.scenes])
 
-  if (taleLoading || structureLoading) return <Loading />
+  useEffect(() => {
+    setLiveWordCount(activeScene?.word_count ?? 0)
+  }, [activeScene?.id, activeScene?.word_count])
 
-  const activeScene = structure?.scenes?.find((s) => s.id === activeSceneId)
-    || structure?.scenes?.[0]
+  const handleSelectScene = useCallback(
+    async (sceneId) => {
+      if (sceneId === activeSceneId) return
+      await autosave.flush()
+      setActiveSceneId(sceneId)
+    },
+    [activeSceneId, autosave],
+  )
+
+  if (taleLoading || structureLoading) return <Loading />
 
   const beats = structure?.taleBeats?.beats || []
   const beatLinks = structure?.beatLinks || []
+  const totalScenes = structure?.scenes?.length || 0
 
   const getBeatScenes = (beatKey) =>
     beatLinks
@@ -69,73 +90,28 @@ const TaleEditorPage = () => {
 
       {mode === TALE_MODES.WRITE && (
         <div className="flex flex-1 overflow-hidden">
-          <aside className="w-64 shrink-0 overflow-y-auto border-r border-bronze-dark/50 bg-surface/30 p-3">
-            <h2 className="mb-3 font-ui text-xs uppercase tracking-widest text-bronze">The Rack</h2>
-            {structure?.chapters?.map((chapter) => (
-              <div key={chapter.id} className="mb-4">
-                <div className="mb-1 font-ui text-sm font-medium text-cream/80">{chapter.title}</div>
-                {chapter.scenes?.map((scene) => (
-                  <button
-                    key={scene.id}
-                    type="button"
-                    onClick={() => setActiveSceneId(scene.id)}
-                    className={`mb-1 block w-full truncate rounded px-2 py-1 text-left text-sm ${
-                      activeScene?.id === scene.id
-                        ? 'bg-bronze/20 text-bronze'
-                        : 'text-cream/70 hover:bg-ink'
-                    }`}
-                  >
-                    {scene.title}
-                  </button>
-                ))}
-              </div>
-            ))}
-          </aside>
+          <Rack
+            taleId={taleId}
+            chapters={structure?.chapters || []}
+            activeSceneId={activeScene?.id}
+            onSelectScene={handleSelectScene}
+            totalScenes={totalScenes}
+          />
 
           <main className="flex flex-1 flex-col overflow-hidden">
-            {activeScene ? (
-              <>
-                <div className="border-b border-bronze-dark/30 px-6 py-3">
-                  <h2 className="font-prose text-xl text-cream">{activeScene.title}</h2>
-                  <p className="text-sm text-cream/40">{activeScene.word_count} words</p>
-                </div>
-                <div className="flex-1 overflow-y-auto px-6 py-4">
-                  <p className="font-prose text-cream/50 italic">
-                    TipTap editor coming in M2. Scene content is stored and ready.
-                  </p>
-                  {activeScene.plain_text && (
-                    <pre className="mt-4 whitespace-pre-wrap font-prose text-cream/80">{activeScene.plain_text}</pre>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="flex flex-1 items-center justify-center text-cream/40">
-                No scenes yet.
-              </div>
-            )}
+            <SceneEditor
+              key={activeScene?.id}
+              scene={activeScene}
+              onWordCountChange={setLiveWordCount}
+              autosave={autosave}
+            />
           </main>
 
-          <aside className="w-72 shrink-0 overflow-y-auto border-l border-bronze-dark/50 bg-surface/30 p-4">
-            <h2 className="mb-3 font-ui text-xs uppercase tracking-widest text-bronze">Inspector</h2>
-            {activeScene && (
-              <div className="space-y-4 text-sm">
-                <div>
-                  <label className="text-cream/50">Status</label>
-                  <p style={{ color: SCENE_STATUS_COLORS[activeScene.scene_status] }}>{activeScene.scene_status}</p>
-                </div>
-                {activeScene.synopsis && (
-                  <div>
-                    <label className="text-cream/50">Synopsis</label>
-                    <p className="text-cream/80">{activeScene.synopsis}</p>
-                  </div>
-                )}
-                <div>
-                  <label className="text-cream/50">Word Count</label>
-                  <p className="text-cream/80">{activeScene.word_count}</p>
-                </div>
-              </div>
-            )}
-          </aside>
+          <Inspector
+            scene={activeScene}
+            taleId={taleId}
+            liveWordCount={liveWordCount}
+          />
         </div>
       )}
 
@@ -147,7 +123,7 @@ const TaleEditorPage = () => {
                 key={scene.id}
                 type="button"
                 onClick={() => {
-                  setActiveSceneId(scene.id)
+                  handleSelectScene(scene.id)
                   setMode(TALE_MODES.WRITE)
                 }}
                 className="rounded border-2 p-4 text-left transition hover:scale-[1.02]"
@@ -205,7 +181,7 @@ const TaleEditorPage = () => {
                           key={s.id}
                           type="button"
                           onClick={() => {
-                            setActiveSceneId(s.id)
+                            handleSelectScene(s.id)
                             setMode(TALE_MODES.WRITE)
                           }}
                           className="rounded bg-bronze/20 px-2 py-1 text-xs text-bronze hover:bg-bronze/30"

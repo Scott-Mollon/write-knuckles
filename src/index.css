@@ -46,3 +46,74 @@ button {
 input, select, textarea {
   font-family: inherit;
 }
+
+/* TipTap scene editor */
+.scene-editor-prose p {
+  margin: 0 0 1em;
+}
+
+.scene-editor-prose p:last-child {
+  margin-bottom: 0;
+}
+
+.scene-editor-prose p.dropcap::first-letter {
+  float: left;
+  font-family: Oswald, sans-serif;
+  font-size: 3.5em;
+  font-weight: 600;
+  line-height: 0.75;
+  margin: 0.04em 0.12em 0 0;
+  color: #938938;
+}
+
+.scene-editor-prose .scene-divider {
+  border: none;
+  border-top: 1px solid #726a2b;
+  width: 50%;
+  margin: 1.75em auto;
+  opacity: 0.6;
+}
+
+.scene-editor-prose h2 {
+  font-family: Oswald, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #938938;
+  margin: 1.5em 0 0.5em;
+}
+
+.scene-editor-prose h3 {
+  font-family: Oswald, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #e8dcc8;
+  margin: 1.25em 0 0.5em;
+}
+
+.scene-editor-prose blockquote {
+  border-left: 3px solid #726a2b;
+  margin: 1em 0;
+  padding-left: 1em;
+  color: rgba(232, 220, 200, 0.7);
+  font-style: italic;
+}
+
+.scene-editor-prose mark {
+  background-color: rgba(147, 137, 56, 0.35);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.scene-editor-prose a {
+  color: #938938;
+  text-decoration: underline;
+}
+
+.scene-editor-prose p.is-editor-empty:first-child::before {
+  color: rgba(232, 220, 200, 0.3);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

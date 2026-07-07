@@ -12,10 +12,13 @@ todos:
     content: "Port auth from bronze-knuckles LIVE branch; SSO verified in production; Tale dashboard + New Tale wizard; GitHub repo live"
     status: completed
   - id: rack-editor
-    content: "NEXT — TipTap scene editor, autosave, word count, Rack drag-reorder, editable Inspector (shell exists read-only in TaleEditorPage.jsx)"
-    status: in_progress
+    content: "TipTap scene editor, autosave, word count, Rack drag-reorder, editable Inspector, drop caps, scene dividers"
+    status: completed
+  - id: access-control
+    content: "Invite-only access: write.approved_users (003), admin access page, list registered users (004)"
+    status: completed
   - id: story-board-beats
-    content: "Story Board + Beat Sheet read-only views done; beat linking UI, scene editing, corkboard drag, progress tracking still needed"
+    content: "NEXT — Beat linking UI, corkboard drag between chapters, progress tracking (Story Board + Beat Sheet read-only done; scene metadata editing done in Inspector)"
     status: in_progress
   - id: dope-search
     content: Add Characters, Locations, The Dope reference panels + full-text search across scenes
@@ -63,24 +66,27 @@ flowchart TB
 
 ---
 
-## Current Progress (as of M1 complete + production SSO)
+## Current Progress (as of M2 complete + invite-only access)
 
-**Resume here:** M2 — TipTap editor + autosave (`rack-editor` todo)
+**Resume here:** M3 — Beat linking UI (`story-board-beats` todo)
 
 **Repo:** https://github.com/Scott-Mollon/write-knuckles
 
 | Area | Status | Key files |
 |------|--------|-----------|
 | Project scaffold | Done | [`package.json`](C:\Users\scott\Documents\code\write-knuckles\package.json), [`src/main.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\main.jsx) |
-| DB migration | Deployed | [`001_write_knuckles_schema.sql`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\001_write_knuckles_schema.sql) + [`002_terminology_rename.sql`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\002_terminology_rename.sql) if upgrading old schema; tables in **`write` schema**; track via `write.schema_migrations` |
-| Auth + SSO | Done | [`AuthContext.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\contexts\AuthContext.jsx), [`authStorage.js`](C:\Users\scott\Documents\code\write-knuckles\src\lib\authStorage.js); backported to bronze-knuckles |
-| SSO production | **Verified** | `VITE_COOKIE_DOMAIN=.bronzeknucklesmagazine.com` on both apps; cross-subdomain session works |
-| Cloudflare deploy | Done (write app) | Build output: `dist/`; production SSO validated |
+| DB migration | Deployed | [`001`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\001_write_knuckles_schema.sql) + [`002`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\002_terminology_rename.sql) rename path; [`003`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\003_approved_users.sql) invite list; [`004`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\004_list_registered_users.sql) admin user list |
+| Auth + SSO | Done | [`AuthContext.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\contexts\AuthContext.jsx), [`authStorage.js`](C:\Users\scott\Documents\code\write-knuckles\src\lib\authStorage.js) |
+| SSO production | **Verified** | `VITE_COOKIE_DOMAIN=.bronzeknucklesmagazine.com` on both apps |
+| Cloudflare deploy | Done (write app) | Build output: `dist/` |
+| Invite-only access | Done | [`ApprovedRoute.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\ApprovedRoute.jsx), [`AccessAdminPage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\AccessAdminPage.jsx) |
 | Tale dashboard | Done | [`DashboardPage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\DashboardPage.jsx) |
-| New Tale wizard | Done | [`NewTalePage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\NewTalePage.jsx) — defaults: Chapter One + Scene One |
-| Tale editor shell | Partial | [`TaleEditorPage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\TaleEditorPage.jsx) — Write / Story Board / Beat Sheet tabs, read-only |
-| TipTap editor | Not started | Placeholder in TaleEditorPage |
-| Beat linking UI | Not started | Beat Sheet displays links but cannot create them |
+| New Tale wizard | Done | [`NewTalePage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\NewTalePage.jsx) |
+| Tale editor (Write mode) | **Done** | [`TaleEditorPage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\TaleEditorPage.jsx), [`SceneEditor.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\editor\SceneEditor.jsx), [`Rack.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\rack\Rack.jsx), [`Inspector.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\inspector\Inspector.jsx) |
+| TipTap editor | Done | StarterKit, drop caps, scene dividers, autosave 1.5s, word count |
+| Story Board | Read-only | Corkboard cards; click opens Write mode |
+| Beat Sheet | Read-only | Timeline + linked scene chips; no link creation yet |
+| Beat linking UI | Not started | — |
 | Characters / Locations / Dope | Not started | Tables exist; no UI yet |
 | Grammar / export | Not started | — |
 
@@ -296,14 +302,16 @@ Selecting Save the Cat on a new Tale pre-populates all 15 beats with guidance co
 
 ## Editor (TipTap)
 
-**Extensions (Phase 1):**
+**Extensions (Phase 1 — implemented):**
 - StarterKit (headings limited to H2/H3 within a scene)
 - Placeholder, CharacterCount, Typography
 - Highlight (for notes-to-self)
-- Link, Blockquote
-- **GrammarHighlight** (custom decoration from LanguageTool results)
+- Link, Blockquote, Underline
+- **DropCap** — paragraph `dropCap` attribute (toolbar toggle)
+- **SceneDivider** — 50% width horizontal rule between paragraphs
+- **GrammarHighlight** (custom decoration from LanguageTool results) — M5
 
-**Toolbar:** bold, italic, underline, highlight, blockquote, undo/redo, focus mode, grammar check toggle.
+**Toolbar:** bold, italic, underline, highlight, blockquote, drop cap, divider, undo/redo. Focus mode and grammar check toggle — M5.
 
 **Autosave:** debounced 1.5s → upsert `write.scenes.content` + regenerate `plain_text` + `word_count`.
 
@@ -469,19 +477,25 @@ sequenceDiagram
 - [x] Tale CRUD + dashboard + New Tale wizard
 - [x] Tale editor shell (Write / Story Board / Beat Sheet — read-only)
 
-### M2 — The Rack + Scenes — IN PROGRESS
-- [x] Chapter/scene tree display (read-only)
-- [ ] TipTap editor wired to scene
-- [ ] Autosave + word count
-- [ ] Editable Inspector (title, synopsis, status, color)
-- [ ] Rack drag-reorder + create/delete chapters/scenes
+### M2 — The Rack + Scenes — COMPLETE
+- [x] Chapter/scene tree display
+- [x] TipTap editor wired to scene
+- [x] Autosave + word count (1.5s debounce → `content`, `plain_text`, `word_count`)
+- [x] Editable Inspector (title, synopsis, status, color)
+- [x] Rack drag-reorder + create/delete chapters/scenes (cross-chapter scene moves)
+- [x] Editor extras: drop caps, scene dividers
 
-### M3 — Story Board + Beat Sheet — PARTIAL
+### M2b — Access control — COMPLETE
+- [x] `write.approved_users` invite list + RLS (`003`)
+- [x] `ApprovedRoute` + `/access-pending` for unapproved users
+- [x] `/admin/access` for magazine admins — approve by email, list all registered accounts (`004`)
+
+### M3 — Story Board + Beat Sheet — IN PROGRESS
 - [x] Story Board corkboard (read-only scene cards)
 - [x] Seed beat templates; Tale wizard with Beat Sheet picker
 - [x] Beat Sheet UI (read-only timeline + linked scene chips)
+- [x] Scene metadata editing (synopsis, status, color) — done in Inspector (M2)
 - [ ] Beat linking UI (connect beats to scenes — Beat Sheet + Inspector)
-- [ ] Scene editing (synopsis, status, color)
 - [ ] Corkboard drag between chapters
 - [ ] Progress tracking (% beats linked + drafted)
 
@@ -513,7 +527,7 @@ Design Phase 1 so these drop in cleanly:
 
 ## Security & RLS
 
-Every table: `user_id = auth.uid()` for SELECT/INSERT/UPDATE/DELETE. Edge Function validates JWT before LanguageTool call. No client-side API keys. Storage buckets (future) scoped per user.
+Every table: `user_id = auth.uid()` for SELECT/INSERT/UPDATE/DELETE. **Write schema additionally requires** `write.is_approved_user()` (migration `003`). Magazine admins manage the invite list via `public.Admins`. Edge Function validates JWT before LanguageTool call. No client-side API keys. Storage buckets (future) scoped per user.
 
 ---
 
@@ -522,12 +536,15 @@ Every table: `user_id = auth.uid()` for SELECT/INSERT/UPDATE/DELETE. Edge Functi
 - [x] **Single sign-on works** in production (verified)
 - [x] Author can sign up and create a Tale with Save the Cat beats via New Tale wizard
 - [x] Deployed to production URL; Supabase backing live data
-- [ ] Author can organize chapters/scenes with drag-reorder
-- [ ] Author can write in a rich-text editor with autosave
+- [x] **Invite-only access** — approved users only; admin can manage list
+- [x] Author can organize chapters/scenes with drag-reorder
+- [x] Author can write in a rich-text editor with autosave
 - [x] Story Board and Beat Sheet views exist (read-only shell)
-- [ ] Beat linking and scene metadata editing functional
+- [x] Scene metadata editing functional (Inspector)
+- [x] Word counts visible (editor header + Inspector; tale dashboard aggregate)
+- [ ] Beat linking functional
 - [ ] Grammar/spell check works on demand
-- [ ] Word counts, beat progress, and readability stats visible
+- [ ] Beat progress and readability stats visible
 - [ ] Markdown export works
 
 This is the back room where pulp gets written. Phase 2 is where it gets printed.

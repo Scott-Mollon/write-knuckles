@@ -1,20 +1,24 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { supabase } from '../clients/supabase'
+import { supabase, writeDb } from '../clients/supabase'
 
 const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
+  const [approvalLoading, setApprovalLoading] = useState(false)
   const [user, setUser] = useState(null)
   const [session, setSession] = useState(null)
   const [admin, setAdmin] = useState(false)
+  const [approved, setApproved] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession)
       setUser(currentSession?.user ?? null)
       if (currentSession?.user) {
+        setApprovalLoading(true)
         checkAdmin(currentSession.user.id)
+        checkApproved(currentSession.user)
       }
       setLoading(false)
     })
@@ -23,9 +27,13 @@ export const AuthProvider = ({ children }) => {
       setSession(nextSession)
       setUser(nextSession?.user ?? null)
       if (nextSession?.user) {
+        setApprovalLoading(true)
         checkAdmin(nextSession.user.id)
+        checkApproved(nextSession.user)
       } else {
         setAdmin(false)
+        setApproved(false)
+        setApprovalLoading(false)
       }
     })
 
@@ -40,6 +48,30 @@ export const AuthProvider = ({ children }) => {
 
     if (!error) {
       setAdmin(data?.length === 1)
+    }
+  }
+
+  const checkApproved = async (authUser) => {
+    setApprovalLoading(true)
+    try {
+      const { data, error } = await writeDb
+        .from('approved_users')
+        .select('id')
+        .ilike('email', authUser.email)
+        .is('revoked_at', null)
+        .maybeSingle()
+
+      if (error || !data) {
+        setApproved(false)
+        return
+      }
+
+      await writeDb.rpc('link_approved_user')
+      setApproved(true)
+    } catch {
+      setApproved(false)
+    } finally {
+      setApprovalLoading(false)
     }
   }
 
@@ -86,11 +118,25 @@ export const AuthProvider = ({ children }) => {
     setUser(null)
     setSession(null)
     setAdmin(false)
+    setApproved(false)
     return supabase.auth.signOut()
   }
 
   return (
-    <AuthContext.Provider value={{ loading, signup, signin, isSignedIn, user, admin, signout, session }}>
+    <AuthContext.Provider
+      value={{
+        loading,
+        approvalLoading,
+        signup,
+        signin,
+        isSignedIn,
+        user,
+        admin,
+        approved,
+        signout,
+        session,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )
