@@ -95,7 +95,7 @@ export const useCreateTale = () => {
         .insert({
           tale_id: tale.id,
           user_id: user.id,
-          title: 'Chapter 1',
+          title: '',
           sort_order: 0,
         })
         .select()
@@ -131,6 +131,34 @@ export const useDeleteTale = () => {
       if (error) throw error
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tales'] })
+    },
+  })
+}
+
+export const useUpdateTale = (taleId) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ title, subtitle, genre, targetWordCount }) => {
+      const { data, error } = await writeDb
+        .from('tales')
+        .update({
+          title: title.trim(),
+          subtitle: subtitle?.trim() || null,
+          genre: genre?.trim() || null,
+          target_word_count: Number(targetWordCount),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', taleId)
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['tale', taleId], data)
       queryClient.invalidateQueries({ queryKey: ['tales'] })
     },
   })

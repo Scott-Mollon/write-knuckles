@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { writeDb } from '../clients/supabase'
-import { contentToPlainText, countWords } from '../lib/editor/plainText'
+import { contentToPlainText, countWords, normalizeContentForSave } from '../lib/editor/plainText'
 
 export const SAVE_STATES = {
   IDLE: 'idle',
@@ -37,12 +37,13 @@ export const useAutosave = (sceneId, taleId, debounceMs = 1500) => {
 
   const { mutateAsync } = useMutation({
     mutationFn: async (content) => {
-      const plain_text = contentToPlainText(content)
+      const normalizedContent = normalizeContentForSave(content)
+      const plain_text = contentToPlainText(normalizedContent)
       const word_count = countWords(plain_text)
       const { error } = await writeDb
         .from('scenes')
         .update({
-          content,
+          content: normalizedContent,
           plain_text,
           word_count,
           updated_at: new Date().toISOString(),
@@ -50,7 +51,7 @@ export const useAutosave = (sceneId, taleId, debounceMs = 1500) => {
         .eq('id', sceneId)
 
       if (error) throw error
-      return { content, plain_text, word_count }
+      return { content: normalizedContent, plain_text, word_count }
     },
     onSuccess: (data) => {
       setSaveState(SAVE_STATES.SAVED)

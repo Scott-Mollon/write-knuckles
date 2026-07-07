@@ -15,8 +15,13 @@ const Password = ({ value, onChange, disabled = false }) => {
         placeholder="Password"
         disabled={disabled}
       />
-      <button type="button" className="toggle-password" onClick={() => setHidden(!hidden)} aria-label="Toggle password visibility">
-        {hidden ? 'Show' : 'Hide'}
+      <button
+        type="button"
+        className="toggle-password"
+        onClick={() => setHidden(!hidden)}
+        aria-label={hidden ? 'Show password' : 'Hide password'}
+      >
+        <img src={hidden ? '/view.png' : '/hide.png'} alt="" />
       </button>
     </div>
   )

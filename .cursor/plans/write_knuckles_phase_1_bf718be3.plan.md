@@ -18,8 +18,8 @@ todos:
     content: "Invite-only access: write.approved_users (003), admin access page, list registered users (004)"
     status: completed
   - id: story-board-beats
-    content: "NEXT — Beat linking UI, corkboard drag between chapters, progress tracking (Story Board + Beat Sheet read-only done; scene metadata editing done in Inspector)"
-    status: in_progress
+    content: "Beat linking UI, corkboard drag between chapters, progress tracking (Story Board + Beat Sheet read-only done; scene metadata editing done in Inspector)"
+    status: completed
   - id: research-search
     content: Add Characters, Locations, Research reference panels + full-text search across scenes
     status: pending
@@ -68,7 +68,7 @@ flowchart TB
 
 ## Current Progress (as of M2 complete + invite-only access)
 
-**Resume here:** M3 — Beat linking UI (`story-board-beats` todo)
+**Resume here:** M4 — Characters, Locations, Research reference panels (`research-search` todo)
 
 **Repo:** https://github.com/Scott-Mollon/write-knuckles
 
@@ -84,9 +84,11 @@ flowchart TB
 | New Tale wizard | Done | [`NewTalePage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\NewTalePage.jsx) |
 | Tale editor (Write mode) | **Done** | [`TaleEditorPage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\TaleEditorPage.jsx), [`SceneEditor.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\editor\SceneEditor.jsx), [`Rack.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\rack\Rack.jsx), [`Inspector.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\inspector\Inspector.jsx) |
 | TipTap editor | Done | StarterKit, drop caps, scene dividers, autosave 1.5s, word count |
-| Story Board | Read-only | Corkboard cards; click opens Write mode |
-| Beat Sheet | Read-only | Timeline + linked scene chips; no link creation yet |
-| Beat linking UI | Not started | — |
+| Story Board | Done | Corkboard with chapter columns + cross-chapter drag |
+| Beat Sheet | Done | Timeline + linked scene chips + link/unlink UI |
+| Beat linking UI | Done | [`BeatSheet.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\beats\BeatSheet.jsx), [`useBeatLinks.js`](C:\Users\scott\Documents\code\write-knuckles\src\hooks\useBeatLinks.js), Inspector beat links |
+| Story Board drag | Done | [`StoryBoard.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\story-board\StoryBoard.jsx) — chapter columns, cross-chapter drag |
+| Beat progress | Done | [`BeatProgress.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\beats\BeatProgress.jsx), header summary in TaleEditorPage |
 | Characters / Locations / Research | Not started | Tables exist; no UI yet |
 | Grammar / export | Not started | — |
 
@@ -490,14 +492,14 @@ sequenceDiagram
 - [x] `ApprovedRoute` + `/access-pending` for unapproved users
 - [x] `/admin/access` for magazine admins — approve by email, list all registered accounts (`004`)
 
-### M3 — Story Board + Beat Sheet — IN PROGRESS
+### M3 — Story Board + Beat Sheet — COMPLETE
 - [x] Story Board corkboard (read-only scene cards)
 - [x] Seed beat templates; Tale wizard with Beat Sheet picker
 - [x] Beat Sheet UI (read-only timeline + linked scene chips)
 - [x] Scene metadata editing (synopsis, status, color) — done in Inspector (M2)
-- [ ] Beat linking UI (connect beats to scenes — Beat Sheet + Inspector)
-- [ ] Corkboard drag between chapters
-- [ ] Progress tracking (% beats linked + drafted)
+- [x] Beat linking UI (connect beats to scenes — Beat Sheet + Inspector)
+- [x] Corkboard drag between chapters
+- [x] Progress tracking (% beats linked + drafted)
 
 ### M4 — Characters + Locations + Research
 - Reference panels (Characters, Locations, research notes)
@@ -542,7 +544,7 @@ Every table: `user_id = auth.uid()` for SELECT/INSERT/UPDATE/DELETE. **Write sch
 - [x] Story Board and Beat Sheet views exist (read-only shell)
 - [x] Scene metadata editing functional (Inspector)
 - [x] Word counts visible (editor header + Inspector; tale dashboard aggregate)
-- [ ] Beat linking functional
+- [x] Beat linking functional
 - [ ] Grammar/spell check works on demand
 - [ ] Beat progress and readability stats visible
 - [ ] Markdown export works

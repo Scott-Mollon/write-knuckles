@@ -48,6 +48,80 @@ input, select, textarea {
 }
 
 /* TipTap scene editor */
+.editor-surface[data-editor-theme='dark'] {
+  --editor-bg: #1a1410;
+  --editor-toolbar-bg: rgba(26, 20, 16, 0.6);
+  --editor-text: #e8dcc8;
+  --editor-text-muted: rgba(232, 220, 200, 0.4);
+  --editor-text-subtle: rgba(232, 220, 200, 0.7);
+  --editor-accent: #938938;
+  --editor-border: rgba(114, 106, 43, 0.3);
+  --editor-divider: #726a2b;
+  --editor-mark-bg: rgba(147, 137, 56, 0.35);
+  --editor-placeholder: rgba(232, 220, 200, 0.3);
+  --editor-btn: rgba(232, 220, 200, 0.6);
+  --editor-btn-hover-bg: #1a1410;
+  --editor-btn-hover-text: #e8dcc8;
+  --editor-btn-active-bg: rgba(147, 137, 56, 0.3);
+}
+
+.editor-surface[data-editor-theme='light'] {
+  --editor-bg: #f4efe4;
+  --editor-toolbar-bg: #ebe4d4;
+  --editor-text: #1a1410;
+  --editor-text-muted: rgba(26, 20, 16, 0.45);
+  --editor-text-subtle: rgba(26, 20, 16, 0.7);
+  --editor-accent: #726a2b;
+  --editor-border: rgba(114, 106, 43, 0.35);
+  --editor-divider: #938938;
+  --editor-mark-bg: rgba(147, 137, 56, 0.25);
+  --editor-placeholder: rgba(26, 20, 16, 0.35);
+  --editor-btn: rgba(26, 20, 16, 0.55);
+  --editor-btn-hover-bg: rgba(26, 20, 16, 0.06);
+  --editor-btn-hover-text: #1a1410;
+  --editor-btn-active-bg: rgba(147, 137, 56, 0.2);
+}
+
+.editor-surface {
+  background-color: var(--editor-bg);
+  color: var(--editor-text);
+}
+
+.editor-surface .editor-toolbar {
+  background-color: var(--editor-toolbar-bg);
+  border-color: var(--editor-border);
+}
+
+.editor-surface .editor-toolbar-btn {
+  color: var(--editor-btn);
+}
+
+.editor-surface .editor-toolbar-btn:hover:not(:disabled) {
+  background-color: var(--editor-btn-hover-bg);
+  color: var(--editor-btn-hover-text);
+}
+
+.editor-surface .editor-toolbar-btn.is-active {
+  background-color: var(--editor-btn-active-bg);
+  color: var(--editor-accent);
+}
+
+.editor-surface .editor-toolbar-sep {
+  color: var(--editor-border);
+}
+
+.editor-surface .editor-scene-title {
+  color: var(--editor-text);
+}
+
+.editor-surface .editor-save-status {
+  color: var(--editor-text-muted);
+}
+
+.scene-editor-prose {
+  color: var(--editor-text);
+}
+
 .scene-editor-prose p {
   margin: 0 0 1em;
 }
@@ -63,12 +137,12 @@ input, select, textarea {
   font-weight: 600;
   line-height: 0.75;
   margin: 0.04em 0.12em 0 0;
-  color: #938938;
+  color: var(--editor-accent);
 }
 
 .scene-editor-prose .scene-divider {
   border: none;
-  border-top: 1px solid #726a2b;
+  border-top: 1px solid var(--editor-divider);
   width: 50%;
   margin: 1.75em auto;
   opacity: 0.6;
@@ -78,7 +152,7 @@ input, select, textarea {
   font-family: Oswald, sans-serif;
   font-size: 1.25rem;
   font-weight: 600;
-  color: #938938;
+  color: var(--editor-accent);
   margin: 1.5em 0 0.5em;
 }
 
@@ -86,32 +160,32 @@ input, select, textarea {
   font-family: Oswald, sans-serif;
   font-size: 1.1rem;
   font-weight: 500;
-  color: #e8dcc8;
+  color: var(--editor-text);
   margin: 1.25em 0 0.5em;
 }
 
 .scene-editor-prose blockquote {
-  border-left: 3px solid #726a2b;
+  border-left: 3px solid var(--editor-divider);
   margin: 1em 0;
   padding-left: 1em;
-  color: rgba(232, 220, 200, 0.7);
+  color: var(--editor-text-subtle);
   font-style: italic;
 }
 
 .scene-editor-prose mark {
-  background-color: rgba(147, 137, 56, 0.35);
+  background-color: var(--editor-mark-bg);
   color: inherit;
   border-radius: 2px;
   padding: 0 2px;
 }
 
 .scene-editor-prose a {
-  color: #938938;
+  color: var(--editor-accent);
   text-decoration: underline;
 }
 
 .scene-editor-prose p.is-editor-empty:first-child::before {
-  color: rgba(232, 220, 200, 0.3);
+  color: var(--editor-placeholder);
   content: attr(data-placeholder);
   float: left;
   height: 0;

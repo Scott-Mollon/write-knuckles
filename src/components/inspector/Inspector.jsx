@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
 import { SCENE_STATUSES, SCENE_STATUS_COLORS, SCENE_COLOR_TAGS, DEFAULT_SCENE_COLOR } from '../../constants/taleEditor'
 import { useUpdateSceneMeta } from '../../hooks/useSceneMutations'
+import { useCreateBeatLink, useDeleteBeatLink } from '../../hooks/useBeatLinks'
+import { getSceneBeatLinks } from '../../lib/beats'
 
-const Inspector = ({ scene, taleId, liveWordCount }) => {
+const Inspector = ({ scene, taleId, liveWordCount, beats = [], beatLinks = [] }) => {
   const updateMeta = useUpdateSceneMeta(taleId)
+  const createLink = useCreateBeatLink(taleId)
+  const deleteLink = useDeleteBeatLink(taleId)
   const [collapsed, setCollapsed] = useState(false)
   const [title, setTitle] = useState('')
   const [synopsis, setSynopsis] = useState('')
@@ -45,6 +49,20 @@ const Inspector = ({ scene, taleId, liveWordCount }) => {
   }
 
   const wordCount = liveWordCount ?? scene?.word_count ?? 0
+  const sceneLinks = scene ? getSceneBeatLinks(scene.id, beatLinks) : []
+  const linkedBeat = sceneLinks[0]
+    ? beats.find((b) => b.key === sceneLinks[0].beat_key)
+    : null
+  const availableBeats = beats.filter((b) => b.key !== linkedBeat?.key)
+
+  const handleLinkBeat = (beatKey) => {
+    if (!scene || !beatKey) return
+    createLink.mutate({ beatKey, sceneId: scene.id })
+  }
+
+  const handleUnlinkBeat = (linkId) => {
+    deleteLink.mutate(linkId)
+  }
 
   return (
     <aside className="flex w-72 shrink-0 flex-col overflow-hidden border-l border-bronze-dark/50 bg-surface/30">
@@ -144,6 +162,44 @@ const Inspector = ({ scene, taleId, liveWordCount }) => {
                   />
                 ))}
               </div>
+            </div>
+
+            <div>
+              <span className="mb-2 block text-cream/50">Beat Link</span>
+              {linkedBeat ? (
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  <span className="inline-flex items-center gap-1 rounded bg-bronze/20 text-xs text-bronze">
+                    <span className="px-2 py-1">{linkedBeat.title}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleUnlinkBeat(sceneLinks[0].id)}
+                      className="pr-1.5 text-bronze/60 hover:text-error"
+                      title="Unlink beat"
+                      aria-label={`Unlink ${linkedBeat.title}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                </div>
+              ) : (
+                <p className="mb-2 text-xs italic text-cream/30">No beat linked.</p>
+              )}
+              {availableBeats.length > 0 && (
+                <select
+                  value=""
+                  onChange={(e) => handleLinkBeat(e.target.value)}
+                  className="w-full rounded border border-bronze-dark/50 bg-ink px-2 py-1.5 text-cream focus:border-bronze focus:outline-none"
+                >
+                  <option value="" disabled>
+                    {linkedBeat ? 'Change beat…' : 'Link a beat…'}
+                  </option>
+                  {availableBeats.map((b) => (
+                    <option key={b.key} value={b.key}>
+                      {b.title}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div>

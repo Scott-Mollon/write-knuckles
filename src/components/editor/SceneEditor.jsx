@@ -1,7 +1,10 @@
+import { useMemo } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import { createEditorExtensions } from '../../lib/editor/extensions'
-import { normalizeContent } from '../../lib/editor/plainText'
+import { normalizeContent, isSceneContentEmpty } from '../../lib/editor/plainText'
+import { pickRandomScenePlaceholder } from '../../constants/scenePlaceholders'
 import { SAVE_STATES } from '../../hooks/useAutosave'
+import { useEditorTheme } from '../../hooks/useEditorTheme'
 import EditorToolbar from './EditorToolbar'
 
 const SAVE_LABELS = {
@@ -13,12 +16,20 @@ const SAVE_LABELS = {
 }
 
 const SceneEditor = ({ scene, onWordCountChange, autosave }) => {
+  const { theme, toggleTheme, isLight } = useEditorTheme()
+  const placeholder = useMemo(() => {
+    if (scene && isSceneContentEmpty(scene.content)) {
+      return pickRandomScenePlaceholder()
+    }
+    return ''
+  }, [scene?.id])
+
   const editor = useEditor({
-    extensions: createEditorExtensions(),
+    extensions: createEditorExtensions(placeholder),
     content: normalizeContent(scene?.content),
     editorProps: {
       attributes: {
-        class: 'scene-editor-prose focus:outline-none min-h-[60vh] font-prose text-cream leading-relaxed',
+        class: 'scene-editor-prose focus:outline-none min-h-[60vh] font-prose leading-relaxed',
       },
     },
     onUpdate: ({ editor: ed }) => {
@@ -30,7 +41,7 @@ const SceneEditor = ({ scene, onWordCountChange, autosave }) => {
     onCreate: ({ editor: ed }) => {
       onWordCountChange?.(ed.storage.characterCount.words())
     },
-  }, [scene?.id])
+  }, [scene?.id, placeholder])
 
   if (!scene) {
     return (
@@ -43,10 +54,10 @@ const SceneEditor = ({ scene, onWordCountChange, autosave }) => {
   const saveLabel = SAVE_LABELS[autosave.saveState]
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex items-center justify-between border-b border-bronze-dark/30 px-6 py-3">
-        <h2 className="font-prose text-xl text-cream">{scene.title}</h2>
-        <div className="flex items-center gap-4 text-sm text-cream/40">
+    <div className="editor-surface flex flex-1 flex-col overflow-hidden" data-editor-theme={theme}>
+      <div className="flex items-center justify-between border-b px-6 py-3" style={{ borderColor: 'var(--editor-border)' }}>
+        <h2 className="editor-scene-title font-prose text-xl">{scene.title}</h2>
+        <div className="editor-save-status flex items-center gap-4 text-sm">
           {saveLabel && (
             <span
               className={
@@ -63,7 +74,7 @@ const SceneEditor = ({ scene, onWordCountChange, autosave }) => {
         </div>
       </div>
 
-      <EditorToolbar editor={editor} />
+      <EditorToolbar editor={editor} isLight={isLight} onToggleTheme={toggleTheme} />
 
       <div className="flex-1 overflow-y-auto px-6 py-4">
         <EditorContent editor={editor} />

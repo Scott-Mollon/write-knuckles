@@ -21,7 +21,9 @@ import {
   useDeleteChapter,
   useDeleteScene,
   useReorderStructure,
+  useUpdateChapterMeta,
 } from '../../hooks/useSceneMutations'
+import ChapterTitleInput from '../chapters/ChapterTitleInput'
 
 const SortableScene = ({ scene, isActive, onSelect, onDelete, canDelete }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -71,11 +73,13 @@ const SortableScene = ({ scene, isActive, onSelect, onDelete, canDelete }) => {
 
 const SortableChapter = ({
   chapter,
+  chapterIndex,
   activeSceneId,
   onSelectScene,
   onAddScene,
   onDeleteChapter,
   onDeleteScene,
+  onSaveChapterTitle,
   canDeleteChapter,
   totalScenes,
 }) => {
@@ -94,7 +98,7 @@ const SortableChapter = ({
 
   return (
     <div ref={setNodeRef} style={style} className="mb-4">
-      <div className="mb-1 flex items-center gap-1">
+      <div className="mb-1 flex items-start gap-1">
         <button
           type="button"
           className="cursor-grab px-1 text-cream/30 hover:text-cream/60 active:cursor-grabbing"
@@ -104,9 +108,11 @@ const SortableChapter = ({
         >
           ⠿
         </button>
-        <span className="min-w-0 flex-1 truncate font-ui text-sm font-medium text-cream/80">
-          {chapter.title}
-        </span>
+        <ChapterTitleInput
+          chapter={chapter}
+          chapterIndex={chapterIndex}
+          onSave={onSaveChapterTitle}
+        />
         <button
           type="button"
           onClick={() => onAddScene(chapter.id)}
@@ -157,6 +163,7 @@ const Rack = ({ taleId, chapters, activeSceneId, onSelectScene, totalScenes }) =
   const deleteChapter = useDeleteChapter(taleId)
   const deleteScene = useDeleteScene(taleId)
   const reorder = useReorderStructure(taleId)
+  const updateChapter = useUpdateChapterMeta(taleId)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -275,7 +282,7 @@ const Rack = ({ taleId, chapters, activeSceneId, onSelectScene, totalScenes }) =
   const handleAddChapter = async () => {
     const count = localChapters.length
     const chapter = await createChapter.mutateAsync({
-      title: `Chapter ${count + 1}`,
+      title: '',
       sortOrder: count,
     })
     await createScene.mutateAsync({
@@ -312,6 +319,10 @@ const Rack = ({ taleId, chapters, activeSceneId, onSelectScene, totalScenes }) =
     }
   }
 
+  const handleSaveChapterTitle = (chapterId, title) => {
+    updateChapter.mutate({ chapterId, title })
+  }
+
   return (
     <aside className="flex w-64 shrink-0 flex-col border-r border-bronze-dark/50 bg-surface/30">
       <div className="flex items-center justify-between border-b border-bronze-dark/30 p-3">
@@ -334,15 +345,17 @@ const Rack = ({ taleId, chapters, activeSceneId, onSelectScene, totalScenes }) =
           onDragEnd={handleDragEnd}
         >
           <SortableContext items={[...chapterIds, ...allSceneIds]} strategy={verticalListSortingStrategy}>
-            {localChapters.map((chapter) => (
+            {localChapters.map((chapter, chapterIndex) => (
               <SortableChapter
                 key={chapter.id}
                 chapter={chapter}
+                chapterIndex={chapterIndex}
                 activeSceneId={activeSceneId}
                 onSelectScene={onSelectScene}
                 onAddScene={handleAddScene}
                 onDeleteChapter={handleDeleteChapter}
                 onDeleteScene={handleDeleteScene}
+                onSaveChapterTitle={handleSaveChapterTitle}
                 canDeleteChapter={localChapters.length > 1}
                 totalScenes={totalScenes}
               />

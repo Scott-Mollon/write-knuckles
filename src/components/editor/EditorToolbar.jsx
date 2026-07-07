@@ -1,24 +1,58 @@
-const ToolbarButton = ({ onClick, active, disabled, title, children }) => (
+const ToolbarButton = ({ onClick, active, disabled, title, children, className = '' }) => (
   <button
     type="button"
     onClick={onClick}
     disabled={disabled}
     title={title}
-    className={`rounded px-2 py-1 text-sm transition ${
-      active
-        ? 'bg-bronze/30 text-bronze'
-        : 'text-cream/60 hover:bg-ink hover:text-cream disabled:opacity-30'
-    }`}
+    className={`editor-toolbar-btn rounded px-2 py-1 text-sm transition disabled:opacity-30 ${
+      active ? 'is-active' : ''
+    } ${className}`}
   >
     {children}
   </button>
 )
 
-const EditorToolbar = ({ editor }) => {
+const SunIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+  </svg>
+)
+
+const MoonIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+  </svg>
+)
+
+const EditorToolbar = ({ editor, isLight, onToggleTheme }) => {
   if (!editor) return null
 
   return (
-    <div className="flex flex-wrap items-center gap-1 border-b border-bronze-dark/30 px-4 py-2">
+    <div className="editor-toolbar flex items-center border-b px-4 py-2">
+      <div className="flex flex-wrap items-center gap-1">
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleBold().run()}
         active={editor.isActive('bold')}
@@ -69,7 +103,7 @@ const EditorToolbar = ({ editor }) => {
         <span className="inline-block w-4 border-t border-current" />
       </ToolbarButton>
 
-      <span className="mx-1 text-cream/20">|</span>
+      <span className="editor-toolbar-sep mx-1">|</span>
 
       <ToolbarButton
         onClick={() => editor.chain().focus().undo().run()}
@@ -84,6 +118,15 @@ const EditorToolbar = ({ editor }) => {
         title="Redo"
       >
         Redo
+      </ToolbarButton>
+      </div>
+
+      <ToolbarButton
+        onClick={onToggleTheme}
+        title={isLight ? 'Switch to dark editor' : 'Switch to light editor'}
+        className="ml-auto shrink-0"
+      >
+        {isLight ? <MoonIcon /> : <SunIcon />}
       </ToolbarButton>
     </div>
   )

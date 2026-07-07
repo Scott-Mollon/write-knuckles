@@ -38,6 +38,30 @@ export const useUpdateSceneMeta = (taleId) => {
   })
 }
 
+export const useUpdateChapterMeta = (taleId) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ chapterId, ...fields }) => {
+      const { error } = await writeDb
+        .from('chapters')
+        .update({ ...fields, updated_at: new Date().toISOString() })
+        .eq('id', chapterId)
+
+      if (error) throw error
+      return { chapterId, ...fields }
+    },
+    onSuccess: ({ chapterId, ...fields }) => {
+      queryClient.setQueryData(['tale-structure', taleId], (old) => {
+        if (!old) return old
+        const patch = (ch) => (ch.id === chapterId ? { ...ch, ...fields } : ch)
+        return { ...old, chapters: old.chapters.map(patch) }
+      })
+      queryClient.invalidateQueries({ queryKey: ['tales'] })
+    },
+  })
+}
+
 export const useCreateChapter = (taleId) => {
   const queryClient = useQueryClient()
   const { user } = useAuth()

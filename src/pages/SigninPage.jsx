@@ -55,6 +55,9 @@ const SigninPage = () => {
 
   return (
     <div className="centered-page signin-page">
+      <div className="signin-disclaimer">
+        Access to Write Knuckles is currently by invitation only.
+      </div>
       <div className="page-header">Write Knuckles</div>
       <div className="page-subheader">The back room where pulp gets written.</div>
 

@@ -5,6 +5,10 @@ const extensions = createEditorExtensions()
 
 const EMPTY_DOC = { type: 'doc', content: [] }
 
+export function emptySceneContent() {
+  return EMPTY_DOC
+}
+
 export function contentToPlainText(content) {
   if (!content) return ''
   try {
@@ -22,4 +26,13 @@ export function countWords(text) {
 export function normalizeContent(content) {
   if (!content || content.type !== 'doc') return EMPTY_DOC
   return content
+}
+
+export function isSceneContentEmpty(content) {
+  return contentToPlainText(normalizeContent(content)).trim().length === 0
+}
+
+export function normalizeContentForSave(content) {
+  if (isSceneContentEmpty(content)) return EMPTY_DOC
+  return normalizeContent(content)
 }

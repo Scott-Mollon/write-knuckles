@@ -8,7 +8,7 @@ import Underline from '@tiptap/extension-underline'
 import { DropCapParagraph } from './dropCapParagraph'
 import { SceneDivider } from './sceneDivider'
 
-export const createEditorExtensions = () => [
+export const createEditorExtensions = (placeholder = '') => [
   StarterKit.configure({
     heading: { levels: [2, 3] },
     paragraph: false,
@@ -17,7 +17,7 @@ export const createEditorExtensions = () => [
   DropCapParagraph,
   SceneDivider,
   Placeholder.configure({
-    placeholder: 'The story begins here…',
+    placeholder,
   }),
   CharacterCount,
   Typography,
