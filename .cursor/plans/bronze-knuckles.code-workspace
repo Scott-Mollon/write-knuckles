@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "../../../bronze-knuckles"
+		},
+		{
+			"name": "scott-mollon",
+			"path": "../../../scott-mollon"
+		},
+		{
+			"path": "../.."
+		}
+	],
+	"settings": {}
+}

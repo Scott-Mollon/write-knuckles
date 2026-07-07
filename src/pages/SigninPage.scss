@@ -1,0 +1,82 @@
+.signin-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 2rem;
+
+  .page-header {
+    color: var(--main-color);
+    font-size: 200%;
+    margin-bottom: 0.5rem;
+    font-family: 'Oswald', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .page-subheader {
+    color: var(--main-back-subtle);
+    margin-bottom: 2rem;
+    font-style: italic;
+  }
+
+  .signin-email {
+    margin: 0 auto 10px auto;
+    max-width: 490px;
+    display: block;
+  }
+
+  .signin-btns {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 490px;
+    margin: 10px auto 20px auto;
+
+    .bk-button {
+      width: 30%;
+    }
+  }
+
+  .signin-confirm {
+    display: flex;
+    flex-direction: column;
+    border: 2px solid var(--main-color);
+    margin: 20px auto;
+    padding: 2rem;
+    max-width: 490px;
+
+    .confirm-header {
+      color: var(--main-color);
+      font-weight: bold;
+      font-size: 150%;
+      margin-bottom: 20px;
+    }
+  }
+
+  .signin-error {
+    color: var(--main-error);
+    font-weight: bold;
+    max-width: 490px;
+    margin: 0 auto;
+  }
+
+  .page-help {
+    width: 490px;
+    margin: 20px auto;
+    text-align: center;
+  }
+
+  .signin-footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    max-width: 490px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
+.centered-page {
+  justify-content: center;
+  align-items: center;
+}

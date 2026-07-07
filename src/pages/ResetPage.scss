@@ -1,0 +1,48 @@
+.reset-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 2rem;
+  align-items: center;
+
+  .reset-email {
+    margin: 0 auto 10px auto;
+    max-width: 490px;
+    display: block;
+  }
+
+  .reset-confirm {
+    display: flex;
+    flex-direction: column;
+    border: 2px solid var(--main-color);
+    margin: 20px;
+    padding: 2rem;
+    max-width: 490px;
+
+    .confirm-header {
+      color: var(--main-color);
+      font-weight: bold;
+      font-size: 150%;
+      margin-bottom: 20px;
+    }
+  }
+
+  .signin-error {
+    color: var(--main-error);
+    font-weight: bold;
+    max-width: 490px;
+  }
+
+  .page-help {
+    width: 490px;
+    margin: 20px 0;
+    text-align: center;
+  }
+
+  .signin-footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 490px;
+  }
+}

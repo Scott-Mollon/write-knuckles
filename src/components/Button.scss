@@ -1,0 +1,18 @@
+.bk-button {
+  border: 2px solid #726a2b;
+  margin: 5px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.6em 1.2em;
+  font-family: inherit;
+
+  &:hover:not(:disabled) {
+    border: 2px solid var(--main-color);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
