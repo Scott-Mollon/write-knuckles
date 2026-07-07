@@ -1,6 +1,6 @@
 ---
 name: Write Knuckles Phase 1
-overview: "Build **Write Knuckles** — a pulp-flavored Scrivener rival — as a standalone React + Supabase app. Phase 1 delivers the full writing cockpit: auth, manuscript structure (Chapters/Scenes), Beat Sheet guidance, rich editor, grammar/spell check, and export hooks for Phase 2 layout."
+overview: "Build **Write Knuckles** — a pulp-flavored Scrivener rival — as a standalone React + Supabase app. Phase 1 (M1–M5) delivers the full writing cockpit: auth, manuscript structure, Beat Sheet, rich editor, grammar/spell check, and export hooks. Post–Phase 1 (M6+) adds Tale collaborators, real-time co-editing, Print Run layout, and AI insights."
 todos:
   - id: scaffold
     content: "Scaffold write-knuckles repo: Vite + React 19 + JavaScript + Tailwind + React Router + TanStack Query"
@@ -18,13 +18,28 @@ todos:
     content: "Invite-only access: write.approved_users (003), admin access page, list registered users (004)"
     status: completed
   - id: story-board-beats
-    content: "Beat linking UI, corkboard drag between chapters, progress tracking (Story Board + Beat Sheet read-only done; scene metadata editing done in Inspector)"
+    content: "M3: Story Board (By Chapter + By Beat), beat linking, progress bars, beat sheet apply/change, chapter titles, one scene per beat"
+    status: completed
+  - id: tale-settings-editor-polish
+    content: "Tale settings modal, editor dark/light theme, scene placeholders, whitespace autosave, sign-in UX (invite disclaimer, password icons)"
     status: completed
   - id: research-search
     content: Add Characters, Locations, Research reference panels + full-text search across scenes
     status: pending
   - id: grammar-polish
     content: LanguageTool Edge Function, grammar highlights, readability stats, Markdown export, pulp theming polish
+    status: pending
+  - id: tale-collaborators
+    content: "M6: Tale collaborators — invite users, roles, shared RLS, collaborator management in Tale settings"
+    status: pending
+  - id: realtime-coediting
+    content: "M7: Real-time co-editing — Yjs + Supabase Realtime presence and conflict-free scene editing"
+    status: pending
+  - id: print-run-layout
+    content: "M8: Print Run — layout templates, PDF/ePub export, Phase 2 publishing hooks"
+    status: pending
+  - id: ai-insights
+    content: "M9: AI writing insights — beat suggestions, tone/cliché checks via Edge Function"
     status: pending
 isProject: false
 ---
@@ -66,7 +81,7 @@ flowchart TB
 
 ---
 
-## Current Progress (as of M2 complete + invite-only access)
+## Current Progress (as of M3 complete + UX polish)
 
 **Resume here:** M4 — Characters, Locations, Research reference panels (`research-search` todo)
 
@@ -75,22 +90,29 @@ flowchart TB
 | Area | Status | Key files |
 |------|--------|-----------|
 | Project scaffold | Done | [`package.json`](C:\Users\scott\Documents\code\write-knuckles\package.json), [`src/main.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\main.jsx) |
-| DB migration | Deployed | [`001`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\001_write_knuckles_schema.sql) + [`002`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\002_terminology_rename.sql) rename path; [`003`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\003_approved_users.sql) invite list; [`004`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\004_list_registered_users.sql) admin user list |
+| DB migration | Deployed | [`001`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\001_write_knuckles_schema.sql)–[`005`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\005_rename_dope_to_research.sql) (`002` rename path, `003` invite list, `004` admin user list, `005` dope→research) |
 | Auth + SSO | Done | [`AuthContext.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\contexts\AuthContext.jsx), [`authStorage.js`](C:\Users\scott\Documents\code\write-knuckles\src\lib\authStorage.js) |
+| Sign-in UX | Done | [`SigninPage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\SigninPage.jsx) — invite-only disclaimer; [`Password.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\Password.jsx) — bronze-knuckles eye icons |
 | SSO production | **Verified** | `VITE_COOKIE_DOMAIN=.bronzeknucklesmagazine.com` on both apps |
 | Cloudflare deploy | Done (write app) | Build output: `dist/` |
 | Invite-only access | Done | [`ApprovedRoute.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\ApprovedRoute.jsx), [`AccessAdminPage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\AccessAdminPage.jsx) |
 | Tale dashboard | Done | [`DashboardPage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\DashboardPage.jsx) |
 | New Tale wizard | Done | [`NewTalePage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\NewTalePage.jsx) |
+| Tale settings | Done | [`TaleSettingsModal.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\tale\TaleSettingsModal.jsx), [`useUpdateTale`](C:\Users\scott\Documents\code\write-knuckles\src\hooks\useTales.js) — title, subtitle, genre, target words, beat sheet change |
 | Tale editor (Write mode) | **Done** | [`TaleEditorPage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\TaleEditorPage.jsx), [`SceneEditor.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\editor\SceneEditor.jsx), [`Rack.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\rack\Rack.jsx), [`Inspector.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\inspector\Inspector.jsx) |
-| TipTap editor | Done | StarterKit, drop caps, scene dividers, autosave 1.5s, word count |
-| Story Board | Done | Corkboard with chapter columns + cross-chapter drag |
-| Beat Sheet | Done | Timeline + linked scene chips + link/unlink UI |
-| Beat linking UI | Done | [`BeatSheet.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\beats\BeatSheet.jsx), [`useBeatLinks.js`](C:\Users\scott\Documents\code\write-knuckles\src\hooks\useBeatLinks.js), Inspector beat links |
-| Story Board drag | Done | [`StoryBoard.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\story-board\StoryBoard.jsx) — chapter columns, cross-chapter drag |
-| Beat progress | Done | [`BeatProgress.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\beats\BeatProgress.jsx), header summary in TaleEditorPage |
-| Characters / Locations / Research | Not started | Tables exist; no UI yet |
+| TipTap editor | Done | StarterKit, drop caps, scene dividers, autosave 1.5s, word count, **dark/light theme** ([`useEditorTheme.js`](C:\Users\scott\Documents\code\write-knuckles\src\hooks\useEditorTheme.js)), rotating placeholders ([`scenePlaceholders.js`](C:\Users\scott\Documents\code\write-knuckles\src\constants\scenePlaceholders.js)) |
+| Chapter titles | Done | [`ChapterTitleInput.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\chapters\ChapterTitleInput.jsx), [`chapters.js`](C:\Users\scott\Documents\code\write-knuckles\src\lib\chapters.js) — number + custom title in Rack & Story Board |
+| Story Board | Done | [`StoryBoard.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\story-board\StoryBoard.jsx) — **By Chapter** (default) + **By Beat** views; chapter reorder; +Chapter/+Scene; beat drag link/unlink + unlinked pool |
+| Beat Sheet | Done | [`BeatSheet.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\beats\BeatSheet.jsx) — timeline, linked scene chips, link/unlink, change beat sheet |
+| Beat linking UI | Done | [`useBeatLinks.js`](C:\Users\scott\Documents\code\write-knuckles\src\hooks\useBeatLinks.js), Inspector + Beat Sheet + Story Board By Beat; **one scene per beat**; labels `Chapter N — Title — Scene` ([`scenes.js`](C:\Users\scott\Documents\code\write-knuckles\src\lib\scenes.js)) |
+| Beat sheet apply | Done | [`BeatSheetPicker.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\beats\BeatSheetPicker.jsx), [`useApplyBeatTemplate.js`](C:\Users\scott\Documents\code\write-knuckles\src\hooks\useApplyBeatTemplate.js) |
+| Beat word progress | Done | [`BeatWordBar.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\beats\BeatWordBar.jsx) — per-beat word budget (span since previous beat); header linked-beat count |
+| Autosave polish | Done | Whitespace-only scenes not persisted ([`plainText.js`](C:\Users\scott\Documents\code\write-knuckles\src\lib\editor\plainText.js), [`useAutosave.js`](C:\Users\scott\Documents\code\write-knuckles\src\hooks\useAutosave.js)) |
+| Characters / Locations / Research | Not started | Tables exist (`research_items` after `005`); no UI yet |
 | Grammar / export | Not started | — |
+| Tale collaborators (M6) | Not started | Schema + RLS planned in migration `006` |
+
+**After Phase 1 (M6+):** Collaborators → real-time co-editing → Print Run → AI insights. See [Post–Phase 1 Milestones](#postphase-1-milestones-m6).
 
 ---
 
@@ -115,7 +137,7 @@ flowchart TB
 
 **Stack note:** Write Knuckles stays **JavaScript throughout** — same language as the magazine. Auth pages port directly (JS + SCSS); writing cockpit uses JSX + Tailwind. No TypeScript.
 
-**Deferred to later milestone:** AI writing insights (Edge Function + provider key), collaborative editing (Yjs), offline PWA.
+**Deferred to later milestones:** AI writing insights (M9), real-time co-editing (M7), offline PWA. **Shared Tale access (M6)** is the first post–Phase 1 feature — multiple approved users on one manuscript; last-write-wins autosave until Yjs lands in M7.
 
 ---
 
@@ -138,7 +160,7 @@ Standard writing terms with pulp flavor where it fits:
 
 Scene status labels: `Raw`, `Drafted`, `Rewritten`, `Final`.
 
-New tales seed **Chapter One** + **Scene One**.
+New tales seed **Chapter 1** (empty custom title) + **Scene 1**. Display: `Chapter N` or `Chapter N — Custom Title` via [`formatChapterLabel`](C:\Users\scott\Documents\code\write-knuckles\src\lib\chapters.js).
 
 ---
 
@@ -215,6 +237,40 @@ write.locations (id, tale_id, name, description, notes jsonb, sort_order)
 write.research_items (id, tale_id, title, body, url, tags[], sort_order)
 ```
 
+### Tale collaborators (M6 — schema + RLS; not built yet)
+
+```sql
+-- write.tale_collaborators: shared access to a Tale
+write.tale_collaborators (
+  id, tale_id, user_id,           -- collaborator must be an approved user
+  role text not null,             -- 'owner' | 'editor' | 'viewer'
+  invited_by uuid,                -- auth.users who sent invite
+  invited_at, accepted_at,        -- null accepted_at = pending invite
+  created_at, updated_at,
+  unique (tale_id, user_id)
+)
+```
+
+**Roles (v1):**
+| Role | Capabilities |
+|------|----------------|
+| **owner** | Full control; invite/remove collaborators; delete Tale; implicit for `tales.user_id` |
+| **editor** | Read/write chapters, scenes, beats, reference sheets; cannot delete Tale or manage collaborators |
+| **viewer** | Read-only access to Tale structure and scene content |
+
+**RLS shift (M6):** Replace sole `user_id = auth.uid()` checks on tale-scoped tables with `write.can_access_tale(tale_id)` helper — true when user is tale owner **or** has an accepted collaborator row. Child tables (`chapters`, `scenes`, `beat_links`, `characters`, etc.) inherit via `tale_id`.
+
+**Invite flow:** Owner enters collaborator email in **Tale Settings → Collaborators** → resolve to `auth.users` (must exist + `write.is_approved_user()`) → insert `tale_collaborators` row → optional email via Resend. Dashboard shows **My Tales** vs **Shared With Me**.
+
+**Conflict model (M6):** Keep existing debounced autosave; last write wins. Document risk in UI (“another author may be editing”). **M7** adds Yjs + Realtime for live cursors and merge-safe scene bodies.
+
+**Key files (planned):**
+- Migration `006_tale_collaborators.sql` — table, helper functions, RLS policy updates
+- `src/hooks/useTaleCollaborators.js`, `src/components/tale/CollaboratorsPanel.jsx`
+- Extend [`TaleSettingsModal.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\tale\TaleSettingsModal.jsx) with collaborator list + invite form
+- [`DashboardPage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\DashboardPage.jsx) — shared tales section
+- [`useTales.js`](C:\Users\scott\Documents\code\write-knuckles\src\hooks\useTales.js) — query tales where user is owner or collaborator
+
 ### Migration tracking
 
 ```sql
@@ -256,10 +312,12 @@ write-knuckles/
 │   │   ├── ui/              # shadcn
 │   │   ├── rack/            # outline tree
 │   │   ├── editor/          # TipTap shell + toolbar
-│   │   ├── story-board/     # corkboard
+│   │   ├── story-board/     # corkboard (By Chapter + By Beat)
+│   │   ├── chapters/        # chapter title input
 │   │   ├── beats/           # Beat Sheet panel
-│   │   └── research/        # research sidebar
-│   ├── hooks/               # useTales, useTaleStructure, useAutosave (M2)
+│   │   ├── research/        # research sidebar (M4)
+│   │   └── tale/            # Tale settings (collaborators M6)
+│   ├── hooks/               # useTales, useTaleStructure, useAutosave, useBeatLinks, useApplyBeatTemplate, useEditorTheme
 │   ├── lib/
 │   │   ├── editor/          # TipTap extensions config
 │   │   └── beats/
@@ -284,21 +342,28 @@ Three primary **modes** (top nav tabs, Scrivener-style):
 └─────────────┴──────────────────────────┴──────────────┘
 ```
 
-- **The Rack:** collapsible tree, drag-reorder chapters/scenes, context menu (new chapter, new scene, duplicate, archive)
-- **Scene Editor:** distraction-free prose mode; typewriter scroll; session word count
-- **Inspector:** synopsis, status, color, linked beats, Characters/Locations refs
+- **The Rack:** drag-reorder chapters/scenes, editable chapter titles, create/delete chapters & scenes
+- **Scene Editor:** TipTap toolbar, autosave, dark/light theme toggle (sun/moon), rotating empty-scene placeholders
+- **Inspector:** synopsis, status, color, single beat link, word count
+- **Tale Settings** (header): edit title, subtitle, genre, target word count, change beat sheet
 
 ### 2. Story Board
-Corkboard grid of scenes (one card per scene). Drag between chapters. Color = status. Click opens scene in Write Mode.
+Two views (toggle in header; **By Chapter** is default):
+
+- **By Chapter:** chapter columns with editable titles, drag-reorder chapters & scenes, +Chapter/+Scene, cross-chapter scene moves
+- **By Beat:** beat columns with linked scenes, unlinked **Rack** pool, drag to link/unlink (one scene per beat max)
+
+Scene cards show status color, synopsis; click opens Write Mode.
 
 ### 3. Beat Sheet
 Vertical timeline of story beats from selected template. Each row shows:
 - Beat title + pulp guidance blurb
-- Target % / word-count milestone (computed from tale target)
-- Linked scene chips (click to jump)
-- Progress indicator (empty / linked / drafted)
+- Target % range + per-beat word budget (~words since previous beat)
+- **BeatWordBar** — words written in linked scenes vs that beat’s budget
+- Linked scene chips (`Chapter — Scene`); link/unlink via dropdown
+- **Change Beat Sheet** panel ([`BeatSheetPicker`](C:\Users\scott\Documents\code\write-knuckles\src\components\beats\BeatSheetPicker.jsx))
 
-Selecting Save the Cat on a new Tale pre-populates all 15 beats with guidance copy written in Bronze Knuckles voice.
+Empty beat sheet state offers template picker (also used when applying beats after tale creation).
 
 ---
 
@@ -313,9 +378,13 @@ Selecting Save the Cat on a new Tale pre-populates all 15 beats with guidance co
 - **SceneDivider** — 50% width horizontal rule between paragraphs
 - **GrammarHighlight** (custom decoration from LanguageTool results) — M5
 
-**Toolbar:** bold, italic, underline, highlight, blockquote, drop cap, divider, undo/redo. Focus mode and grammar check toggle — M5.
+**Toolbar:** bold, italic, underline, highlight, blockquote, drop cap, divider, undo/redo, **dark/light theme** (sun/moon, far right). Focus mode and grammar check toggle — M5.
 
-**Autosave:** debounced 1.5s → upsert `write.scenes.content` + regenerate `plain_text` + `word_count`.
+**Editor theme:** scoped dark (ink) / light (paper) modes via CSS variables; preference persisted in `localStorage` ([`useEditorTheme.js`](C:\Users\scott\Documents\code\write-knuckles\src\hooks\useEditorTheme.js)).
+
+**Placeholders:** 13 rotating pulp lines on empty scene open ([`scenePlaceholders.js`](C:\Users\scott\Documents\code\write-knuckles\src\constants\scenePlaceholders.js)).
+
+**Autosave:** debounced 1.5s → upsert `write.scenes.content` + regenerate `plain_text` + `word_count`. Whitespace-only content is not saved.
 
 **Grammar/spell flow:**
 1. User triggers check (manual button or on idle after 3s pause)
@@ -394,6 +463,7 @@ Implementation approach:
 - Add `VITE_APP_URL` for Write Knuckles redirect URLs
 - **Backport SSO fix to [`bronze-knuckles` LIVE branch](C:\Users\scott\Documents\code\bronze-knuckles)** — both apps must use the same session strategy
 - Routes: `/signin`, `/reset` (ported); protected routes wrap Tale dashboard and editor
+- Sign-in page shows **invitation-only** disclaimer; password field uses bronze-knuckles eye icons (`view.png` / `hide.png`)
 
 - Supabase Auth: email/password (same as magazine); email confirmation via Resend
 - First login → **New Tale wizard:**
@@ -428,7 +498,8 @@ From [`index.css`](C:\Users\scott\Documents\code\bronze-knuckles\src\index.css):
 | Background | `#1a1410` (ink black) |
 | Surface | `#2a2218` (weathered paper dark) |
 | Accent | `#938938` (match magazine bronze) |
-| Accent red | `#8b2635` (Final status color) |
+| Accent red | `#8b2635` (punch / color tag) |
+| Final status | `#4a7c59` (green) |
 | Text | `#e8dcc8` (newsprint cream) |
 | Writing font | **Courier Prime** or **Literata** |
 | UI font | **Oswald** or **Bebas Neue** (condensed pulp headlines) |
@@ -477,7 +548,7 @@ sequenceDiagram
 - [x] GitHub repo: https://github.com/Scott-Mollon/write-knuckles
 - [x] Cloudflare Pages deploy (write app); build output `dist/`
 - [x] Tale CRUD + dashboard + New Tale wizard
-- [x] Tale editor shell (Write / Story Board / Beat Sheet — read-only)
+- [x] Tale editor shell (Write / Story Board / Beat Sheet tabs — fully built out in M2–M3)
 
 ### M2 — The Rack + Scenes — COMPLETE
 - [x] Chapter/scene tree display
@@ -493,13 +564,25 @@ sequenceDiagram
 - [x] `/admin/access` for magazine admins — approve by email, list all registered accounts (`004`)
 
 ### M3 — Story Board + Beat Sheet — COMPLETE
-- [x] Story Board corkboard (read-only scene cards)
-- [x] Seed beat templates; Tale wizard with Beat Sheet picker
-- [x] Beat Sheet UI (read-only timeline + linked scene chips)
-- [x] Scene metadata editing (synopsis, status, color) — done in Inspector (M2)
-- [x] Beat linking UI (connect beats to scenes — Beat Sheet + Inspector)
-- [x] Corkboard drag between chapters
-- [x] Progress tracking (% beats linked + drafted)
+- [x] Story Board **By Chapter** view (default): chapter columns, scene cards, cross-chapter drag
+- [x] Story Board **By Beat** view: beat lanes, unlinked scene pool, drag to link/unlink
+- [x] Chapter reorder on Story Board; +Chapter / +Scene from Story Board header
+- [x] Seed beat templates; New Tale wizard with Beat Sheet picker
+- [x] Beat Sheet UI: timeline, guidance, linked scene chips, link/unlink
+- [x] Beat linking in Inspector (single beat per scene)
+- [x] **One scene per beat** enforced on link (`useCreateBeatLink` replaces existing)
+- [x] Scene link labels: `Chapter N — Title — Scene` in dropdowns and chips
+- [x] Per-beat word progress ([`BeatWordBar`](C:\Users\scott\Documents\code\write-knuckles\src\components\beats\BeatWordBar.jsx)); header linked-beat count
+- [x] Apply / change beat sheet ([`BeatSheetPicker`](C:\Users\scott\Documents\code\write-knuckles\src\components\beats\BeatSheetPicker.jsx), [`useApplyBeatTemplate`](C:\Users\scott\Documents\code\write-knuckles\src\hooks\useApplyBeatTemplate.js))
+- [x] `Final` scene status color → green (`#4a7c59`)
+
+### M3b — UX polish — COMPLETE
+- [x] **Chapter titles:** number + editable custom title in Rack & Story Board ([`ChapterTitleInput`](C:\Users\scott\Documents\code\write-knuckles\src\components\chapters\ChapterTitleInput.jsx))
+- [x] **Tale settings** modal: title, subtitle, genre, target word count, beat sheet ([`TaleSettingsModal`](C:\Users\scott\Documents\code\write-knuckles\src\components\tale\TaleSettingsModal.jsx))
+- [x] Editor **dark/light theme** toggle (sun/moon icons, toolbar right)
+- [x] Rotating empty-scene placeholders; whitespace-only autosave skip
+- [x] Sign-in invite-only disclaimer; password show/hide eye icons (ported from bronze-knuckles)
+- [x] Migration [`005`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\005_rename_dope_to_research.sql): `dope_items` → `research_items`
 
 ### M4 — Characters + Locations + Research
 - Reference panels (Characters, Locations, research notes)
@@ -515,7 +598,46 @@ sequenceDiagram
 
 ---
 
-## Phase 2 Foreshadow (Do Not Build Yet)
+## Post–Phase 1 Milestones (M6+)
+
+Features to build **after M1–M5** are complete. Track in plan todos (`tale-collaborators`, `realtime-coediting`, etc.).
+
+### M6 — Tale Collaborators
+- [ ] `write.tale_collaborators` table + `can_access_tale()` RLS helper (migration `006`)
+- [ ] Roles: owner (implicit), editor, viewer
+- [ ] **Tale Settings → Collaborators:** invite by email, change role, remove access
+- [ ] Only **approved users** can be invited (aligns with invite-only platform access)
+- [ ] Dashboard: **My Tales** + **Shared With Me** sections
+- [ ] Tale editor header: show collaborator avatars / count when shared
+- [ ] Autosave continues per-scene; last-write-wins with optional “edited by X” on `updated_at` / activity log (lite)
+- [ ] Owner-only: delete Tale, transfer ownership (stretch)
+
+### M7 — Real-time Co-editing
+- [ ] Yjs document per open scene; TipTap Collaboration extension
+- [ ] Supabase Realtime channel per `scene_id` for Yjs sync + presence (who’s in the scene)
+- [ ] Replace last-write-wins with CRDT merge for `write.scenes.content`
+- [ ] “Someone else is here” indicator in Scene Editor
+
+### M8 — Print Run (Layout & Export)
+- [ ] `print_runs` UI — trim size, fonts, chapter breaks
+- [ ] Layout engine: TipTap JSON → print-ready HTML/CSS
+- [ ] PDF + ePub export to Supabase Storage
+- [ ] Optional link Tale → magazine issue (`bronze-knuckles`)
+
+### M9 — AI Writing Insights
+- [ ] Edge Function + provider key (OpenAI/Anthropic — opt-in)
+- [ ] Beat completion suggestions, tone check, cliché flagging
+- [ ] Inspector panel or inline tips (no auto-rewrite without author confirm)
+
+### Backlog (unscheduled)
+- Offline PWA + local draft queue
+- Scene revision history / snapshots (`scene_revisions`)
+- Custom beat templates (user-authored structures)
+- Magazine submission bridge — push Tale excerpt to `bronze-knuckles` Submissions
+
+---
+
+## Phase 2 Foreshadow (Do Not Build Until M8)
 
 Design Phase 1 so these drop in cleanly:
 
@@ -531,6 +653,8 @@ Design Phase 1 so these drop in cleanly:
 
 Every table: `user_id = auth.uid()` for SELECT/INSERT/UPDATE/DELETE. **Write schema additionally requires** `write.is_approved_user()` (migration `003`). Magazine admins manage the invite list via `public.Admins`. Edge Function validates JWT before LanguageTool call. No client-side API keys. Storage buckets (future) scoped per user.
 
+**M6 collaborator RLS:** Tale-scoped tables grant access when `auth.uid()` is the tale owner **or** an accepted row in `write.tale_collaborators` with sufficient role (`editor` for writes, `viewer` for read-only). Collaborator management restricted to `owner`. Pending invites visible to invitee on dashboard.
+
 ---
 
 ## Success Criteria for Phase 1
@@ -541,15 +665,17 @@ Every table: `user_id = auth.uid()` for SELECT/INSERT/UPDATE/DELETE. **Write sch
 - [x] **Invite-only access** — approved users only; admin can manage list
 - [x] Author can organize chapters/scenes with drag-reorder
 - [x] Author can write in a rich-text editor with autosave
-- [x] Story Board and Beat Sheet views exist (read-only shell)
+- [x] Story Board and Beat Sheet views fully interactive (not read-only)
 - [x] Scene metadata editing functional (Inspector)
-- [x] Word counts visible (editor header + Inspector; tale dashboard aggregate)
-- [x] Beat linking functional
+- [x] Word counts visible (editor + Inspector; tale dashboard aggregate; per-beat word bars)
+- [x] Beat linking functional (Beat Sheet, Inspector, Story Board By Beat)
+- [x] Tale settings editable (title, genre, beat sheet, etc.)
+- [x] Per-beat word progress visible on Beat Sheet
 - [ ] Grammar/spell check works on demand
-- [ ] Beat progress and readability stats visible
+- [ ] Readability stats visible
 - [ ] Markdown export works
 
-This is the back room where pulp gets written. Phase 2 is where it gets printed.
+This is the back room where pulp gets written. **Phase 1 ends at M5.** M6+ adds collaboration, live co-editing, and publishing — see [Post–Phase 1 Milestones](#postphase-1-milestones-m6).
 
 ---
 
