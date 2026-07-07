@@ -1,27 +1,27 @@
 ---
 name: Write Knuckles Phase 1
-overview: "Build **Write Knuckles** — a pulp-flavored Scrivener rival — as a standalone React + Supabase app in the empty `write-knuckles` repo. Phase 1 delivers the full writing cockpit: auth, manuscript structure (Hits/Punches), beat-sheet guidance, rich editor, grammar/spell check, and export hooks for Phase 2 layout."
+overview: "Build **Write Knuckles** — a pulp-flavored Scrivener rival — as a standalone React + Supabase app. Phase 1 delivers the full writing cockpit: auth, manuscript structure (Chapters/Scenes), Beat Sheet guidance, rich editor, grammar/spell check, and export hooks for Phase 2 layout."
 todos:
   - id: scaffold
     content: "Scaffold write-knuckles repo: Vite + React 19 + JavaScript + Tailwind + React Router + TanStack Query"
     status: completed
   - id: supabase-schema
-    content: "Create Supabase migrations: tales, hits, punches, beat_templates, tale_beats, beat_links, mugshots, joints, dope_items + RLS + seed beat templates (file ready — run in Supabase SQL Editor)"
+    content: "Supabase write schema: tales, chapters, scenes, beat_templates, tale_beats, beat_links, characters, locations, dope_items + RLS + migrations 001/002 + schema_migrations tracking"
     status: completed
   - id: auth-dashboard
-    content: "Port auth from bronze-knuckles LIVE branch; SSO session fix in both repos; Tale dashboard + New Tale wizard"
+    content: "Port auth from bronze-knuckles LIVE branch; SSO verified in production; Tale dashboard + New Tale wizard; GitHub repo live"
     status: completed
   - id: rack-editor
-    content: "NEXT — TipTap Punch editor, autosave, word count, Rack drag-reorder, editable Inspector (shell exists read-only in TaleEditorPage.jsx)"
+    content: "NEXT — TipTap scene editor, autosave, word count, Rack drag-reorder, editable Inspector (shell exists read-only in TaleEditorPage.jsx)"
     status: in_progress
-  - id: slug-beats
-    content: "Slug Board + Beatdown Sheet read-only views done; beat linking UI, slug editing, corkboard drag, progress tracking still needed"
+  - id: story-board-beats
+    content: "Story Board + Beat Sheet read-only views done; beat linking UI, scene editing, corkboard drag, progress tracking still needed"
     status: in_progress
   - id: dope-search
-    content: Add Mugshots, Joints, The Dope reference panels + full-text search across punches
+    content: Add Characters, Locations, The Dope reference panels + full-text search across scenes
     status: pending
   - id: grammar-polish
-    content: LanguageTool Edge Function, grammar highlights, readability stats, Markdown export, pulp theming, Cloudflare deploy
+    content: LanguageTool Edge Function, grammar highlights, readability stats, Markdown export, pulp theming polish
     status: pending
 isProject: false
 ---
@@ -30,7 +30,7 @@ isProject: false
 
 ## Vision
 
-**Write Knuckles** is the author’s back room for *Bronze Knuckles Magazine* — hard-hitting pulp fiction, organized like a fight card. Where Scrivener has binders and scenes, we have **The Rack**, **Hits**, and **Punches**. Where Scrivener has index cards, we have **Slugs**. Story structure isn’t abstract — it’s a **Beatdown Sheet** you can walk like Save the Cat, Hero’s Journey, or a custom pulp arc.
+**Write Knuckles** is the author’s back room for *Bronze Knuckles Magazine* — hard-hitting pulp fiction with a noir edge. Where Scrivener has binders and scenes, we have **The Rack**, **Chapters**, and **Scenes**. The **Story Board** is your corkboard view. Story structure isn’t abstract — it’s a **Beat Sheet** you can walk like Save the Cat, Hero’s Journey, or a custom pulp arc.
 
 Phase 2 (layout/publishing) is intentionally foreshadowed in the data model but not built yet.
 
@@ -38,10 +38,10 @@ Phase 2 (layout/publishing) is intentionally foreshadowed in the data model but 
 flowchart TB
   subgraph client [Write Knuckles Client]
     Rack[The Rack - outline tree]
-    Editor[Punch Editor - TipTap]
-    Slugs[Slug Board - corkboard]
-    BeatdownSheet[Beatdown Sheet - Save the Cat]
-    Inspector[The Dope - metadata]
+    Editor[Scene Editor - TipTap]
+    StoryBoard[Story Board - corkboard]
+    BeatSheet[Beat Sheet - Save the Cat]
+    Inspector[Inspector - metadata]
   end
 
   subgraph supabase [Supabase]
@@ -54,8 +54,8 @@ flowchart TB
 
   Rack --> DB
   Editor --> DB
-  Slugs --> DB
-  BeatdownSheet --> DB
+  StoryBoard --> DB
+  BeatSheet --> DB
   Inspector --> DB
   Auth --> client
   Realtime --> Editor
@@ -63,25 +63,26 @@ flowchart TB
 
 ---
 
-## Current Progress (as of M1 complete)
+## Current Progress (as of M1 complete + production SSO)
 
 **Resume here:** M2 — TipTap editor + autosave (`rack-editor` todo)
+
+**Repo:** https://github.com/Scott-Mollon/write-knuckles
 
 | Area | Status | Key files |
 |------|--------|-----------|
 | Project scaffold | Done | [`package.json`](C:\Users\scott\Documents\code\write-knuckles\package.json), [`src/main.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\main.jsx) |
-| DB migration | File ready | [`supabase/migrations/001_write_knuckles_schema.sql`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\001_write_knuckles_schema.sql) — **must be run in Supabase SQL Editor** |
-| Auth + SSO | Done (code) | [`src/contexts/AuthContext.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\contexts\AuthContext.jsx), [`src/lib/authStorage.js`](C:\Users\scott\Documents\code\write-knuckles\src\lib\authStorage.js); backported to [`bronze-knuckles/src/contexts/AuthContext.jsx`](C:\Users\scott\Documents\code\bronze-knuckles\src\contexts\AuthContext.jsx) |
-| SSO production config | Not verified | Set `VITE_COOKIE_DOMAIN=.bronzeknucklesmagazine.com` + Supabase redirect URLs in both apps |
-| Tale dashboard | Done | [`src/pages/DashboardPage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\DashboardPage.jsx) |
-| New Tale wizard | Done | [`src/pages/NewTalePage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\NewTalePage.jsx) |
-| Tale editor shell | Partial | [`src/pages/TaleEditorPage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\TaleEditorPage.jsx) — Write / Slug Board / Beatdown tabs, read-only |
+| DB migration | Deployed | [`001_write_knuckles_schema.sql`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\001_write_knuckles_schema.sql) + [`002_terminology_rename.sql`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\002_terminology_rename.sql) if upgrading old schema; tables in **`write` schema**; track via `write.schema_migrations` |
+| Auth + SSO | Done | [`AuthContext.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\contexts\AuthContext.jsx), [`authStorage.js`](C:\Users\scott\Documents\code\write-knuckles\src\lib\authStorage.js); backported to bronze-knuckles |
+| SSO production | **Verified** | `VITE_COOKIE_DOMAIN=.bronzeknucklesmagazine.com` on both apps; cross-subdomain session works |
+| Cloudflare deploy | Done (write app) | Build output: `dist/`; production SSO validated |
+| Tale dashboard | Done | [`DashboardPage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\DashboardPage.jsx) |
+| New Tale wizard | Done | [`NewTalePage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\NewTalePage.jsx) — defaults: Chapter One + Scene One |
+| Tale editor shell | Partial | [`TaleEditorPage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\TaleEditorPage.jsx) — Write / Story Board / Beat Sheet tabs, read-only |
 | TipTap editor | Not started | Placeholder in TaleEditorPage |
-| Beat linking UI | Not started | Beatdown Sheet displays links but cannot create them |
-| Mugshots / Joints / Dope | Not started | — |
-| Grammar / export / deploy | Not started | — |
-
-**Local setup still required:** `npm install`, copy `.env.development` from bronze-knuckles, `npm run dev` (port 5174)
+| Beat linking UI | Not started | Beat Sheet displays links but cannot create them |
+| Characters / Locations / Dope | Not started | Tables exist; no UI yet |
+| Grammar / export | Not started | — |
 
 ---
 
@@ -97,7 +98,7 @@ flowchart TB
 | Editor | **TipTap 2** (ProseMirror) | Extensible rich text, JSON document model, spellcheck-friendly |
 | UI | Tailwind CSS 4 + **shadcn/ui** | Fast, accessible components; easy pulp theming |
 | Forms/validation | React Hook Form + Zod | Beat sheets, metadata, settings |
-| Drag & drop | @dnd-kit | Reorder Hits/Punches, Slug board |
+| Drag & drop | @dnd-kit | Reorder chapters/scenes, Story Board |
 | Grammar/spell | **LanguageTool Public API** (Phase 1) | Server-side keys via Edge Function; upgrade path to self-hosted LT |
 | State | Zustand (UI) + TanStack Query (server) | Thin, predictable |
 | Deploy | Cloudflare Pages + Supabase (same pattern as magazine) | Consistent with your existing infra |
@@ -110,51 +111,54 @@ flowchart TB
 
 ---
 
-## Pulp Domain Language
+## Domain Language
 
-Scrivener concepts mapped to Bronze Knuckles voice:
+Standard writing terms with pulp flavor where it fits:
 
-| Scrivener | Write Knuckles | Description |
-|-----------|----------------|-------------|
-| Project | **Tale** | A manuscript (novel, novella, serial) |
-| Binder folder | **Hit** | Major story unit (part, chapter, act block) |
-| Scene | **Punch** | Atomic writing unit with body text |
-| Index card | **Slug** | Corkboard card — synopsis, status, color |
+| Concept | Write Knuckles | Description |
+|---------|----------------|-------------|
+| Manuscript | **Tale** | A novel, novella, or serial |
+| Chapter / part | **Chapter** | Major structural unit in The Rack (tree via `parent_id` optional) |
+| Scene | **Scene** | Atomic writing unit with TipTap body text |
+| Corkboard view | **Story Board** | Grid of scene cards — synopsis, status, color |
+| Story structure | **Beat Sheet** | Save the Cat / Hero's Journey / etc. timeline per tale |
 | Research | **The Dope** | Notes, links, reference files |
-| Characters | **Mugshots** | Character sheets |
-| Locations | **Joints** | Setting sheets |
-| Synopsis | **The Pitch** | Logline + back-cover copy |
-| Compile | **Print Run** | Phase 2 — layout + PDF/ePub export |
+| Characters | **Characters** | Character sheets (`write.characters`) |
+| Locations | **Locations** | Setting sheets (`write.locations`) |
+| Synopsis | **The Pitch** | Logline + back-cover copy (future) |
+| Export | **Print Run** | Phase 2 — layout + PDF/ePub |
 
-Status labels on Slugs: `Raw`, `Drafted`, `Rewritten`, `Final`.
+Scene status labels: `Raw`, `Drafted`, `Rewritten`, `Final`.
+
+New tales seed **Chapter One** + **Scene One**.
 
 ---
 
 ## Data Model (Supabase Postgres)
 
-All tables use `uuid` PKs, `user_id` FK to `auth.users`, RLS enabled (users only see their own rows).
+All Write Knuckles tables live in the **`write` schema**. Magazine tables stay in `public`. `uuid` PKs, `user_id` FK to `auth.users`, RLS enabled.
 
 ### Core writing
 
 ```sql
--- tales: top-level manuscript
-tales (
+-- write.tales: top-level manuscript
+write.tales (
   id, user_id, title, subtitle, genre, target_word_count,
   beat_template_id,  _progress jsonb,
   created_at, updated_at, archived_at
 )
 
--- hits: ordered chapters/parts (tree optional via parent_id)
-hits (
+-- write.chapters: ordered chapters/parts (tree optional via parent_id)
+write.chapters (
   id, tale_id, user_id, parent_id nullable,
   title, sort_order, synopsis,
   created_at, updated_at
 )
 
--- punches: scenes with TipTap JSON body
-punches (
-  id, hit_id, tale_id, user_id,
-  title, sort_order, slug_color, slug_status,
+-- write.scenes: scenes with TipTap JSON body
+write.scenes (
+  id, chapter_id, tale_id, user_id,
+  title, sort_order, scene_color, scene_status,
   content jsonb,           -- TipTap document
   plain_text text,          -- generated for search + word count
   word_count int,
@@ -172,17 +176,17 @@ beat_templates (
   structure jsonb           -- ordered beats with act %, guidance text
 )
 
--- tale_beats: instantiated beatdown sheet per tale
+-- tale_beats: instantiated Beat Sheet per tale
 tale_beats (
   id, tale_id, beat_template_id,
   beats jsonb,              -- copy of template + per-beat overrides
   created_at, updated_at
 )
 
--- beat_links: connect a beat to one or more punches
+-- beat_links: connect a story beat to one or more scenes
 beat_links (
-  id, tale_id, beat_key text,  -- e.g. "save_the_cat_05"
-  punch_id nullable, notes text
+  id, tale_id, beat_key text,
+  scene_id nullable, notes text
 )
 ```
 
@@ -191,17 +195,25 @@ beat_links (
 - Hero’s Journey (12 stages)
 - Three-Act Pulp (custom: Hook, Complication, Gut Punch, Reversal, Knockout)
 - Story Circle (Dan Harmon, 8 steps)
-- Blank Beatdown Sheet
+- Blank Beat Sheet
 
-Each beat stores: `key`, `title`, `act`, `description`, `guidance` (author-facing copy in pulp voice), `target_percent`, `linked_punch_ids[]`.
+Each beat stores: `key`, `title`, `act`, `guidance`, `target_percent`. Scene links via `write.beat_links`.
 
 ### Reference & metadata
 
 ```sql
-mugshots (id, tale_id, name, role, bio jsonb, avatar_url, sort_order)
-joints (id, tale_id, name, description, notes jsonb, sort_order)
-dope_items (id, tale_id, title, body, url, tags[], sort_order)
+write.characters (id, tale_id, name, role, bio jsonb, avatar_url, sort_order)
+write.locations (id, tale_id, name, description, notes jsonb, sort_order)
+write.dope_items (id, tale_id, title, body, url, tags[], sort_order)
 ```
+
+### Migration tracking
+
+```sql
+write.schema_migrations (version, name, applied_at)
+```
+
+Client: `writeDb = supabase.schema('write')`. Expose `write` in Supabase API settings.
 
 ### Phase 2 hooks (schema only, no UI yet)
 
@@ -216,9 +228,9 @@ print_runs (
 
 ### Search & versioning (Phase 1 lite)
 
-- `plain_text` on punches/updated via TipTap `onUpdate` debounce
-- Postgres full-text search index on `punches.plain_text`
-- Optional `punch_revisions` table (snapshot on manual "Save Snapshot" — not full auto-versioning in v1)
+- `plain_text` on scenes updated via TipTap `onUpdate` debounce
+- Postgres full-text search index on `write.scenes.plain_text`
+- Optional `scene_revisions` table (manual snapshot — not full auto-versioning in v1)
 
 ---
 
@@ -236,16 +248,15 @@ write-knuckles/
 │   │   ├── ui/              # shadcn
 │   │   ├── rack/            # outline tree
 │   │   ├── editor/          # TipTap shell + toolbar
-│   │   ├── slugs/           # corkboard
-│   │   ├── beats/           # beatdown sheet panel
+│   │   ├── story-board/     # corkboard
+│   │   ├── beats/           # Beat Sheet panel
 │   │   └── dope/            # research sidebar
-│   ├── hooks/               # useTale, usePunch, useAutosave
+│   ├── hooks/               # useTales, useTaleStructure, useAutosave (M2)
 │   ├── lib/
-│   │   ├── supabase/
 │   │   ├── editor/          # TipTap extensions config
-│   │   └── beats/           # template definitions
-│   ├── stores/              # UI layout, active punch, panel state
-│   └── constants/           # beat template defs, slug statuses, shared enums
+│   │   └── beats/
+│   ├── stores/              # UI layout, active scene, panel state
+│   └── constants/           # taleEditor.js — modes, scene statuses
 ```
 
 ---
@@ -257,26 +268,26 @@ Three primary **modes** (top nav tabs, Scrivener-style):
 ### 1. Write Mode (default)
 ```
 ┌─────────────┬──────────────────────────┬──────────────┐
-│  THE RACK   │     PUNCH EDITOR         │  INSPECTOR   │
-│  (tree)     │     TipTap + toolbar     │  Slug card   │
-│  Hits ▾     │                          │  Beat link   │
-│   Punches   │                          │  Word count  │
-│             │                          │  Mugshot refs│
+│  THE RACK   │     SCENE EDITOR         │  INSPECTOR   │
+│  (tree)     │     TipTap + toolbar     │  Scene meta  │
+│  Chapters ▾ │                          │  Beat links  │
+│   Scenes    │                          │  Word count  │
+│             │                          │  Char / Loc  │
 └─────────────┴──────────────────────────┴──────────────┘
 ```
 
-- **The Rack:** collapsible tree, drag-reorder Hits/Punches, right-click context (new Hit, new Punch, duplicate, archive)
-- **Punch Editor:** distraction-free prose mode toggle; typewriter scroll; session word count
-- **Inspector:** slug synopsis, status color, POV, linked Mugshots/Joints, linked Beat
+- **The Rack:** collapsible tree, drag-reorder chapters/scenes, context menu (new chapter, new scene, duplicate, archive)
+- **Scene Editor:** distraction-free prose mode; typewriter scroll; session word count
+- **Inspector:** synopsis, status, color, linked beats, Characters/Locations refs
 
-### 2. Slug Board
-Corkboard grid of Slugs (one per Punch). Drag between Hits. Color = status. Double-click opens Punch in Write Mode.
+### 2. Story Board
+Corkboard grid of scenes (one card per scene). Drag between chapters. Color = status. Click opens scene in Write Mode.
 
-### 3. Beatdown Sheet
-Vertical timeline of beats from selected template. Each row shows:
+### 3. Beat Sheet
+Vertical timeline of story beats from selected template. Each row shows:
 - Beat title + pulp guidance blurb
 - Target % / word-count milestone (computed from tale target)
-- Linked Punch chips (click to jump)
+- Linked scene chips (click to jump)
 - Progress indicator (empty / linked / drafted)
 
 Selecting Save the Cat on a new Tale pre-populates all 15 beats with guidance copy written in Bronze Knuckles voice.
@@ -286,7 +297,7 @@ Selecting Save the Cat on a new Tale pre-populates all 15 beats with guidance co
 ## Editor (TipTap)
 
 **Extensions (Phase 1):**
-- StarterKit (headings limited to H2/H3 for structure within a Punch)
+- StarterKit (headings limited to H2/H3 within a scene)
 - Placeholder, CharacterCount, Typography
 - Highlight (for notes-to-self)
 - Link, Blockquote
@@ -294,7 +305,7 @@ Selecting Save the Cat on a new Tale pre-populates all 15 beats with guidance co
 
 **Toolbar:** bold, italic, underline, highlight, blockquote, undo/redo, focus mode, grammar check toggle.
 
-**Autosave:** debounced 1.5s → upsert `punches.content` + regenerate `plain_text` + `word_count`. Optimistic UI with TanStack Query mutation. Toast on save error only.
+**Autosave:** debounced 1.5s → upsert `write.scenes.content` + regenerate `plain_text` + `word_count`.
 
 **Grammar/spell flow:**
 1. User triggers check (manual button or on idle after 3s pause)
@@ -328,7 +339,7 @@ Same project for magazine + Write Knuckles (already in [`.env.development`](C:\U
 | `Submissions` | Story submissions to the magazine |
 | `Texts` | Submission body text |
 
-Write Knuckles gets **new tables** (`tales`, `hits`, `punches`, etc.) in the same project. RLS keeps magazine data and writing data isolated per user.
+Write Knuckles tables in **`write` schema** (`tales`, `chapters`, `scenes`, etc.) alongside magazine tables in `public`. RLS isolates per user.
 
 ### Auth files to port (copy verbatim, then env-tweak)
 
@@ -351,11 +362,7 @@ public/whosthere.jpg                   ← sign-in hero image
 ### Required auth tweaks when porting
 
 1. **Env-driven redirect URLs** — magazine hardcodes `https://bronzeknucklesmagazine.com/signin` and `/reset?mode=reset`. Replace with `import.meta.env.VITE_APP_URL` so Write Knuckles uses its own domain.
-2. **Single sign-on (SSO) across subdomains** — **M1 success criterion.** One login on either site keeps the user signed in on both `bronzeknucklesmagazine.com` and `write.bronzeknucklesmagazine.com`. Today the magazine stores session in `sessionStorage` key `bk-session`, which is origin-scoped and blocks SSO. Fix in **both repos**:
-   - Remove manual `sessionStorage` session management from `AuthContext`
-   - Use Supabase client's built-in session persistence (`onAuthStateChange` + `getSession`)
-   - Configure Supabase Auth cookie domain to `.bronzeknucklesmagazine.com` (Supabase dashboard → Auth → URL Configuration)
-   - Verify: sign in on magazine → open Write Knuckles → already authenticated (and vice versa)
+2. **Single sign-on (SSO) across subdomains** — **Done (verified in production).** `authStorage.js` + `VITE_COOKIE_DOMAIN=.bronzeknucklesmagazine.com` on both apps.
 3. **Supabase redirect URLs** — add Write Knuckles URLs to Auth settings alongside existing magazine URLs.
 4. **Post-login redirect** — magazine navigates to `/submissions`; Write Knuckles navigates to `/` (Tale dashboard).
 
@@ -383,7 +390,7 @@ Implementation approach:
   1. Title + genre
   2. Pick beat template (Save the Cat recommended for pulp)
   3. Set target word count
-  4. Creates default Hit ("Act I") + first empty Punch ("Opening Punch")
+  4. Creates default **Chapter One** + **Scene One**
 
 Dashboard (`/`) lists Tales with word count progress bar and last edited timestamp.
 
@@ -411,13 +418,14 @@ From [`index.css`](C:\Users\scott\Documents\code\bronze-knuckles\src\index.css):
 | Background | `#1a1410` (ink black) |
 | Surface | `#2a2218` (weathered paper dark) |
 | Accent | `#938938` (match magazine bronze) |
-| Punch red | `#8b2635` (blood slug) |
+| Accent red | `#8b2635` (Final status color) |
 | Text | `#e8dcc8` (newsprint cream) |
 | Writing font | **Courier Prime** or **Literata** |
 | UI font | **Oswald** or **Bebas Neue** (condensed pulp headlines) |
 
 Micro-copy examples:
-- Empty state: *"No punches thrown yet. Step into the ring."*
+- Empty state: *"No tales started yet? Step into the ring."*
+- New Tale CTA: *"Start Your Tale"*
 - Save indicator: *"Locked in."*
 - Beat guidance header: *"The Setup — before the fist flies"*
 
@@ -434,9 +442,9 @@ sequenceDiagram
   participant Supabase
   participant LT as LanguageTool
 
-  Author->>App: Edit Punch in TipTap
+  Author->>App: Edit scene in TipTap
   App->>App: Debounce 1.5s
-  App->>Supabase: upsert punch content
+  App->>Supabase: upsert write.scenes.content
   Supabase-->>App: OK + Realtime broadcast
 
   Author->>App: Run grammar check
@@ -451,43 +459,43 @@ sequenceDiagram
 
 ## Phase 1 Milestones (Build Order)
 
-### M1 — Foundation (Week 1) — COMPLETE
+### M1 — Foundation — COMPLETE
 - [x] Scaffold `write-knuckles`: Vite + React + JavaScript + Tailwind
-- [x] Link to existing Supabase project (`rjquutusbwfrfpbwrxxd`); migration file + RLS written
-- [x] Port auth module from [`bronze-knuckles` LIVE branch](C:\Users\scott\Documents\code\bronze-knuckles); env-driven redirect URLs
-- [x] Cross-subdomain SSO code in both write-knuckles and bronze-knuckles (`authStorage.js` + `onAuthStateChange`)
-- [ ] Verify SSO in production (cookie domain + Supabase redirect URLs)
+- [x] `write` schema migrations (`001` + `002` rename path); `schema_migrations` tracking
+- [x] Port auth from bronze-knuckles LIVE; env-driven redirect URLs
+- [x] Cross-subdomain SSO — **verified in production**
+- [x] GitHub repo: https://github.com/Scott-Mollon/write-knuckles
+- [x] Cloudflare Pages deploy (write app); build output `dist/`
 - [x] Tale CRUD + dashboard + New Tale wizard
-- [x] Tale editor shell (three-mode tabs, read-only Rack / Slug Board / Beatdown Sheet)
+- [x] Tale editor shell (Write / Story Board / Beat Sheet — read-only)
 
-### M2 — The Rack + Punches (Week 2) — IN PROGRESS
-- [x] Hit/Punch tree display (read-only, no drag-reorder)
-- [ ] TipTap editor wired to Punch
+### M2 — The Rack + Scenes — IN PROGRESS
+- [x] Chapter/scene tree display (read-only)
+- [ ] TipTap editor wired to scene
 - [ ] Autosave + word count
 - [ ] Editable Inspector (title, synopsis, status, color)
-- [ ] Rack drag-reorder + create/delete Hits/Punches
+- [ ] Rack drag-reorder + create/delete chapters/scenes
 
-### M3 — Slug Board + Beatdown Sheet (Week 3) — PARTIAL
-- [x] Corkboard view (read-only slug cards)
-- [x] Seed beat templates; Tale wizard with template picker
-- [x] Beatdown Sheet UI (read-only beat timeline + linked punch chips)
-- [ ] Beat linking UI (connect beats to punches)
-- [ ] Slug editing (synopsis, status, color)
-- [ ] Corkboard drag between Hits
+### M3 — Story Board + Beat Sheet — PARTIAL
+- [x] Story Board corkboard (read-only scene cards)
+- [x] Seed beat templates; Tale wizard with Beat Sheet picker
+- [x] Beat Sheet UI (read-only timeline + linked scene chips)
+- [ ] Beat linking UI (connect beats to scenes — Beat Sheet + Inspector)
+- [ ] Scene editing (synopsis, status, color)
+- [ ] Corkboard drag between chapters
 - [ ] Progress tracking (% beats linked + drafted)
 
-### M4 — The Dope + Mugshots + Joints (Week 4)
-- Reference panels (Mugshots, locations, research notes)
-- Link Mugshots/Joints to Punches in Inspector
-- Full-text search across Punches
+### M4 — Characters + Locations + The Dope
+- Reference panels (Characters, Locations, research notes)
+- Link Characters/Locations to scenes in Inspector
+- Full-text search across scenes
 
-### M5 — Grammar + Polish (Week 5)
+### M5 — Grammar + Polish
 - LanguageTool Edge Function
 - Grammar highlights in editor
 - Readability stats (local)
-- Export: **Markdown + plain text** per Tale or selected Punches (DOCX optional stretch)
-- Pulp theming pass, responsive layout, empty states
-- Cloudflare Pages deploy
+- Export: Markdown + plain text per Tale or selected scenes
+- Pulp theming pass, responsive layout
 
 ---
 
@@ -495,7 +503,7 @@ sequenceDiagram
 
 Design Phase 1 so these drop in cleanly:
 
-- `punches.content` JSON → layout engine input (Phase 2 Scribus-like canvas)
+- `write.scenes.content` JSON → layout engine input (Phase 2)
 - `print_runs` table + Storage bucket for PDF/ePub
 - `tales` metadata → magazine issue assignment (link to bronze-knuckles site)
 - Edge Function slot for AI insights (beat completion suggestions, tone check, cliché flagging)
@@ -511,16 +519,16 @@ Every table: `user_id = auth.uid()` for SELECT/INSERT/UPDATE/DELETE. Edge Functi
 
 ## Success Criteria for Phase 1
 
-- [ ] **Single sign-on works** in production (code done; production config not verified)
+- [x] **Single sign-on works** in production (verified)
 - [x] Author can sign up and create a Tale with Save the Cat beats via New Tale wizard
-- [ ] Author can organize Hits/Punches with drag-reorder
+- [x] Deployed to production URL; Supabase backing live data
+- [ ] Author can organize chapters/scenes with drag-reorder
 - [ ] Author can write in a rich-text editor with autosave
-- [x] Slug Board and Beatdown Sheet views exist (read-only shell)
-- [ ] Beat linking and slug editing functional
+- [x] Story Board and Beat Sheet views exist (read-only shell)
+- [ ] Beat linking and scene metadata editing functional
 - [ ] Grammar/spell check works on demand
 - [ ] Word counts, beat progress, and readability stats visible
 - [ ] Markdown export works
-- [ ] Deployed to production URL, Supabase backing live data
 
 This is the back room where pulp gets written. Phase 2 is where it gets printed.
 
