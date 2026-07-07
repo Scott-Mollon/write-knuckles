@@ -39,6 +39,12 @@ supabase/migrations/003_approved_users.sql
 supabase/migrations/004_list_registered_users.sql
 ```
 
+   If you previously applied `001` with `write.dope_items`, also run:
+
+```
+supabase/migrations/005_rename_dope_to_research.sql
+```
+
    Then add yourself to the invite list (replace with your email):
 
 ```sql
@@ -107,5 +113,5 @@ For single sign-on across `bronzeknucklesmagazine.com` and `write.bronzeknuckles
 - [x] M1: Tale editor shell (Write / Story Board / Beat Sheet views)
 - [ ] M2: TipTap editor, autosave, Rack drag-reorder
 - [ ] M3: Beat linking UI, scene editing
-- [ ] M4: Characters, Locations, The Dope
+- [ ] M4: Characters, Locations, Research
 - [ ] M5: Grammar check, export, deploy

@@ -95,7 +95,7 @@ export const useCreateTale = () => {
         .insert({
           tale_id: tale.id,
           user_id: user.id,
-          title: 'Chapter One',
+          title: 'Chapter 1',
           sort_order: 0,
         })
         .select()
@@ -107,7 +107,7 @@ export const useCreateTale = () => {
         chapter_id: chapter.id,
         tale_id: tale.id,
         user_id: user.id,
-        title: 'Scene One',
+        title: 'Scene 1',
         sort_order: 0,
         scene_status: 'Raw',
       })

@@ -280,7 +280,7 @@ const Rack = ({ taleId, chapters, activeSceneId, onSelectScene, totalScenes }) =
     })
     await createScene.mutateAsync({
       chapterId: chapter.id,
-      title: 'Scene One',
+      title: 'Scene 1',
       sortOrder: 0,
     })
   }

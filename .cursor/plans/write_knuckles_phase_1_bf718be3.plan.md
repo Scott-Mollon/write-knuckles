@@ -6,7 +6,7 @@ todos:
     content: "Scaffold write-knuckles repo: Vite + React 19 + JavaScript + Tailwind + React Router + TanStack Query"
     status: completed
   - id: supabase-schema
-    content: "Supabase write schema: tales, chapters, scenes, beat_templates, tale_beats, beat_links, characters, locations, dope_items + RLS + migrations 001/002 + schema_migrations tracking"
+    content: "Supabase write schema: tales, chapters, scenes, beat_templates, tale_beats, beat_links, characters, locations, research_items + RLS + migrations 001/002 + schema_migrations tracking"
     status: completed
   - id: auth-dashboard
     content: "Port auth from bronze-knuckles LIVE branch; SSO verified in production; Tale dashboard + New Tale wizard; GitHub repo live"
@@ -20,8 +20,8 @@ todos:
   - id: story-board-beats
     content: "NEXT — Beat linking UI, corkboard drag between chapters, progress tracking (Story Board + Beat Sheet read-only done; scene metadata editing done in Inspector)"
     status: in_progress
-  - id: dope-search
-    content: Add Characters, Locations, The Dope reference panels + full-text search across scenes
+  - id: research-search
+    content: Add Characters, Locations, Research reference panels + full-text search across scenes
     status: pending
   - id: grammar-polish
     content: LanguageTool Edge Function, grammar highlights, readability stats, Markdown export, pulp theming polish
@@ -87,7 +87,7 @@ flowchart TB
 | Story Board | Read-only | Corkboard cards; click opens Write mode |
 | Beat Sheet | Read-only | Timeline + linked scene chips; no link creation yet |
 | Beat linking UI | Not started | — |
-| Characters / Locations / Dope | Not started | Tables exist; no UI yet |
+| Characters / Locations / Research | Not started | Tables exist; no UI yet |
 | Grammar / export | Not started | — |
 
 ---
@@ -128,7 +128,7 @@ Standard writing terms with pulp flavor where it fits:
 | Scene | **Scene** | Atomic writing unit with TipTap body text |
 | Corkboard view | **Story Board** | Grid of scene cards — synopsis, status, color |
 | Story structure | **Beat Sheet** | Save the Cat / Hero's Journey / etc. timeline per tale |
-| Research | **The Dope** | Notes, links, reference files |
+| Research | **Research** | Notes, links, reference files |
 | Characters | **Characters** | Character sheets (`write.characters`) |
 | Locations | **Locations** | Setting sheets (`write.locations`) |
 | Synopsis | **The Pitch** | Logline + back-cover copy (future) |
@@ -210,7 +210,7 @@ Each beat stores: `key`, `title`, `act`, `guidance`, `target_percent`. Scene lin
 ```sql
 write.characters (id, tale_id, name, role, bio jsonb, avatar_url, sort_order)
 write.locations (id, tale_id, name, description, notes jsonb, sort_order)
-write.dope_items (id, tale_id, title, body, url, tags[], sort_order)
+write.research_items (id, tale_id, title, body, url, tags[], sort_order)
 ```
 
 ### Migration tracking
@@ -256,7 +256,7 @@ write-knuckles/
 │   │   ├── editor/          # TipTap shell + toolbar
 │   │   ├── story-board/     # corkboard
 │   │   ├── beats/           # Beat Sheet panel
-│   │   └── dope/            # research sidebar
+│   │   └── research/        # research sidebar
 │   ├── hooks/               # useTales, useTaleStructure, useAutosave (M2)
 │   ├── lib/
 │   │   ├── editor/          # TipTap extensions config
@@ -499,7 +499,7 @@ sequenceDiagram
 - [ ] Corkboard drag between chapters
 - [ ] Progress tracking (% beats linked + drafted)
 
-### M4 — Characters + Locations + The Dope
+### M4 — Characters + Locations + Research
 - Reference panels (Characters, Locations, research notes)
 - Link Characters/Locations to scenes in Inspector
 - Full-text search across scenes

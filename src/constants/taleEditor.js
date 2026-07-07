@@ -7,6 +7,18 @@ export const SCENE_STATUS_COLORS = {
   Final: '#8b2635',
 }
 
+export const SCENE_COLOR_TAGS = [
+  '#938938',
+  '#5e5e5e',
+  '#c87533',
+  '#8b2635',
+  '#4a6741',
+  '#3d5a80',
+  '#6b4c7a',
+]
+
+export const DEFAULT_SCENE_COLOR = '#938938'
+
 export const TALE_MODES = {
   WRITE: 'write',
   STORY_BOARD: 'storyBoard',

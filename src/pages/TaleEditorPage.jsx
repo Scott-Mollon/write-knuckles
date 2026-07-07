@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useTale } from '../hooks/useTales'
 import { useTaleStructure } from '../hooks/useTaleStructure'
 import { useAutosave } from '../hooks/useAutosave'
-import { TALE_MODES, SCENE_STATUS_COLORS } from '../constants/taleEditor'
+import { TALE_MODES, SCENE_STATUS_COLORS, DEFAULT_SCENE_COLOR } from '../constants/taleEditor'
 import Rack from '../components/rack/Rack'
 import SceneEditor from '../components/editor/SceneEditor'
 import Inspector from '../components/inspector/Inspector'
@@ -132,7 +132,14 @@ const TaleEditorPage = () => {
                   backgroundColor: `${SCENE_STATUS_COLORS[scene.scene_status]}15`,
                 }}
               >
-                <h3 className="font-ui text-sm font-semibold text-cream">{scene.title}</h3>
+                <div className="flex items-start gap-2">
+                  <span
+                    className="mt-0.5 h-3 w-3 shrink-0 rounded-full border border-cream/20"
+                    style={{ backgroundColor: scene.scene_color || DEFAULT_SCENE_COLOR }}
+                    title="Color tag"
+                  />
+                  <h3 className="min-w-0 flex-1 font-ui text-sm font-semibold text-cream">{scene.title}</h3>
+                </div>
                 <p className="mt-2 line-clamp-4 text-xs text-cream/60">
                   {scene.synopsis || 'No synopsis yet.'}
                 </p>

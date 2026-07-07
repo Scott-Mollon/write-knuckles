@@ -135,8 +135,8 @@ create policy "Approved users manage own locations" on write.locations
   for all using (write.is_approved_user() and auth.uid() = user_id)
   with check (write.is_approved_user() and auth.uid() = user_id);
 
-drop policy if exists "Users manage own dope_items" on write.dope_items;
-create policy "Approved users manage own dope_items" on write.dope_items
+drop policy if exists "Users manage own research_items" on write.research_items;
+create policy "Approved users manage own research_items" on write.research_items
   for all using (write.is_approved_user() and auth.uid() = user_id)
   with check (write.is_approved_user() and auth.uid() = user_id);
 

@@ -132,8 +132,8 @@ create table if not exists write.locations (
   updated_at timestamptz not null default now()
 );
 
--- The Dope (research)
-create table if not exists write.dope_items (
+-- Research notes
+create table if not exists write.research_items (
   id uuid primary key default gen_random_uuid(),
   tale_id uuid not null references write.tales(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -192,7 +192,7 @@ create trigger characters_updated_at before update on write.characters
   for each row execute function write.set_updated_at();
 create trigger locations_updated_at before update on write.locations
   for each row execute function write.set_updated_at();
-create trigger dope_items_updated_at before update on write.dope_items
+create trigger research_items_updated_at before update on write.research_items
   for each row execute function write.set_updated_at();
 
 -- RLS
@@ -204,7 +204,7 @@ alter table write.tale_beats enable row level security;
 alter table write.beat_links enable row level security;
 alter table write.characters enable row level security;
 alter table write.locations enable row level security;
-alter table write.dope_items enable row level security;
+alter table write.research_items enable row level security;
 alter table write.print_runs enable row level security;
 
 -- Tales policies
@@ -245,12 +245,12 @@ create policy "Users manage beat links via tale" on write.beat_links
     exists (select 1 from write.tales t where t.id = tale_id and t.user_id = auth.uid())
   );
 
--- Characters, locations, dope
+-- Characters, locations, research
 create policy "Users manage own characters" on write.characters
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "Users manage own locations" on write.locations
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "Users manage own dope_items" on write.dope_items
+create policy "Users manage own research_items" on write.research_items
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "Users manage own print_runs" on write.print_runs
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
