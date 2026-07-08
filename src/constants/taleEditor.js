@@ -23,6 +23,14 @@ export const TALE_MODES = {
   WRITE: 'write',
   STORY_BOARD: 'storyBoard',
   BEAT_SHEET: 'beatSheet',
+  RESEARCH: 'research',
+  SEARCH: 'search',
+}
+
+export const REFERENCE_TABS = {
+  CHARACTERS: 'characters',
+  LOCATIONS: 'locations',
+  RESEARCH: 'research',
 }
 
 export const STORY_BOARD_VIEWS = {

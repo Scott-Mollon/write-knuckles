@@ -100,9 +100,7 @@ const SigninPage = () => {
 
       {pageMode === PAGE_STATES.SIGNIN && (
         <div className="page-help">
-          To create a new account enter your email and a password,
-          <br />
-          and then click Sign Up.
+          To create a new account enter your email and a password, and then click Sign Up.
         </div>
       )}
 

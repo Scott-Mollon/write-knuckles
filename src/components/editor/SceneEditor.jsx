@@ -1,10 +1,11 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import { createEditorExtensions } from '../../lib/editor/extensions'
 import { normalizeContent, isSceneContentEmpty } from '../../lib/editor/plainText'
 import { pickRandomScenePlaceholder } from '../../constants/scenePlaceholders'
 import { SAVE_STATES } from '../../hooks/useAutosave'
 import { useEditorTheme } from '../../hooks/useEditorTheme'
+import { useUpdateSceneMeta } from '../../hooks/useSceneMutations'
 import EditorToolbar from './EditorToolbar'
 
 const SAVE_LABELS = {
@@ -15,8 +16,15 @@ const SAVE_LABELS = {
   [SAVE_STATES.ERROR]: 'Save failed — retry by editing',
 }
 
-const SceneEditor = ({ scene, onWordCountChange, autosave }) => {
+const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
   const { theme, toggleTheme, isLight } = useEditorTheme()
+  const updateMeta = useUpdateSceneMeta(taleId)
+  const [title, setTitle] = useState(scene?.title || '')
+
+  useEffect(() => {
+    setTitle(scene?.title || '')
+  }, [scene?.id, scene?.title])
+
   const placeholder = useMemo(() => {
     if (scene && isSceneContentEmpty(scene.content)) {
       return pickRandomScenePlaceholder()
@@ -53,11 +61,33 @@ const SceneEditor = ({ scene, onWordCountChange, autosave }) => {
 
   const saveLabel = SAVE_LABELS[autosave.saveState]
 
+  const saveTitle = () => {
+    if (!scene) return
+    const trimmed = title.trim()
+    if (!trimmed) {
+      setTitle(scene.title || '')
+      return
+    }
+    if (trimmed !== scene.title) {
+      updateMeta.mutate({ sceneId: scene.id, title: trimmed })
+    }
+  }
+
   return (
     <div className="editor-surface flex flex-1 flex-col overflow-hidden" data-editor-theme={theme}>
-      <div className="flex items-center justify-between border-b px-6 py-3" style={{ borderColor: 'var(--editor-border)' }}>
-        <h2 className="editor-scene-title font-prose text-xl">{scene.title}</h2>
-        <div className="editor-save-status flex items-center gap-4 text-sm">
+      <div className="flex items-center justify-between gap-4 border-b px-6 py-3" style={{ borderColor: 'var(--editor-border)' }}>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onBlur={saveTitle}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') e.currentTarget.blur()
+          }}
+          aria-label="Scene title"
+          className="editor-scene-title min-w-0 flex-1 border-0 bg-transparent font-prose text-xl focus:outline-none"
+        />
+        <div className="editor-save-status flex shrink-0 items-center gap-4 text-sm">
           {saveLabel && (
             <span
               className={

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useTale } from '../hooks/useTales'
 import { useTaleStructure } from '../hooks/useTaleStructure'
+import { useTaleReference } from '../hooks/useTaleReference'
 import { useAutosave } from '../hooks/useAutosave'
 import { countLinkedBeats } from '../lib/beats'
 import { TALE_MODES } from '../constants/taleEditor'
@@ -10,6 +11,8 @@ import SceneEditor from '../components/editor/SceneEditor'
 import Inspector from '../components/inspector/Inspector'
 import StoryBoard from '../components/story-board/StoryBoard'
 import BeatSheet from '../components/beats/BeatSheet'
+import ReferencePanel from '../components/research/ReferencePanel'
+import SearchMode from '../components/search/SearchMode'
 import TaleSettingsModal from '../components/tale/TaleSettingsModal'
 import Loading from './Loading'
 
@@ -22,6 +25,7 @@ const TaleEditorPage = () => {
 
   const { data: tale, isLoading: taleLoading } = useTale(taleId)
   const { data: structure, isLoading: structureLoading } = useTaleStructure(taleId)
+  const { data: reference, isLoading: referenceLoading } = useTaleReference(taleId)
 
   const activeScene = structure?.scenes?.find((s) => s.id === activeSceneId)
     || structure?.scenes?.[0]
@@ -60,12 +64,17 @@ const TaleEditorPage = () => {
     setSettingsOpen(true)
   }, [autosave])
 
-  if (taleLoading || structureLoading) return <Loading />
+  if (taleLoading || structureLoading || referenceLoading) return <Loading />
 
   const beats = structure?.taleBeats?.beats || []
   const beatLinks = structure?.beatLinks || []
   const totalScenes = structure?.scenes?.length || 0
   const beatProgress = countLinkedBeats(beats, beatLinks)
+  const characters = reference?.characters || []
+  const locations = reference?.locations || []
+  const researchItems = reference?.researchItems || []
+  const characterLinks = reference?.characterLinks || []
+  const locationLinks = reference?.locationLinks || []
 
   return (
     <div className="flex h-[calc(100vh-57px)] flex-col">
@@ -93,6 +102,8 @@ const TaleEditorPage = () => {
             { key: TALE_MODES.WRITE, label: 'Write' },
             { key: TALE_MODES.STORY_BOARD, label: 'Story Board' },
             { key: TALE_MODES.BEAT_SHEET, label: 'Beat Sheet' },
+            { key: TALE_MODES.RESEARCH, label: 'Research' },
+            { key: TALE_MODES.SEARCH, label: 'Search' },
           ].map(({ key, label }) => (
             <button
               key={key}
@@ -120,6 +131,7 @@ const TaleEditorPage = () => {
             <SceneEditor
               key={activeScene?.id}
               scene={activeScene}
+              taleId={taleId}
               onWordCountChange={setLiveWordCount}
               autosave={autosave}
             />
@@ -131,6 +143,10 @@ const TaleEditorPage = () => {
             liveWordCount={liveWordCount}
             beats={beats}
             beatLinks={beatLinks}
+            characters={characters}
+            locations={locations}
+            characterLinks={characterLinks}
+            locationLinks={locationLinks}
           />
         </div>
       )}
@@ -154,6 +170,23 @@ const TaleEditorPage = () => {
           scenes={structure?.scenes || []}
           chapters={structure?.chapters || []}
           tale={tale}
+          onOpenScene={handleOpenScene}
+        />
+      )}
+
+      {mode === TALE_MODES.RESEARCH && (
+        <ReferencePanel
+          taleId={taleId}
+          characters={characters}
+          locations={locations}
+          researchItems={researchItems}
+        />
+      )}
+
+      {mode === TALE_MODES.SEARCH && (
+        <SearchMode
+          taleId={taleId}
+          chapters={structure?.chapters || []}
           onOpenScene={handleOpenScene}
         />
       )}

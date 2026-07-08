@@ -114,6 +114,10 @@ input, select, textarea {
   color: var(--editor-text);
 }
 
+.editor-surface .editor-scene-title::placeholder {
+  color: var(--editor-placeholder);
+}
+
 .editor-surface .editor-save-status {
   color: var(--editor-text-muted);
 }

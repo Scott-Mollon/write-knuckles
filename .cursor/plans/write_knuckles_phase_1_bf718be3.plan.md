@@ -25,7 +25,7 @@ todos:
     status: completed
   - id: research-search
     content: Add Characters, Locations, Research reference panels + full-text search across scenes
-    status: pending
+    status: completed
   - id: grammar-polish
     content: LanguageTool Edge Function, grammar highlights, readability stats, Markdown export, pulp theming polish
     status: pending
@@ -81,16 +81,16 @@ flowchart TB
 
 ---
 
-## Current Progress (as of M3 complete + UX polish)
+## Current Progress (as of M4 complete)
 
-**Resume here:** M4 — Characters, Locations, Research reference panels (`research-search` todo)
+**Resume here:** M5 — Grammar, readability stats, Markdown export (`grammar-polish` todo)
 
 **Repo:** https://github.com/Scott-Mollon/write-knuckles
 
 | Area | Status | Key files |
 |------|--------|-----------|
 | Project scaffold | Done | [`package.json`](C:\Users\scott\Documents\code\write-knuckles\package.json), [`src/main.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\main.jsx) |
-| DB migration | Deployed | [`001`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\001_write_knuckles_schema.sql)–[`005`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\005_rename_dope_to_research.sql) (`002` rename path, `003` invite list, `004` admin user list, `005` dope→research) |
+| DB migration | Deployed | [`001`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\001_write_knuckles_schema.sql)–[`006`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\006_scene_reference_links.sql) |
 | Auth + SSO | Done | [`AuthContext.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\contexts\AuthContext.jsx), [`authStorage.js`](C:\Users\scott\Documents\code\write-knuckles\src\lib\authStorage.js) |
 | Sign-in UX | Done | [`SigninPage.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\pages\SigninPage.jsx) — invite-only disclaimer; [`Password.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\Password.jsx) — bronze-knuckles eye icons |
 | SSO production | **Verified** | `VITE_COOKIE_DOMAIN=.bronzeknucklesmagazine.com` on both apps |
@@ -108,7 +108,9 @@ flowchart TB
 | Beat sheet apply | Done | [`BeatSheetPicker.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\beats\BeatSheetPicker.jsx), [`useApplyBeatTemplate.js`](C:\Users\scott\Documents\code\write-knuckles\src\hooks\useApplyBeatTemplate.js) |
 | Beat word progress | Done | [`BeatWordBar.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\beats\BeatWordBar.jsx) — per-beat word budget (span since previous beat); header linked-beat count |
 | Autosave polish | Done | Whitespace-only scenes not persisted ([`plainText.js`](C:\Users\scott\Documents\code\write-knuckles\src\lib\editor\plainText.js), [`useAutosave.js`](C:\Users\scott\Documents\code\write-knuckles\src\hooks\useAutosave.js)) |
-| Characters / Locations / Research | Not started | Tables exist (`research_items` after `005`); no UI yet |
+| Characters / Locations / Research | **Done** | [`ReferencePanel.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\research\ReferencePanel.jsx), [`useTaleReference.js`](C:\Users\scott\Documents\code\write-knuckles\src\hooks\useTaleReference.js) |
+| Scene ↔ character/location links | Done | [`SceneReferenceLinks.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\inspector\SceneReferenceLinks.jsx), migration `006` |
+| Full-text scene search | Done | [`SceneSearchPanel.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\research\SceneSearchPanel.jsx), `write.search_scenes` RPC |
 | Grammar / export | Not started | — |
 | Tale collaborators (M6) | Not started | Schema + RLS planned in migration `006` |
 
@@ -329,7 +331,7 @@ write-knuckles/
 
 ## UI: The Writing Cockpit
 
-Three primary **modes** (top nav tabs, Scrivener-style):
+Three primary **modes** (top nav tabs, Scrivener-style) plus **Research**:
 
 ### 1. Write Mode (default)
 ```
@@ -364,6 +366,9 @@ Vertical timeline of story beats from selected template. Each row shows:
 - **Change Beat Sheet** panel ([`BeatSheetPicker`](C:\Users\scott\Documents\code\write-knuckles\src\components\beats\BeatSheetPicker.jsx))
 
 Empty beat sheet state offers template picker (also used when applying beats after tale creation).
+
+### 4. Research
+Reference library and search — sub-tabs for **Characters**, **Locations**, **Research** notes, and **Search** (full-text across scene prose). Link characters and locations to scenes via the Inspector in Write mode.
 
 ---
 
@@ -584,10 +589,12 @@ sequenceDiagram
 - [x] Sign-in invite-only disclaimer; password show/hide eye icons (ported from bronze-knuckles)
 - [x] Migration [`005`](C:\Users\scott\Documents\code\write-knuckles\supabase\migrations\005_rename_dope_to_research.sql): `dope_items` → `research_items`
 
-### M4 — Characters + Locations + Research
-- Reference panels (Characters, Locations, research notes)
-- Link Characters/Locations to scenes in Inspector
-- Full-text search across scenes
+### M4 — Characters + Locations + Research — COMPLETE
+- [x] **Research** mode (4th editor tab) with Characters, Locations, Research, Search sub-tabs
+- [x] CRUD for characters (name, role, bio), locations (name, description, notes), research items (title, body, url, tags)
+- [x] Link characters & locations to scenes in Inspector (many-to-many chips + dropdowns)
+- [x] Migration `006`: `scene_character_links`, `scene_location_links`, `write.search_scenes` RPC
+- [x] Full-text search across scene prose with snippets; click result opens scene in Write mode
 
 ### M5 — Grammar + Polish
 - LanguageTool Edge Function
@@ -671,6 +678,9 @@ Every table: `user_id = auth.uid()` for SELECT/INSERT/UPDATE/DELETE. **Write sch
 - [x] Beat linking functional (Beat Sheet, Inspector, Story Board By Beat)
 - [x] Tale settings editable (title, genre, beat sheet, etc.)
 - [x] Per-beat word progress visible on Beat Sheet
+- [x] Characters, locations, and research notes manageable per Tale
+- [x] Characters and locations linkable to scenes from Inspector
+- [x] Full-text search across scene prose
 - [ ] Grammar/spell check works on demand
 - [ ] Readability stats visible
 - [ ] Markdown export works

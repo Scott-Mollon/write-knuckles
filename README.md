@@ -45,6 +45,12 @@ supabase/migrations/004_list_registered_users.sql
 supabase/migrations/005_rename_dope_to_research.sql
 ```
 
+   For scene reference links and full-text search (M4):
+
+```
+supabase/migrations/006_scene_reference_links.sql
+```
+
    Then add yourself to the invite list (replace with your email):
 
 ```sql

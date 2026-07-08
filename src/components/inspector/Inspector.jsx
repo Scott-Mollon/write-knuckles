@@ -3,8 +3,19 @@ import { SCENE_STATUSES, SCENE_STATUS_COLORS, SCENE_COLOR_TAGS, DEFAULT_SCENE_CO
 import { useUpdateSceneMeta } from '../../hooks/useSceneMutations'
 import { useCreateBeatLink, useDeleteBeatLink } from '../../hooks/useBeatLinks'
 import { getSceneBeatLinks } from '../../lib/beats'
+import SceneReferenceLinks from './SceneReferenceLinks'
 
-const Inspector = ({ scene, taleId, liveWordCount, beats = [], beatLinks = [] }) => {
+const Inspector = ({
+  scene,
+  taleId,
+  liveWordCount,
+  beats = [],
+  beatLinks = [],
+  characters = [],
+  locations = [],
+  characterLinks = [],
+  locationLinks = [],
+}) => {
   const updateMeta = useUpdateSceneMeta(taleId)
   const createLink = useCreateBeatLink(taleId)
   const deleteLink = useDeleteBeatLink(taleId)
@@ -201,6 +212,15 @@ const Inspector = ({ scene, taleId, liveWordCount, beats = [], beatLinks = [] })
                 </select>
               )}
             </div>
+
+            <SceneReferenceLinks
+              scene={scene}
+              taleId={taleId}
+              characters={characters}
+              locations={locations}
+              characterLinks={characterLinks}
+              locationLinks={locationLinks}
+            />
 
             <div>
               <span className="text-cream/50">Word Count</span>
