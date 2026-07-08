@@ -3,6 +3,36 @@ export const getJsonSummary = (json) => {
   return json.summary || ''
 }
 
+export const parseTags = (value) =>
+  value
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean)
+
+export const formatTags = (tags) => (tags?.length ? tags.join(', ') : '')
+
+export const tagsEqual = (a = [], b = []) =>
+  a.length === b.length && a.every((tag, i) => tag === b[i])
+
+export const collectUniqueTags = (items) => {
+  const seen = new Set()
+  for (const item of items) {
+    for (const tag of item.tags || []) {
+      if (tag) seen.add(tag)
+    }
+  }
+  return [...seen].sort((a, b) => a.localeCompare(b))
+}
+
+/** Keep items that have any of the selected tags (OR). Empty selection = all items. */
+export const filterItemsByTags = (items, selectedTags) => {
+  if (!selectedTags?.length) return items
+  return items.filter((item) => {
+    const itemTags = item.tags || []
+    return selectedTags.some((tag) => itemTags.includes(tag))
+  })
+}
+
 export const getSceneCharacterLinks = (sceneId, links) =>
   links.filter((l) => l.scene_id === sceneId)
 

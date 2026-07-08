@@ -1,19 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   useCreateResearchItem,
   useDeleteResearchItem,
   useUpdateResearchItem,
 } from '../../hooks/useReferenceMutations'
+import {
+  collectUniqueTags,
+  filterItemsByTags,
+  formatTags,
+  parseTags,
+  tagsEqual,
+} from '../../lib/reference'
 import ReferencePinBoard from './ReferencePinBoard'
 import { fieldClass, labelClass } from './referenceStyles'
-
-const parseTags = (value) =>
-  value
-    .split(',')
-    .map((t) => t.trim())
-    .filter(Boolean)
-
-const formatTags = (tags) => (tags?.length ? tags.join(', ') : '')
 
 const ResearchDetailForm = ({ item, taleId }) => {
   const update = useUpdateResearchItem(taleId)
@@ -38,15 +37,12 @@ const ResearchDetailForm = ({ item, taleId }) => {
     const nextBody = body.trim()
     const nextUrl = url.trim()
     const nextTags = parseTags(tags)
-    const currentTags = item.tags || []
-    const tagsChanged =
-      nextTags.length !== currentTags.length || nextTags.some((t, i) => t !== currentTags[i])
 
     if (
       trimmedTitle === item.title &&
       nextBody === (item.body || '') &&
       nextUrl === (item.url || '') &&
-      !tagsChanged
+      tagsEqual(nextTags, item.tags || [])
     ) {
       return
     }
@@ -125,8 +121,16 @@ const ResearchList = ({ taleId, researchItems }) => {
   const create = useCreateResearchItem(taleId)
   const del = useDeleteResearchItem(taleId)
   const [selectedId, setSelectedId] = useState(null)
+  const [selectedTags, setSelectedTags] = useState([])
 
-  const selected = researchItems.find((item) => item.id === selectedId) || null
+  const availableTags = useMemo(() => collectUniqueTags(researchItems), [researchItems])
+  const filtered = useMemo(
+    () => filterItemsByTags(researchItems, selectedTags),
+    [researchItems, selectedTags],
+  )
+  const selected = filtered.find((item) => item.id === selectedId)
+    || researchItems.find((item) => item.id === selectedId)
+    || null
 
   useEffect(() => {
     if (selectedId && !researchItems.some((item) => item.id === selectedId)) {
@@ -134,25 +138,38 @@ const ResearchList = ({ taleId, researchItems }) => {
     }
   }, [researchItems, selectedId])
 
+  useEffect(() => {
+    setSelectedTags((prev) => prev.filter((tag) => availableTags.includes(tag)))
+  }, [availableTags])
+
   const handleAdd = async () => {
     const created = await create.mutateAsync({
       title: `Note ${researchItems.length + 1}`,
       sortOrder: researchItems.length,
+      tags: [],
     })
     setSelectedId(created.id)
   }
 
   return (
     <ReferencePinBoard
-      items={researchItems}
+      items={filtered}
       selectedId={selected?.id}
       onSelect={setSelectedId}
       onClearSelection={() => setSelectedId(null)}
       onAdd={handleAdd}
       addLabel="+ Note"
-      countLabel={`${researchItems.length} note${researchItems.length !== 1 ? 's' : ''}`}
+      countLabel={
+        selectedTags.length > 0
+          ? `${filtered.length} of ${researchItems.length} note${researchItems.length !== 1 ? 's' : ''}`
+          : `${researchItems.length} note${researchItems.length !== 1 ? 's' : ''}`
+      }
       emptyMessage="No research yet. Stash your sources here."
+      emptyFilteredMessage="No notes match the selected tags."
       isAdding={create.isPending}
+      availableTags={availableTags}
+      selectedTags={selectedTags}
+      onSelectedTagsChange={setSelectedTags}
       getCardProps={(item) => ({
         title: item.title,
         eyebrow: item.url ? 'Source' : 'Note',

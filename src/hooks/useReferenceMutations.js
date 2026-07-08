@@ -11,7 +11,7 @@ export const useCreateCharacter = (taleId) => {
   const { user } = useAuth()
 
   return useMutation({
-    mutationFn: async ({ name, role, bioSummary, sortOrder }) => {
+    mutationFn: async ({ name, role, bioSummary, tags, sortOrder }) => {
       const { data, error } = await writeDb
         .from('characters')
         .insert({
@@ -20,6 +20,7 @@ export const useCreateCharacter = (taleId) => {
           name,
           role: role || null,
           bio: bioSummary ? { summary: bioSummary } : {},
+          tags: tags || [],
           sort_order: sortOrder,
         })
         .select()
@@ -35,13 +36,14 @@ export const useUpdateCharacter = (taleId) => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ id, name, role, bioSummary }) => {
+    mutationFn: async ({ id, name, role, bioSummary, tags }) => {
       const { data, error } = await writeDb
         .from('characters')
         .update({
           name,
           role: role || null,
           bio: bioSummary ? { summary: bioSummary } : {},
+          tags: tags || [],
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
@@ -71,7 +73,7 @@ export const useCreateLocation = (taleId) => {
   const { user } = useAuth()
 
   return useMutation({
-    mutationFn: async ({ name, description, notesSummary, sortOrder }) => {
+    mutationFn: async ({ name, description, notesSummary, tags, sortOrder }) => {
       const { data, error } = await writeDb
         .from('locations')
         .insert({
@@ -80,6 +82,7 @@ export const useCreateLocation = (taleId) => {
           name,
           description: description || null,
           notes: notesSummary ? { summary: notesSummary } : {},
+          tags: tags || [],
           sort_order: sortOrder,
         })
         .select()
@@ -95,13 +98,14 @@ export const useUpdateLocation = (taleId) => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ id, name, description, notesSummary }) => {
+    mutationFn: async ({ id, name, description, notesSummary, tags }) => {
       const { data, error } = await writeDb
         .from('locations')
         .update({
           name,
           description: description || null,
           notes: notesSummary ? { summary: notesSummary } : {},
+          tags: tags || [],
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)

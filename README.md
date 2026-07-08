@@ -51,6 +51,12 @@ supabase/migrations/005_rename_dope_to_research.sql
 supabase/migrations/006_scene_reference_links.sql
 ```
 
+   For character and location tags:
+
+```
+supabase/migrations/007_character_location_tags.sql
+```
+
    Then add yourself to the invite list (replace with your email):
 
 ```sql

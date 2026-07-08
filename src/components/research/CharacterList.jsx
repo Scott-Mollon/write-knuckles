@@ -1,10 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   useCreateCharacter,
   useDeleteCharacter,
   useUpdateCharacter,
 } from '../../hooks/useReferenceMutations'
-import { getJsonSummary } from '../../lib/reference'
+import {
+  collectUniqueTags,
+  filterItemsByTags,
+  formatTags,
+  getJsonSummary,
+  parseTags,
+  tagsEqual,
+} from '../../lib/reference'
 import ReferencePinBoard from './ReferencePinBoard'
 import { fieldClass, labelClass } from './referenceStyles'
 
@@ -13,12 +20,14 @@ const CharacterDetailForm = ({ character, taleId }) => {
   const [name, setName] = useState(character.name)
   const [role, setRole] = useState(character.role || '')
   const [bio, setBio] = useState(getJsonSummary(character.bio))
+  const [tags, setTags] = useState(formatTags(character.tags))
 
   useEffect(() => {
     setName(character.name)
     setRole(character.role || '')
     setBio(getJsonSummary(character.bio))
-  }, [character.id, character.name, character.role, character.bio])
+    setTags(formatTags(character.tags))
+  }, [character.id, character.name, character.role, character.bio, character.tags])
 
   const save = () => {
     const trimmedName = name.trim()
@@ -28,10 +37,12 @@ const CharacterDetailForm = ({ character, taleId }) => {
     }
     const nextRole = role.trim()
     const nextBio = bio.trim()
+    const nextTags = parseTags(tags)
     if (
       trimmedName === character.name &&
       nextRole === (character.role || '') &&
-      nextBio === getJsonSummary(character.bio)
+      nextBio === getJsonSummary(character.bio) &&
+      tagsEqual(nextTags, character.tags || [])
     ) {
       return
     }
@@ -40,6 +51,7 @@ const CharacterDetailForm = ({ character, taleId }) => {
       name: trimmedName,
       role: nextRole,
       bioSummary: nextBio,
+      tags: nextTags,
     })
   }
 
@@ -86,6 +98,20 @@ const CharacterDetailForm = ({ character, taleId }) => {
           className={`${fieldClass} resize-y`}
         />
       </div>
+      <div>
+        <label className={labelClass} htmlFor={`character-tags-${character.id}`}>
+          Tags
+        </label>
+        <input
+          id={`character-tags-${character.id}`}
+          type="text"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+          onBlur={save}
+          placeholder="villain, crew, informant"
+          className={fieldClass}
+        />
+      </div>
     </div>
   )
 }
@@ -94,8 +120,16 @@ const CharacterList = ({ taleId, characters }) => {
   const create = useCreateCharacter(taleId)
   const del = useDeleteCharacter(taleId)
   const [selectedId, setSelectedId] = useState(null)
+  const [selectedTags, setSelectedTags] = useState([])
 
-  const selected = characters.find((c) => c.id === selectedId) || null
+  const availableTags = useMemo(() => collectUniqueTags(characters), [characters])
+  const filtered = useMemo(
+    () => filterItemsByTags(characters, selectedTags),
+    [characters, selectedTags],
+  )
+  const selected = filtered.find((c) => c.id === selectedId)
+    || characters.find((c) => c.id === selectedId)
+    || null
 
   useEffect(() => {
     if (selectedId && !characters.some((c) => c.id === selectedId)) {
@@ -103,29 +137,43 @@ const CharacterList = ({ taleId, characters }) => {
     }
   }, [characters, selectedId])
 
+  useEffect(() => {
+    setSelectedTags((prev) => prev.filter((tag) => availableTags.includes(tag)))
+  }, [availableTags])
+
   const handleAdd = async () => {
     const created = await create.mutateAsync({
       name: `Character ${characters.length + 1}`,
       sortOrder: characters.length,
+      tags: [],
     })
     setSelectedId(created.id)
   }
 
   return (
     <ReferencePinBoard
-      items={characters}
+      items={filtered}
       selectedId={selected?.id}
       onSelect={setSelectedId}
       onClearSelection={() => setSelectedId(null)}
       onAdd={handleAdd}
       addLabel="+ Character"
-      countLabel={`${characters.length} character${characters.length !== 1 ? 's' : ''}`}
+      countLabel={
+        selectedTags.length > 0
+          ? `${filtered.length} of ${characters.length} character${characters.length !== 1 ? 's' : ''}`
+          : `${characters.length} character${characters.length !== 1 ? 's' : ''}`
+      }
       emptyMessage="No characters yet. Add your cast."
+      emptyFilteredMessage="No characters match the selected tags."
       isAdding={create.isPending}
+      availableTags={availableTags}
+      selectedTags={selectedTags}
+      onSelectedTagsChange={setSelectedTags}
       getCardProps={(c) => ({
         title: c.name,
         eyebrow: c.role || 'Character',
         preview: getJsonSummary(c.bio) || null,
+        tags: c.tags || [],
       })}
       detailTitle={selected?.name || 'Character'}
       detailSubtitle={selected?.role || 'No role set'}

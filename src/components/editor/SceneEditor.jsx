@@ -5,6 +5,7 @@ import { normalizeContent, isSceneContentEmpty } from '../../lib/editor/plainTex
 import { pickRandomScenePlaceholder } from '../../constants/scenePlaceholders'
 import { SAVE_STATES } from '../../hooks/useAutosave'
 import { useEditorTheme } from '../../hooks/useEditorTheme'
+import { useEditorTabSize } from '../../hooks/useEditorTabSize'
 import { useUpdateSceneMeta } from '../../hooks/useSceneMutations'
 import EditorToolbar from './EditorToolbar'
 
@@ -18,6 +19,7 @@ const SAVE_LABELS = {
 
 const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
   const { theme, toggleTheme, isLight } = useEditorTheme()
+  const { tabSize, setTabSize, options: tabSizeOptions } = useEditorTabSize()
   const updateMeta = useUpdateSceneMeta(taleId)
   const [title, setTitle] = useState(scene?.title || '')
 
@@ -74,7 +76,11 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
   }
 
   return (
-    <div className="editor-surface flex flex-1 flex-col overflow-hidden" data-editor-theme={theme}>
+    <div
+      className="editor-surface flex flex-1 flex-col overflow-hidden"
+      data-editor-theme={theme}
+      style={{ '--editor-tab-size': tabSize }}
+    >
       <div className="flex items-center justify-between gap-4 border-b px-6 py-3" style={{ borderColor: 'var(--editor-border)' }}>
         <input
           type="text"
@@ -104,7 +110,14 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
         </div>
       </div>
 
-      <EditorToolbar editor={editor} isLight={isLight} onToggleTheme={toggleTheme} />
+      <EditorToolbar
+        editor={editor}
+        isLight={isLight}
+        onToggleTheme={toggleTheme}
+        tabSize={tabSize}
+        tabSizeOptions={tabSizeOptions}
+        onTabSizeChange={setTabSize}
+      />
 
       <div className="flex-1 overflow-y-auto px-6 py-4">
         <EditorContent editor={editor} />

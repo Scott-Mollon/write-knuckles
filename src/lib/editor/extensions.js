@@ -5,8 +5,11 @@ import Typography from '@tiptap/extension-typography'
 import Highlight from '@tiptap/extension-highlight'
 import Link from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
+import TextAlign from '@tiptap/extension-text-align'
+import { TextStyleKit } from '@tiptap/extension-text-style'
 import { DropCapParagraph } from './dropCapParagraph'
 import { SceneDivider } from './sceneDivider'
+import { Indent } from './indent'
 
 export const createEditorExtensions = (placeholder = '') => [
   StarterKit.configure({
@@ -21,7 +24,17 @@ export const createEditorExtensions = (placeholder = '') => [
   }),
   CharacterCount,
   Typography,
-  Highlight.configure({ multicolor: false }),
+  Highlight.configure({ multicolor: true }),
   Link.configure({ openOnClick: false }),
   Underline,
+  TextAlign.configure({
+    types: ['heading', 'paragraph'],
+    alignments: ['left', 'center', 'right'],
+  }),
+  Indent,
+  TextStyleKit.configure({
+    backgroundColor: false,
+    fontSize: false,
+    lineHeight: false,
+  }),
 ]
