@@ -8,6 +8,7 @@ const fieldClass =
 const TaleSettingsModal = ({ tale, taleId, hasBeats, hasBeatLinks, onClose }) => {
   const updateTale = useUpdateTale(taleId)
   const [title, setTitle] = useState('')
+  const [author, setAuthor] = useState('')
   const [subtitle, setSubtitle] = useState('')
   const [genre, setGenre] = useState('')
   const [targetWordCount, setTargetWordCount] = useState(80000)
@@ -16,6 +17,7 @@ const TaleSettingsModal = ({ tale, taleId, hasBeats, hasBeatLinks, onClose }) =>
   useEffect(() => {
     if (!tale) return
     setTitle(tale.title || '')
+    setAuthor(tale.author || '')
     setSubtitle(tale.subtitle || '')
     setGenre(tale.genre || '')
     setTargetWordCount(tale.target_word_count || 80000)
@@ -39,6 +41,7 @@ const TaleSettingsModal = ({ tale, taleId, hasBeats, hasBeatLinks, onClose }) =>
     try {
       await updateTale.mutateAsync({
         title,
+        author,
         subtitle,
         genre,
         targetWordCount: wordCount,
@@ -89,6 +92,20 @@ const TaleSettingsModal = ({ tale, taleId, hasBeats, hasBeatLinks, onClose }) =>
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              className={fieldClass}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="tale-settings-author" className="mb-2 block font-ui text-xs uppercase text-cream/80">
+              Author
+            </label>
+            <input
+              id="tale-settings-author"
+              type="text"
+              value={author}
+              onChange={(e) => setAuthor(e.target.value)}
+              placeholder="Optional"
               className={fieldClass}
             />
           </div>

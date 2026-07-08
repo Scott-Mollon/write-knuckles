@@ -67,12 +67,13 @@ export const useCreateTale = () => {
   const { user } = useAuth()
 
   return useMutation({
-    mutationFn: async ({ title, genre, targetWordCount, beatTemplateId, beatStructure }) => {
+    mutationFn: async ({ title, author, genre, targetWordCount, beatTemplateId, beatStructure }) => {
       const { data: tale, error: taleError } = await writeDb
         .from('tales')
         .insert({
           user_id: user.id,
           title,
+          author: author?.trim() || null,
           genre,
           target_word_count: targetWordCount,
           beat_template_id: beatTemplateId,
@@ -140,11 +141,12 @@ export const useUpdateTale = (taleId) => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ title, subtitle, genre, targetWordCount }) => {
+    mutationFn: async ({ title, author, subtitle, genre, targetWordCount }) => {
       const { data, error } = await writeDb
         .from('tales')
         .update({
           title: title.trim(),
+          author: author?.trim() || null,
           subtitle: subtitle?.trim() || null,
           genre: genre?.trim() || null,
           target_word_count: Number(targetWordCount),

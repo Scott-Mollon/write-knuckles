@@ -9,6 +9,7 @@ const NewTalePage = () => {
   const createTale = useCreateTale()
 
   const [title, setTitle] = useState('')
+  const [author, setAuthor] = useState('')
   const [genre, setGenre] = useState('Pulp')
   const [targetWordCount, setTargetWordCount] = useState(80000)
   const [beatTemplateId, setBeatTemplateId] = useState('')
@@ -36,6 +37,7 @@ const NewTalePage = () => {
     try {
       const tale = await createTale.mutateAsync({
         title: title.trim(),
+        author: author.trim(),
         genre,
         targetWordCount: Number(targetWordCount),
         beatTemplateId: template.id,
@@ -61,6 +63,17 @@ const NewTalePage = () => {
             onChange={(e) => setTitle(e.target.value)}
             className="w-full border-b-2 border-bronze bg-transparent px-2 py-2 text-cream focus:outline-none"
             placeholder="The Case of the Bronze Knuckle"
+          />
+        </div>
+
+        <div>
+          <label className="mb-2 block font-ui text-sm uppercase text-cream/80">Author</label>
+          <input
+            type="text"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            className="w-full border-b-2 border-bronze bg-transparent px-2 py-2 text-cream focus:outline-none"
+            placeholder="Your name or pen name"
           />
         </div>
 
