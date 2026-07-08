@@ -23,45 +23,12 @@ VITE_COOKIE_DOMAIN=.bronzeknucklesmagazine.com
 2. Run the database migration in Supabase SQL Editor:
 
 ```
-supabase/migrations/001_write_knuckles_schema.sql
+supabase/migrations/010_write_knuckles_bootstrap.sql
 ```
 
-   If you previously ran an older version of `001` (hits/punches tables), also run:
+   **New instance:** run only `010` — it creates the full `write` schema in one step.
 
-```
-supabase/migrations/002_terminology_rename.sql
-```
-
-   For invite-only access control:
-
-```
-supabase/migrations/003_approved_users.sql
-supabase/migrations/004_list_registered_users.sql
-```
-
-   If you previously applied `001` with `write.dope_items`, also run:
-
-```
-supabase/migrations/005_rename_dope_to_research.sql
-```
-
-   For scene reference links and full-text search (M4):
-
-```
-supabase/migrations/006_scene_reference_links.sql
-```
-
-   For character and location tags:
-
-```
-supabase/migrations/007_character_location_tags.sql
-```
-
-   If approval checks fail despite a matching invite row:
-
-```
-supabase/migrations/008_fix_approval_email.sql
-```
+   **Existing databases** on the incremental chain (`001`–`009`) should keep applying only the migrations they are missing. Do not run `010` on top of `001`–`009`.
 
    Then add yourself to the invite list (replace with your email):
 
@@ -91,7 +58,9 @@ App runs at http://localhost:5174
 
 ## Database migrations
 
-Migrations live in `supabase/migrations/` and are run manually in the Supabase SQL Editor (shared project with the magazine site).
+**Fresh install:** run only `010_write_knuckles_bootstrap.sql`.
+
+**Incremental upgrades:** `001`–`009` are the historical chain for the shared Bronze Knuckles database. Check `write.schema_migrations` to see which versions are already applied. Do not run `010` on a database that already went through `001`–`009`.
 
 Each migration records itself in `write.schema_migrations` when it completes:
 
