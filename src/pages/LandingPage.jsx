@@ -5,6 +5,8 @@ import MarketingScreenshot from '../components/marketing/MarketingScreenshot'
 import MarketingLightbox from '../components/marketing/MarketingLightbox'
 import './LandingPage.scss'
 
+const SUBSTACK = 'https://bronzeknuckles.substack.com/'
+
 const FEATURES = [
   {
     id: 'rack',
@@ -77,6 +79,17 @@ const LandingPage = () => {
             The back room where the story gets written — Rack, Story Board, and Beat Sheets in one desk.
           </p>
           <p className="landing-hero__note">Write Knuckles is in Beta and currently invite-only.</p>
+          <p className="landing-hero__note">
+            <a
+              href={SUBSTACK}
+              target="_blank"
+              rel="noreferrer"
+              className="text-bronze hover:text-cream underline underline-offset-2"
+            >
+              Subscribe to our Substack to learn more
+            </a>
+            .
+          </p>
         </div>
         <div className="landing-hero__visual">
           <MarketingScreenshot
@@ -169,6 +182,12 @@ const LandingPage = () => {
           <h2 className="landing-cta-band__title">Knuckle Down and Write Your Story</h2>
           <p className="landing-cta-band__body">
             Write Knuckles is in Beta and currently invite-only.
+          </p>
+          <p className="landing-cta-band__body">
+            <a href={SUBSTACK} target="_blank" rel="noreferrer">
+              Subscribe to our Substack to learn more
+            </a>
+            .
           </p>
         </div>
       </section>

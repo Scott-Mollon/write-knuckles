@@ -1,34 +1,72 @@
 import { Link } from 'react-router-dom'
 
 const MAGAZINE = 'https://bronzeknucklesmagazine.com'
+const SUBSTACK = 'https://bronzeknuckles.substack.com/'
 
 const MarketingFooter = () => {
   const year = new Date().getFullYear()
 
   return (
     <footer className="marketing-footer border-t border-bronze-dark/70 bg-ink">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:grid-cols-2 sm:px-8 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:grid-cols-2 sm:px-8 lg:grid-cols-5">
         <div>
-          <p className="font-ui text-lg uppercase tracking-wide text-bronze">Product</p>
+          <p className="font-ui text-lg uppercase tracking-wide text-bronze">Write</p>
           <ul className="mt-4 space-y-2 font-prose text-sm text-cream/70">
             <li>
-              <a href="#features" className="hover:text-bronze">
+              <a href="/#features" className="hover:text-bronze">
                 Features
               </a>
             </li>
             <li>
-              <a href="#beat-sheets" className="hover:text-bronze">
+              <a href="/#beat-sheets" className="hover:text-bronze">
                 Beat Sheets
               </a>
             </li>
             <li>
-              <a href="#research" className="hover:text-bronze">
+              <a href="/#research" className="hover:text-bronze">
                 Research
               </a>
             </li>
             <li>
-              <a href="#how-it-works" className="hover:text-bronze">
+              <a href="/#how-it-works" className="hover:text-bronze">
                 How it works
+              </a>
+            </li>
+            <li>
+              <Link to="/about" className="hover:text-bronze">
+                About
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <p className="font-ui text-lg uppercase tracking-wide text-bronze">Follow</p>
+          <ul className="mt-4 space-y-2 font-prose text-sm text-cream/70">
+            <li>
+              <a href={SUBSTACK} target="_blank" rel="noreferrer" className="hover:text-bronze">
+                Substack
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <p className="font-ui text-lg uppercase tracking-wide text-bronze">Read</p>
+          <ul className="mt-4 space-y-2 font-prose text-sm text-cream/70">
+            <li>
+              <a href={MAGAZINE} target="_blank" rel="noreferrer" className="hover:text-bronze">
+                Bronze Knuckles Magazine
+              </a>
+            </li>
+            <li>
+              <a
+                href={`${MAGAZINE}/submitinfo`}
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-bronze"
+              >
+                Submit
               </a>
             </li>
           </ul>
@@ -56,38 +94,7 @@ const MarketingFooter = () => {
         </div>
 
         <div>
-          <p className="font-ui text-lg uppercase tracking-wide text-bronze">Magazine</p>
-          <ul className="mt-4 space-y-2 font-prose text-sm text-cream/70">
-            <li>
-              <a href={MAGAZINE} target="_blank" rel="noreferrer" className="hover:text-bronze">
-                Bronze Knuckles Magazine
-              </a>
-            </li>
-            <li>
-              <a
-                href={`${MAGAZINE}/about`}
-                target="_blank"
-                rel="noreferrer"
-                className="hover:text-bronze"
-              >
-                About
-              </a>
-            </li>
-            <li>
-              <a
-                href={`${MAGAZINE}/submitinfo`}
-                target="_blank"
-                rel="noreferrer"
-                className="hover:text-bronze"
-              >
-                Submit
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        <div>
-          <p className="font-ui text-lg uppercase tracking-wide text-bronze">Legal</p>
+          <p className="font-ui text-lg uppercase tracking-wide text-bronze">Small Print</p>
           <ul className="mt-4 space-y-2 font-prose text-sm text-cream/70">
             <li>
               <Link to="/privacy" className="hover:text-bronze">
@@ -106,7 +113,7 @@ const MarketingFooter = () => {
       <div className="border-t border-bronze-dark/50">
         <div className="mx-auto flex max-w-6xl flex-col gap-1 px-5 py-5 font-prose text-xs text-cream/45 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <span>© {year} Write Knuckles</span>
-          <span>Built for Bronze Knuckles Magazine</span>
+          <span>Built by Bronze Knuckles Magazine</span>
         </div>
       </div>
     </footer>

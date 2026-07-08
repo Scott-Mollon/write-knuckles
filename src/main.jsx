@@ -19,6 +19,7 @@ const AccessPendingPage = lazy(() => import('./pages/AccessPendingPage'))
 const AccessAdminPage = lazy(() => import('./pages/AccessAdminPage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const TermsPage = lazy(() => import('./pages/TermsPage'))
+const AboutPage = lazy(() => import('./pages/AboutPage'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,7 +34,8 @@ const AppShell = () => {
   const { pathname } = useLocation()
   const { loading, isSignedIn } = useAuth()
   // Landing has its own marketing header; hide app NavBar for guests (and while auth loads) on `/`
-  const hideNav = pathname === '/' && (loading || !isSignedIn())
+  const hideNav =
+    pathname === '/about' || (pathname === '/' && (loading || !isSignedIn()))
 
   return (
     <>
@@ -44,6 +46,7 @@ const AppShell = () => {
           <Route path="/reset" element={<ResetPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route
             path="/access-pending"
             element={
