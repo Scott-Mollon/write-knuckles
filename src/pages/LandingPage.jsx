@@ -35,7 +35,7 @@ const FEATURES = [
   {
     id: 'beat-sheets',
     title: 'Beat Sheets',
-    body: 'Structure your Tale using popular beat sheets like Save the Cat, Hero’s Journey, Three-Act Pulp, Story Circle — or start blank. Link scenes to beats and track word budgets as you write.',
+    body: 'Structure your Tale using popular beat sheets like Hero’s Journey, Three-Act Pulp, Story Circle, everyone’s favorite feline based beat sheet — or start blank. Link scenes to beats and track word budgets as you write.',
     src: '/marketing/feature-beat-sheet.png',
     alt: 'Beat Sheet timeline with linked scenes',
     caption: 'feature-beat-sheet.png — Beat Sheet timeline',
