@@ -2,13 +2,14 @@ import { Link } from 'react-router-dom'
 
 const MAGAZINE = 'https://bronzeknucklesmagazine.com'
 const SUBSTACK = 'https://bronzeknuckles.substack.com/'
+const FACEBOOK = 'https://www.facebook.com/bronzeknucklesmag'
 
 const MarketingFooter = () => {
   const year = new Date().getFullYear()
 
   return (
     <footer className="marketing-footer border-t border-bronze-dark/70 bg-ink">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:grid-cols-2 sm:px-8 lg:grid-cols-5">
+      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-10 px-5 py-14 sm:px-8 lg:grid-cols-5 lg:gap-10">
         <div>
           <p className="font-ui text-lg uppercase tracking-wide text-bronze">Write</p>
           <ul className="mt-4 space-y-2 font-prose text-sm text-cream/70">
@@ -46,6 +47,11 @@ const MarketingFooter = () => {
             <li>
               <a href={SUBSTACK} target="_blank" rel="noreferrer" className="hover:text-bronze">
                 Substack
+              </a>
+            </li>
+            <li>
+              <a href={FACEBOOK} target="_blank" rel="noreferrer" className="hover:text-bronze">
+                Facebook
               </a>
             </li>
           </ul>

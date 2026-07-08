@@ -19,7 +19,8 @@ const AboutPage = () => {
       <main className="about-page__main">
         <header className="about-page__hero">
           <p className="about-page__eyebrow">About Write Knuckles</p>
-          <h1 className="about-page__title">Knuckle down. Write your story.</h1>
+          <h1 className="about-page__title">Knuckle down.</h1>
+          <h1 className="about-page__title">Write your story.</h1>
           <p className="about-page__lede">
             Write Knuckles is the writing desk that grew out of{' '}
             <a href={MAGAZINE} target="_blank" rel="noreferrer">
