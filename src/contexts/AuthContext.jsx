@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
       if (currentSession?.user) {
         setApprovalLoading(true)
         checkAdmin(currentSession.user.id)
-        checkApproved(currentSession.user)
+        checkApproved()
       }
       setLoading(false)
     })
@@ -29,7 +29,8 @@ export const AuthProvider = ({ children }) => {
       if (nextSession?.user) {
         setApprovalLoading(true)
         checkAdmin(nextSession.user.id)
-        checkApproved(nextSession.user)
+        // Defer until the Supabase client attaches the new session JWT to API calls.
+        setTimeout(() => checkApproved(), 0)
       } else {
         setAdmin(false)
         setApproved(false)
@@ -51,9 +52,16 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const checkApproved = async (authUser) => {
+  const checkApproved = async () => {
     setApprovalLoading(true)
     try {
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      const authUser = currentSession?.user
+      if (!authUser?.email) {
+        setApproved(false)
+        return
+      }
+
       const { data, error } = await writeDb
         .from('approved_users')
         .select('id')
@@ -61,14 +69,28 @@ export const AuthProvider = ({ children }) => {
         .is('revoked_at', null)
         .maybeSingle()
 
-      if (error || !data) {
+      if (error) {
+        if (import.meta.env.DEV) {
+          console.error('Approval check failed:', error.message, error)
+        }
+        setApproved(false)
+        return
+      }
+
+      if (!data) {
+        if (import.meta.env.DEV) {
+          console.warn('No active approval row for', authUser.email)
+        }
         setApproved(false)
         return
       }
 
       await writeDb.rpc('link_approved_user')
       setApproved(true)
-    } catch {
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error('Approval check error:', err)
+      }
       setApproved(false)
     } finally {
       setApprovalLoading(false)

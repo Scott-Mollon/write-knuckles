@@ -57,6 +57,12 @@ supabase/migrations/006_scene_reference_links.sql
 supabase/migrations/007_character_location_tags.sql
 ```
 
+   If approval checks fail despite a matching invite row:
+
+```
+supabase/migrations/008_fix_approval_email.sql
+```
+
    Then add yourself to the invite list (replace with your email):
 
 ```sql
