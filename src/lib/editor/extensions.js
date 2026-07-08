@@ -34,7 +34,6 @@ export const createEditorExtensions = (placeholder = '') => [
   Indent,
   TextStyleKit.configure({
     backgroundColor: false,
-    fontSize: false,
     lineHeight: false,
   }),
 ]

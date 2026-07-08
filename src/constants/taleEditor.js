@@ -2,12 +2,12 @@ export const SCENE_STATUSES = ['Raw', 'Drafted', 'Rewritten', 'Final']
 
 export const SCENE_STATUS_COLORS = {
   Raw: '#5e5e5e',
-  Drafted: '#938938',
+  Drafted: '#6d8fa3',
   Rewritten: '#c87533',
   Final: '#4a7c59',
 }
 
-export const SCENE_COLOR_TAGS = [
+export const POV_COLOR_TAGS = [
   '#938938',
   '#5e5e5e',
   '#c87533',

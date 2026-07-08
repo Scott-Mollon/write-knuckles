@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useEditorState } from '@tiptap/react'
 
 const ToolbarButton = ({ onClick, active, disabled, title, children, className = '' }) => (
   <button
@@ -151,6 +152,20 @@ const FONT_OPTIONS = [
   { label: 'Times New Roman', value: '"Times New Roman", Times, serif' },
 ]
 
+const FONT_SIZE_OPTIONS = [
+  { label: 'Default', value: '' },
+  { label: '10', value: '10px' },
+  { label: '11', value: '11px' },
+  { label: '12', value: '12px' },
+  { label: '14', value: '14px' },
+  { label: '16', value: '16px' },
+  { label: '18', value: '18px' },
+  { label: '20', value: '20px' },
+  { label: '24', value: '24px' },
+  { label: '28', value: '28px' },
+  { label: '32', value: '32px' },
+]
+
 const DEFAULT_TEXT_COLOR = {
   dark: '#e8dcc8',
   light: '#1a1410',
@@ -169,6 +184,13 @@ const toHexColor = (color, fallback) => {
   return fallback
 }
 
+const normalizeFontSize = (size) => {
+  if (!size) return ''
+  const match = size.trim().match(/^([\d.]+)px$/i)
+  if (match) return `${parseFloat(match[1])}px`
+  return size
+}
+
 const EditorToolbar = ({
   editor,
   isLight,
@@ -179,12 +201,32 @@ const EditorToolbar = ({
 }) => {
   const [highlightColor, setHighlightColor] = useState(DEFAULT_HIGHLIGHT_COLOR)
 
-  if (!editor) return null
+  const toolbarState = useEditorState({
+    editor,
+    selector: (snapshot) => {
+      const activeEditor = snapshot.editor
+      if (!activeEditor) return null
 
-  const textStyle = editor.getAttributes('textStyle')
-  const currentFont = textStyle.fontFamily || ''
-  const currentColor = textStyle.color || ''
-  const activeHighlightColor = editor.getAttributes('highlight').color || highlightColor
+      const textStyle = activeEditor.getAttributes('textStyle')
+      return {
+        transactionNumber: snapshot.transactionNumber,
+        currentFont: textStyle.fontFamily || '',
+        currentFontSize: normalizeFontSize(textStyle.fontSize || ''),
+        currentColor: textStyle.color || '',
+        activeHighlightColor: activeEditor.getAttributes('highlight').color,
+      }
+    },
+  })
+
+  if (!editor || !toolbarState) return null
+
+  const {
+    currentFont,
+    currentFontSize,
+    currentColor,
+    activeHighlightColor: editorHighlightColor,
+  } = toolbarState
+  const activeHighlightColor = editorHighlightColor || highlightColor
   const textColorFallback = isLight ? DEFAULT_TEXT_COLOR.light : DEFAULT_TEXT_COLOR.dark
 
   const handleFontChange = (event) => {
@@ -194,6 +236,15 @@ const EditorToolbar = ({
       return
     }
     editor.chain().focus().setFontFamily(value).run()
+  }
+
+  const handleFontSizeChange = (event) => {
+    const { value } = event.target
+    if (!value) {
+      editor.chain().focus().unsetFontSize().run()
+      return
+    }
+    editor.chain().focus().setFontSize(value).run()
   }
 
   const applyColor = (color) => {
@@ -223,6 +274,20 @@ const EditorToolbar = ({
         {FONT_OPTIONS.map((font) => (
           <option key={font.label} value={font.value} style={{ fontFamily: font.value || '"Courier Prime", monospace' }}>
             {font.label}
+          </option>
+        ))}
+      </select>
+
+      <select
+        aria-label="Font size"
+        title="Font size"
+        value={currentFontSize}
+        onChange={handleFontSizeChange}
+        className="editor-toolbar-select editor-toolbar-font-size rounded px-2 py-1 text-sm"
+      >
+        {FONT_SIZE_OPTIONS.map((size) => (
+          <option key={size.label} value={size.value}>
+            {size.label}
           </option>
         ))}
       </select>

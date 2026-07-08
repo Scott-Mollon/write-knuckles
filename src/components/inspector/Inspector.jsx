@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { SCENE_STATUSES, SCENE_STATUS_COLORS, SCENE_COLOR_TAGS, DEFAULT_SCENE_COLOR } from '../../constants/taleEditor'
+import { SCENE_STATUSES, SCENE_STATUS_COLORS, POV_COLOR_TAGS, DEFAULT_SCENE_COLOR } from '../../constants/taleEditor'
 import { useUpdateSceneMeta } from '../../hooks/useSceneMutations'
 import { useCreateBeatLink, useDeleteBeatLink } from '../../hooks/useBeatLinks'
 import { getSceneBeatLinks } from '../../lib/beats'
@@ -155,9 +155,9 @@ const Inspector = ({
             </div>
 
             <div>
-              <span className="mb-2 block text-cream/50">Color Tag</span>
+              <span className="mb-2 block text-cream/50">Point of View Tags</span>
               <div className="flex flex-wrap gap-2">
-                {SCENE_COLOR_TAGS.map((c) => (
+                {POV_COLOR_TAGS.map((c) => (
                   <button
                     key={c}
                     type="button"

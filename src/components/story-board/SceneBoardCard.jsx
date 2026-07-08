@@ -1,6 +1,7 @@
-import { SCENE_STATUS_COLORS, DEFAULT_SCENE_COLOR } from '../../constants/taleEditor'
+import { SCENE_STATUS_COLORS } from '../../constants/taleEditor'
 import { formatChapterLabel } from '../../lib/chapters'
 import { formatSceneLabel, getChapterForScene } from '../../lib/scenes'
+import ScenePovDot from '../scenes/ScenePovDot'
 const SceneBoardCard = ({
   scene,
   chapters,
@@ -42,11 +43,7 @@ const SceneBoardCard = ({
         )}
         <button type="button" onClick={() => onOpen(scene.id)} className="min-w-0 flex-1 text-left">
           <div className="flex items-start gap-2">
-            <span
-              className="mt-0.5 h-3 w-3 shrink-0 rounded-full border border-cream/20"
-              style={{ backgroundColor: scene.scene_color || DEFAULT_SCENE_COLOR }}
-              title="Color tag"
-            />
+            <ScenePovDot scene={scene} />
             <div className="min-w-0 flex-1">
               {compact ? (
                 <h3 className="break-words font-ui text-xs font-semibold text-cream">

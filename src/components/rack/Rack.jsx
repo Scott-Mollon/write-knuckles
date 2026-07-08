@@ -24,6 +24,7 @@ import {
   useUpdateChapterMeta,
 } from '../../hooks/useSceneMutations'
 import ChapterTitleInput from '../chapters/ChapterTitleInput'
+import { getScenePovColor } from '../../lib/scenePov'
 
 const SortableScene = ({ scene, isActive, onSelect, onDelete, canDelete }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -51,9 +52,10 @@ const SortableScene = ({ scene, isActive, onSelect, onDelete, canDelete }) => {
       <button
         type="button"
         onClick={() => onSelect(scene.id)}
-        className={`min-w-0 flex-1 truncate rounded px-2 py-1 text-left text-sm ${
+        className={`min-w-0 flex-1 truncate rounded border-l-[3px] py-1 pl-2 pr-2 text-left text-sm ${
           isActive ? 'bg-bronze/20 text-bronze' : 'text-cream/70 hover:bg-ink'
         }`}
+        style={{ borderLeftColor: getScenePovColor(scene) }}
       >
         {scene.title}
       </button>
