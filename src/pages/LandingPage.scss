@@ -58,8 +58,8 @@
   inset: 0;
   z-index: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 70% 40%, rgba(147, 137, 56, 0.18), transparent 55%),
-    radial-gradient(ellipse 90% 70% at 20% 90%, rgba(139, 38, 53, 0.12), transparent 50%),
+    radial-gradient(ellipse 80% 60% at 30% 40%, rgba(147, 137, 56, 0.18), transparent 55%),
+    radial-gradient(ellipse 90% 70% at 80% 90%, rgba(139, 38, 53, 0.12), transparent 50%),
     linear-gradient(180deg, #1a1410 0%, #221a12 45%, #1a1410 100%);
   pointer-events: none;
 
@@ -81,6 +81,7 @@
   flex-direction: column;
   justify-content: flex-end;
   max-width: 36rem;
+  margin-left: auto;
   padding: 3.5rem 1.25rem 2.5rem;
   animation: landing-fade-up 0.7s ease-out 0.1s both;
 
@@ -89,7 +90,7 @@
   }
 
   @media (min-width: 1024px) {
-    padding: 5rem 2rem 4rem calc((100vw - 72rem) / 2 + 2rem);
+    padding: 5rem calc((100vw - 72rem) / 2 + 2rem) 4rem 2rem;
   }
 }
 
@@ -143,15 +144,11 @@
   z-index: 1;
   display: flex;
   align-items: stretch;
-  justify-content: flex-end;
+  justify-content: flex-start;
   pointer-events: none;
 
   @media (max-width: 767px) {
     opacity: 0.35;
-  }
-
-  @media (min-width: 768px) {
-    left: 28%;
   }
 }
 
@@ -161,7 +158,7 @@
   height: 100%;
   object-fit: cover;
   object-position: left center;
-  animation: landing-hero- ken 18s ease-in-out infinite alternate;
+  animation: landing-hero-ken 18s ease-in-out infinite alternate;
 }
 
 .landing-hero__visual::after {
@@ -170,10 +167,13 @@
   inset: 0;
   background: linear-gradient(
     90deg,
-    #1a1410 0%,
-    rgba(26, 20, 16, 0.92) 28%,
-    rgba(26, 20, 16, 0.35) 55%,
-    rgba(26, 20, 16, 0.55) 100%
+    rgba(26, 20, 16, 0.1) 0%,
+    rgba(26, 20, 16, 0.2) 30%,
+    rgba(26, 20, 16, 0.45) 48%,
+    rgba(26, 20, 16, 0.72) 58%,
+    rgba(26, 20, 16, 0.88) 68%,
+    rgba(26, 20, 16, 0.96) 78%,
+    #1a1410 88%
   );
   pointer-events: none;
 
@@ -353,7 +353,7 @@
 }
 
 .landing-cta-band__inner {
-  max-width: 32rem;
+  max-width: 60%;
   margin: 0 auto;
   text-align: center;
 }
@@ -403,6 +403,108 @@
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
 }
 
+.marketing-shot-trigger {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+  text-align: left;
+
+  &:hover .marketing-shot--feature {
+    border-color: rgba(147, 137, 56, 0.75);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #938938;
+    outline-offset: 3px;
+  }
+}
+
+.marketing-shot-trigger__hint {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  font-family: Oswald, sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(232, 220, 200, 0.85);
+  background: rgba(26, 20, 16, 0.75);
+  border: 1px solid rgba(114, 106, 43, 0.5);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.marketing-shot-trigger:hover .marketing-shot-trigger__hint,
+.marketing-shot-trigger:focus-visible .marketing-shot-trigger__hint {
+  opacity: 1;
+}
+
+.marketing-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(10, 8, 6, 0.92);
+  backdrop-filter: blur(4px);
+}
+
+.marketing-lightbox__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: min(1200px, 100%);
+  max-height: calc(100vh - 3rem);
+}
+
+.marketing-lightbox__close {
+  position: absolute;
+  top: -0.25rem;
+  right: 0;
+  z-index: 1;
+  padding: 0.25rem 0.5rem;
+  border: none;
+  background: none;
+  font-family: Oswald, sans-serif;
+  font-size: 2rem;
+  line-height: 1;
+  color: rgba(232, 220, 200, 0.6);
+  cursor: pointer;
+
+  &:hover {
+    color: #938938;
+  }
+}
+
+.marketing-lightbox__title {
+  margin: 0;
+  padding-right: 2.5rem;
+  font-family: Oswald, sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #938938;
+}
+
+.marketing-lightbox__image {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: calc(100vh - 6rem);
+  margin: 0 auto;
+  border: 1px solid rgba(114, 106, 43, 0.5);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
 .marketing-shot--hero {
   border: none;
   box-shadow: none;
@@ -425,7 +527,6 @@
 .marketing-shot-placeholder--hero {
   min-height: 100%;
   border: none;
-  border-left: 1px dashed rgba(147, 137, 56, 0.35);
   background: rgba(42, 34, 24, 0.4);
 }
 

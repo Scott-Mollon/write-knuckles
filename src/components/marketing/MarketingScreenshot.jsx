@@ -3,7 +3,15 @@ import { useState } from 'react'
 /**
  * Product screenshot with dashed placeholder until the PNG is dropped in public/marketing/.
  */
-const MarketingScreenshot = ({ src, alt, caption, className = '', variant = 'feature' }) => {
+const MarketingScreenshot = ({
+  src,
+  alt,
+  caption,
+  className = '',
+  variant = 'feature',
+  expandable = false,
+  onExpand,
+}) => {
   const [failed, setFailed] = useState(false)
 
   if (failed) {
@@ -19,13 +27,31 @@ const MarketingScreenshot = ({ src, alt, caption, className = '', variant = 'fea
     )
   }
 
-  return (
+  const image = (
     <img
       src={src}
       alt={alt}
       className={`marketing-shot marketing-shot--${variant} ${className}`}
       onError={() => setFailed(true)}
     />
+  )
+
+  if (!expandable || !onExpand) {
+    return image
+  }
+
+  return (
+    <button
+      type="button"
+      className="marketing-shot-trigger"
+      onClick={onExpand}
+      aria-label={`View larger: ${alt}`}
+    >
+      {image}
+      <span className="marketing-shot-trigger__hint" aria-hidden="true">
+        Click to enlarge
+      </span>
+    </button>
   )
 }
 

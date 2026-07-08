@@ -1,7 +1,8 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
 import MarketingHeader from '../components/marketing/MarketingHeader'
 import MarketingFooter from '../components/marketing/MarketingFooter'
 import MarketingScreenshot from '../components/marketing/MarketingScreenshot'
+import MarketingLightbox from '../components/marketing/MarketingLightbox'
 import './LandingPage.scss'
 
 const FEATURES = [
@@ -24,9 +25,9 @@ const FEATURES = [
   {
     id: 'story-board',
     title: 'Story Board',
-    body: 'See the whole Tale as cards on a corkboard. View your story By Chapter or By Beat, drag scenes across lanes, and keep Raw-to-Final progress available at a glance.',
+    body: 'See the whole Tale as cards on a story board. View your story By Chapter or By Beat, drag scenes across lanes, and keep Raw-to-Final progress available at a glance.',
     src: '/marketing/feature-story-board.png',
-    alt: 'Story Board corkboard view by chapter',
+    alt: 'Story Board view by chapter',
     caption: 'feature-story-board.png — Story Board By Chapter',
   },
   {
@@ -57,7 +58,10 @@ const FEATURES = [
   },
 ]
 
-const LandingPage = () => (
+const LandingPage = () => {
+  const [lightbox, setLightbox] = useState(null)
+
+  return (
   <div id="top" className="landing-page bg-ink text-cream">
     <MarketingHeader />
 
@@ -72,7 +76,7 @@ const LandingPage = () => (
           <p className="landing-hero__support">
             The back room where the story gets written — Rack, Story Board, and Beat Sheets in one desk.
           </p>
-          <p className="landing-hero__note">Access is by invitation only.</p>
+          <p className="landing-hero__note">Write Knuckles is in Beta and currently invite-only.</p>
         </div>
         <div className="landing-hero__visual">
           <MarketingScreenshot
@@ -88,7 +92,7 @@ const LandingPage = () => (
         <div className="landing-section__inner">
           <h2 className="landing-section__title">Built for short and long-form fiction</h2>
           <p className="landing-section__lede">
-            Start a Tale, pick a Beat Sheet, and draft scene by scene — with outline, corkboard, and
+            Start a Tale, pick a Beat Sheet, and draft scene by scene — with outline, story board, and
             research under one roof.
           </p>
         </div>
@@ -112,6 +116,10 @@ const LandingPage = () => (
                 alt={feature.alt}
                 caption={feature.caption}
                 variant="feature"
+                expandable
+                onExpand={() =>
+                  setLightbox({ src: feature.src, alt: feature.alt, title: feature.title })
+                }
               />
             </div>
           </section>
@@ -158,16 +166,26 @@ const LandingPage = () => (
 
       <section className="landing-cta-band">
         <div className="landing-cta-band__inner">
-          <h2 className="landing-cta-band__title">Step into the back room</h2>
+          <h2 className="landing-cta-band__title">Knuckle Down and Write Your Story</h2>
           <p className="landing-cta-band__body">
-            Write Knuckles is invite-only.
+            Write Knuckles is in Beta and currently invite-only.
           </p>
         </div>
       </section>
     </main>
 
     <MarketingFooter />
+
+    {lightbox && (
+      <MarketingLightbox
+        src={lightbox.src}
+        alt={lightbox.alt}
+        title={lightbox.title}
+        onClose={() => setLightbox(null)}
+      />
+    )}
   </div>
-)
+  )
+}
 
 export default LandingPage
