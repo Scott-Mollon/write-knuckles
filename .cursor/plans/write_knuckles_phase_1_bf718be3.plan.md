@@ -1,6 +1,6 @@
 ---
 name: Write Knuckles Phase 1
-overview: "Build **Write Knuckles** — a pulp-flavored Scrivener rival — as a standalone React + Supabase app. Phase 1 (M1–M5) delivers the full writing cockpit: auth, manuscript structure, Beat Sheet, rich editor, grammar/spell check, and export hooks. Post–Phase 1 (M6+) adds Tale collaborators, real-time co-editing, Print Run layout, and AI insights."
+overview: "Build **Write Knuckles** — a pulp-flavored Scrivener rival — as a standalone React + Supabase app. Phase 1 (M1–M5b) delivers the full writing cockpit: auth, manuscript structure, Beat Sheet, rich editor, grammar/spell check, export, and theming. Post–Phase 1 (M6+) adds Tale collaborators, real-time co-editing, Print Run layout, and AI insights."
 todos:
   - id: scaffold
     content: "Scaffold write-knuckles repo: Vite + React 19 + JavaScript + Tailwind + React Router + TanStack Query"
@@ -27,7 +27,10 @@ todos:
     content: Add Characters, Locations, Research reference panels + full-text search across scenes
     status: completed
   - id: grammar-polish
-    content: LanguageTool Edge Function, grammar highlights, readability stats, Markdown export, pulp theming polish
+    content: "M5: LanguageTool Edge Function, grammar highlights, readability stats"
+    status: pending
+  - id: export-theming
+    content: "M5b: Markdown + plain text export, pulp theming pass, responsive layout"
     status: pending
   - id: tale-collaborators
     content: "M6: Tale collaborators — invite users, roles, shared RLS, collaborator management in Tale settings"
@@ -83,7 +86,7 @@ flowchart TB
 
 ## Current Progress (as of M4 complete)
 
-**Resume here:** M5 — Grammar, readability stats, Markdown export (`grammar-polish` todo)
+**Resume here:** M5 — Grammar highlights + readability stats (`grammar-polish` todo); then M5b — export + theming (`export-theming` todo)
 
 **Repo:** https://github.com/Scott-Mollon/write-knuckles
 
@@ -111,7 +114,8 @@ flowchart TB
 | Characters / Locations / Research | **Done** | [`ReferencePanel.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\research\ReferencePanel.jsx), [`useTaleReference.js`](C:\Users\scott\Documents\code\write-knuckles\src\hooks\useTaleReference.js) |
 | Scene ↔ character/location links | Done | [`SceneReferenceLinks.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\inspector\SceneReferenceLinks.jsx), migration `006` |
 | Full-text scene search | Done | [`SceneSearchPanel.jsx`](C:\Users\scott\Documents\code\write-knuckles\src\components\research\SceneSearchPanel.jsx), `write.search_scenes` RPC |
-| Grammar / export | Not started | — |
+| Grammar / readability (M5) | Not started | — |
+| Export + theming (M5b) | Not started | — |
 | Tale collaborators (M6) | Not started | Schema + RLS planned in migration `006` |
 
 **After Phase 1 (M6+):** Collaborators → real-time co-editing → Print Run → AI insights. See [Post–Phase 1 Milestones](#postphase-1-milestones-m6).
@@ -596,18 +600,21 @@ sequenceDiagram
 - [x] Migration `006`: `scene_character_links`, `scene_location_links`, `write.search_scenes` RPC
 - [x] Full-text search across scene prose with snippets; click result opens scene in Write mode
 
-### M5 — Grammar + Polish
+### M5 — Grammar + Readability
 - LanguageTool Edge Function
 - Grammar highlights in editor
 - Readability stats (local)
+
+### M5b — Export + Theming
 - Export: Markdown + plain text per Tale or selected scenes
-- Pulp theming pass, responsive layout
+- Pulp theming pass
+- Responsive layout
 
 ---
 
 ## Post–Phase 1 Milestones (M6+)
 
-Features to build **after M1–M5** are complete. Track in plan todos (`tale-collaborators`, `realtime-coediting`, etc.).
+Features to build **after M1–M5b** are complete. Track in plan todos (`tale-collaborators`, `realtime-coediting`, etc.).
 
 ### M6 — Tale Collaborators
 - [ ] `write.tale_collaborators` table + `can_access_tale()` RLS helper (migration `006`)
@@ -683,9 +690,10 @@ Every table: `user_id = auth.uid()` for SELECT/INSERT/UPDATE/DELETE. **Write sch
 - [x] Full-text search across scene prose
 - [ ] Grammar/spell check works on demand
 - [ ] Readability stats visible
-- [ ] Markdown export works
+- [ ] Markdown / plain text export works
+- [ ] Pulp theming pass + responsive layout
 
-This is the back room where pulp gets written. **Phase 1 ends at M5.** M6+ adds collaboration, live co-editing, and publishing — see [Post–Phase 1 Milestones](#postphase-1-milestones-m6).
+This is the back room where pulp gets written. **Phase 1 ends at M5b.** M6+ adds collaboration, live co-editing, and publishing — see [Post–Phase 1 Milestones](#postphase-1-milestones-m6).
 
 ---
 

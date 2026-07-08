@@ -1,0 +1,493 @@
+.landing-page {
+  min-height: 100vh;
+  scroll-behavior: smooth;
+}
+
+.marketing-header {
+  animation: landing-fade-in 0.55s ease-out both;
+}
+
+.landing-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.35rem;
+  font-family: Oswald, sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.landing-btn--primary {
+  background: #938938;
+  border: 1px solid #938938;
+  color: #1a1410;
+
+  &:hover {
+    background: #726a2b;
+    border-color: #726a2b;
+    color: #e8dcc8;
+  }
+}
+
+.landing-btn--ghost {
+  background: transparent;
+  border: 1px solid #726a2b;
+  color: #e8dcc8;
+
+  &:hover {
+    border-color: #938938;
+    color: #938938;
+  }
+}
+
+/* —— Hero —— */
+.landing-hero {
+  position: relative;
+  display: grid;
+  min-height: calc(100vh - 3.5rem);
+  align-items: end;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.landing-hero__atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 70% 40%, rgba(147, 137, 56, 0.18), transparent 55%),
+    radial-gradient(ellipse 90% 70% at 20% 90%, rgba(139, 38, 53, 0.12), transparent 50%),
+    linear-gradient(180deg, #1a1410 0%, #221a12 45%, #1a1410 100%);
+  pointer-events: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.07;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+    mix-blend-mode: overlay;
+  }
+}
+
+.landing-hero__content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  max-width: 36rem;
+  padding: 3.5rem 1.25rem 2.5rem;
+  animation: landing-fade-up 0.7s ease-out 0.1s both;
+
+  @media (min-width: 640px) {
+    padding: 4.5rem 2rem 3rem;
+  }
+
+  @media (min-width: 1024px) {
+    padding: 5rem 2rem 4rem calc((100vw - 72rem) / 2 + 2rem);
+  }
+}
+
+.landing-hero__brand {
+  margin: 0 0 0.75rem;
+  font-family: Oswald, sans-serif;
+  font-size: clamp(2.4rem, 6vw, 3.75rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: #938938;
+}
+
+.landing-hero__headline {
+  margin: 0 0 0.85rem;
+  font-family: Oswald, sans-serif;
+  font-size: clamp(1.35rem, 3.2vw, 1.85rem);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+  color: #e8dcc8;
+}
+
+.landing-hero__support {
+  margin: 0 0 1.5rem;
+  max-width: 28rem;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: rgba(232, 220, 200, 0.72);
+}
+
+.landing-hero__ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.landing-hero__note {
+  margin: 1rem 0 0;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: rgba(232, 220, 200, 0.45);
+}
+
+.landing-hero__visual {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+  pointer-events: none;
+
+  @media (max-width: 767px) {
+    opacity: 0.35;
+  }
+
+  @media (min-width: 768px) {
+    left: 28%;
+  }
+}
+
+.landing-hero__visual .marketing-shot,
+.landing-hero__visual .marketing-shot-placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: left center;
+  animation: landing-hero- ken 18s ease-in-out infinite alternate;
+}
+
+.landing-hero__visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    #1a1410 0%,
+    rgba(26, 20, 16, 0.92) 28%,
+    rgba(26, 20, 16, 0.35) 55%,
+    rgba(26, 20, 16, 0.55) 100%
+  );
+  pointer-events: none;
+
+  @media (max-width: 767px) {
+    background: linear-gradient(
+      180deg,
+      rgba(26, 20, 16, 0.55) 0%,
+      rgba(26, 20, 16, 0.92) 70%,
+      #1a1410 100%
+    );
+  }
+}
+
+/* —— Sections —— */
+.landing-section {
+  padding: 4rem 1.25rem;
+
+  @media (min-width: 640px) {
+    padding: 5rem 2rem;
+  }
+}
+
+.landing-section__inner {
+  max-width: 42rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.landing-section--intro {
+  border-top: 1px solid rgba(114, 106, 43, 0.35);
+}
+
+.landing-section__title {
+  margin: 0 0 0.75rem;
+  font-family: Oswald, sans-serif;
+  font-size: clamp(1.6rem, 3vw, 2rem);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #e8dcc8;
+}
+
+.landing-section__lede {
+  margin: 0;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(232, 220, 200, 0.68);
+}
+
+/* —— Feature rows —— */
+.landing-feature {
+  display: grid;
+  gap: 2rem;
+  align-items: center;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 3.5rem 1.25rem;
+  opacity: 0;
+  animation: landing-fade-up 0.65s ease-out both;
+  animation-timeline: view();
+  animation-range: entry 10% cover 30%;
+
+  @media (min-width: 640px) {
+    padding: 4rem 2rem;
+  }
+
+  @media (min-width: 900px) {
+    grid-template-columns: 1fr 1.15fr;
+    gap: 3.5rem;
+  }
+
+  /* Fallback when view() unsupported: still show */
+  @supports not (animation-timeline: view()) {
+    opacity: 1;
+    animation: landing-fade-up 0.65s ease-out both;
+  }
+}
+
+.landing-feature--reverse {
+  @media (min-width: 900px) {
+    direction: rtl;
+
+    > * {
+      direction: ltr;
+    }
+  }
+}
+
+.landing-feature__title {
+  margin: 0 0 0.85rem;
+  font-family: Oswald, sans-serif;
+  font-size: clamp(1.45rem, 2.5vw, 1.85rem);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #938938;
+}
+
+.landing-feature__body {
+  margin: 0;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: rgba(232, 220, 200, 0.75);
+}
+
+.landing-feature__media {
+  min-width: 0;
+}
+
+/* —— How it works —— */
+.landing-how {
+  border-top: 1px solid rgba(114, 106, 43, 0.35);
+  background: linear-gradient(180deg, #1a1410, #221a12 50%, #1a1410);
+}
+
+.landing-how__steps {
+  list-style: none;
+  margin: 2.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  text-align: left;
+  max-width: 36rem;
+  margin-inline: auto;
+}
+
+.landing-how__steps li {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.landing-how__num {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid #938938;
+  font-family: Oswald, sans-serif;
+  font-size: 0.95rem;
+  color: #938938;
+}
+
+.landing-how__step-title {
+  margin: 0 0 0.35rem;
+  font-family: Oswald, sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #e8dcc8;
+}
+
+.landing-how__step-body {
+  margin: 0;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: rgba(232, 220, 200, 0.65);
+}
+
+/* —— Closing CTA —— */
+.landing-cta-band {
+  padding: 4.5rem 1.25rem;
+  border-top: 1px solid rgba(114, 106, 43, 0.4);
+  background:
+    radial-gradient(ellipse 60% 80% at 50% 100%, rgba(147, 137, 56, 0.14), transparent 60%),
+    #1a1410;
+
+  @media (min-width: 640px) {
+    padding: 5.5rem 2rem;
+  }
+}
+
+.landing-cta-band__inner {
+  max-width: 32rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.landing-cta-band__title {
+  margin: 0 0 0.75rem;
+  font-family: Oswald, sans-serif;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #e8dcc8;
+}
+
+.landing-cta-band__body {
+  margin: 0 0 1.5rem;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: rgba(232, 220, 200, 0.68);
+
+  a {
+    color: #938938;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:hover {
+      color: #e8dcc8;
+    }
+  }
+}
+
+.landing-cta-band .landing-hero__ctas {
+  justify-content: center;
+}
+
+/* —— Screenshots / placeholders —— */
+.marketing-shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid rgba(114, 106, 43, 0.45);
+  background: #2a2218;
+}
+
+.marketing-shot--feature {
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.marketing-shot--hero {
+  border: none;
+  box-shadow: none;
+}
+
+.marketing-shot-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 14rem;
+  padding: 1.5rem;
+  border: 1px dashed rgba(147, 137, 56, 0.55);
+  background: rgba(42, 34, 24, 0.65);
+  text-align: center;
+}
+
+.marketing-shot-placeholder--hero {
+  min-height: 100%;
+  border: none;
+  border-left: 1px dashed rgba(147, 137, 56, 0.35);
+  background: rgba(42, 34, 24, 0.4);
+}
+
+.marketing-shot-placeholder--feature {
+  aspect-ratio: 16 / 10;
+}
+
+.marketing-shot-placeholder__label {
+  font-family: Oswald, sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(232, 220, 200, 0.7);
+}
+
+.marketing-shot-placeholder__hint {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.7rem;
+  color: rgba(147, 137, 56, 0.85);
+}
+
+@keyframes landing-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes landing-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landing-hero-ken {
+  from {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page {
+    scroll-behavior: auto;
+  }
+
+  .marketing-header,
+  .landing-hero__content,
+  .landing-feature,
+  .landing-hero__visual .marketing-shot,
+  .landing-hero__visual .marketing-shot-placeholder {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+}

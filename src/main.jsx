@@ -1,8 +1,8 @@
 import { StrictMode, lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { AuthProvider } from './contexts/AuthContext'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 import NavBar from './components/NavBar'
 import Loading from './pages/Loading'
 import './index.css'
@@ -12,11 +12,13 @@ const ApprovedRoute = lazy(() => import('./components/ApprovedRoute'))
 const AdminRoute = lazy(() => import('./components/AdminRoute'))
 const SigninPage = lazy(() => import('./pages/SigninPage'))
 const ResetPage = lazy(() => import('./pages/ResetPage'))
-const DashboardPage = lazy(() => import('./pages/DashboardPage'))
+const RootPage = lazy(() => import('./pages/RootPage'))
 const NewTalePage = lazy(() => import('./pages/NewTalePage'))
 const TaleEditorPage = lazy(() => import('./pages/TaleEditorPage'))
 const AccessPendingPage = lazy(() => import('./pages/AccessPendingPage'))
 const AccessAdminPage = lazy(() => import('./pages/AccessAdminPage'))
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
+const TermsPage = lazy(() => import('./pages/TermsPage'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,57 +29,65 @@ const queryClient = new QueryClient({
   },
 })
 
+const AppShell = () => {
+  const { pathname } = useLocation()
+  const { loading, isSignedIn } = useAuth()
+  // Landing has its own marketing header; hide app NavBar for guests (and while auth loads) on `/`
+  const hideNav = pathname === '/' && (loading || !isSignedIn())
+
+  return (
+    <>
+      {!hideNav && <NavBar />}
+      <Suspense fallback={<Loading />}>
+        <Routes>
+          <Route path="/signin" element={<SigninPage />} />
+          <Route path="/reset" element={<ResetPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route
+            path="/access-pending"
+            element={
+              <ProtectedRoute>
+                <AccessPendingPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/" element={<RootPage />} />
+          <Route
+            path="/new"
+            element={
+              <ApprovedRoute>
+                <NewTalePage />
+              </ApprovedRoute>
+            }
+          />
+          <Route
+            path="/tale/:taleId"
+            element={
+              <ApprovedRoute>
+                <TaleEditorPage />
+              </ApprovedRoute>
+            }
+          />
+          <Route
+            path="/admin/access"
+            element={
+              <AdminRoute>
+                <AccessAdminPage />
+              </AdminRoute>
+            }
+          />
+        </Routes>
+      </Suspense>
+    </>
+  )
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <Router>
       <AuthProvider>
-        <NavBar />
-        <Suspense fallback={<Loading />}>
-          <Routes>
-            <Route path="/signin" element={<SigninPage />} />
-            <Route path="/reset" element={<ResetPage />} />
-            <Route
-              path="/access-pending"
-              element={
-                <ProtectedRoute>
-                  <AccessPendingPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/"
-              element={
-                <ApprovedRoute>
-                  <DashboardPage />
-                </ApprovedRoute>
-              }
-            />
-            <Route
-              path="/new"
-              element={
-                <ApprovedRoute>
-                  <NewTalePage />
-                </ApprovedRoute>
-              }
-            />
-            <Route
-              path="/tale/:taleId"
-              element={
-                <ApprovedRoute>
-                  <TaleEditorPage />
-                </ApprovedRoute>
-              }
-            />
-            <Route
-              path="/admin/access"
-              element={
-                <AdminRoute>
-                  <AccessAdminPage />
-                </AdminRoute>
-              }
-            />
-          </Routes>
-        </Suspense>
+        <AppShell />
       </AuthProvider>
     </Router>
   </QueryClientProvider>
