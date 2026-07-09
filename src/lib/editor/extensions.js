@@ -7,9 +7,13 @@ import Link from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
 import { TextStyleKit } from '@tiptap/extension-text-style'
+import FileHandler from '@tiptap/extension-file-handler'
 import { DropCapParagraph } from './dropCapParagraph'
 import { SceneDivider } from './sceneDivider'
 import { Indent } from './indent'
+import { SceneImage } from './sceneImage'
+import { getSceneImageUploadHandlers } from './sceneImageUploadBridge'
+import { ALLOWED_IMAGE_MIME_TYPES } from '../images/constants'
 
 export const createEditorExtensions = (placeholder = '') => [
   StarterKit.configure({
@@ -19,6 +23,17 @@ export const createEditorExtensions = (placeholder = '') => [
   }),
   DropCapParagraph,
   SceneDivider,
+  SceneImage,
+  FileHandler.configure({
+    allowedMimeTypes: ALLOWED_IMAGE_MIME_TYPES,
+    consumePasteEvent: true,
+    onPaste: (editor, files) => {
+      getSceneImageUploadHandlers().onPaste?.(editor, files)
+    },
+    onDrop: (editor, files, pos) => {
+      getSceneImageUploadHandlers().onDrop?.(editor, files, pos)
+    },
+  }),
   Placeholder.configure({
     placeholder,
   }),

@@ -264,6 +264,114 @@ input, select, textarea {
   text-decoration: underline;
 }
 
+.scene-editor-prose .scene-image {
+  margin: 1em 0;
+  line-height: 0;
+}
+
+.scene-editor-prose .scene-image--selected {
+  outline: 2px solid var(--editor-accent);
+  outline-offset: 2px;
+}
+
+.scene-editor-prose .scene-image--block {
+  display: block;
+  text-align: center;
+}
+
+.scene-editor-prose .scene-image--block .scene-image__frame {
+  display: inline-block;
+  max-width: 100%;
+}
+
+.scene-editor-prose .scene-image--block .scene-image__img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.scene-editor-prose .scene-image--float-left {
+  float: left;
+  margin: 0.25em 1em 0.5em 0;
+}
+
+.scene-editor-prose .scene-image--float-right {
+  float: right;
+  margin: 0.25em 0 0.5em 1em;
+}
+
+.scene-editor-prose .scene-image--float-left:not(.scene-image--sized),
+.scene-editor-prose .scene-image--float-right:not(.scene-image--sized) {
+  max-width: 45%;
+}
+
+.scene-editor-prose .scene-image--float-left .scene-image__frame,
+.scene-editor-prose .scene-image--float-right .scene-image__frame {
+  width: 100%;
+}
+
+.scene-editor-prose .scene-image--full {
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
+  width: calc(100% + 3rem);
+  max-width: none;
+}
+
+.scene-editor-prose .scene-image--full .scene-image__img {
+  width: 100%;
+  height: auto;
+}
+
+.scene-editor-prose .scene-image__img {
+  border-radius: 2px;
+  width: 100%;
+  height: auto;
+}
+
+.scene-editor-prose .scene-image__frame {
+  position: relative;
+  line-height: 0;
+}
+
+.scene-editor-prose .scene-image__resize-handle {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  z-index: 2;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--editor-surface, #1a1a1a);
+  border-radius: 1px;
+  background: var(--editor-accent);
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+.scene-editor-prose .scene-image__resize-handle:hover {
+  transform: scale(1.1);
+}
+
+.scene-editor-prose .scene-image__placeholder {
+  display: flex;
+  min-height: 4rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--editor-divider);
+  border-radius: 2px;
+  padding: 1rem;
+  font-size: 0.75rem;
+  color: var(--editor-text-muted);
+}
+
+.scene-editor-prose .scene-image__placeholder--error {
+  border-color: color-mix(in srgb, var(--editor-text) 20%, transparent);
+  color: var(--editor-text-subtle);
+}
+
+.image-bubble-menu {
+  z-index: 20;
+}
+
 .scene-editor-prose p.is-editor-empty:first-child::before {
   color: var(--editor-placeholder);
   content: attr(data-placeholder);

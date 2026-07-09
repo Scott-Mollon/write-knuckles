@@ -1,13 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import { createEditorExtensions } from '../../lib/editor/extensions'
 import { normalizeContent, isSceneContentEmpty } from '../../lib/editor/plainText'
+import { buildSceneImageAttrs } from '../../lib/editor/sceneImage'
+import { setSceneImageUploadHandlers } from '../../lib/editor/sceneImageUploadBridge'
 import { pickRandomScenePlaceholder } from '../../constants/scenePlaceholders'
 import { SAVE_STATES } from '../../hooks/useAutosave'
 import { useEditorTheme } from '../../hooks/useEditorTheme'
 import { useEditorTabSize } from '../../hooks/useEditorTabSize'
 import { useUpdateSceneMeta } from '../../hooks/useSceneMutations'
+import { useTaleImageUpload } from '../../hooks/useTaleImageUpload'
+import { validateImageFile } from '../../lib/images/storage'
 import EditorToolbar from './EditorToolbar'
+import ImageBubbleMenu from './ImageBubbleMenu'
 
 const SAVE_LABELS = {
   [SAVE_STATES.IDLE]: '',
@@ -21,6 +26,8 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
   const { theme, toggleTheme, isLight } = useEditorTheme()
   const { tabSize, setTabSize, options: tabSizeOptions } = useEditorTabSize()
   const updateMeta = useUpdateSceneMeta(taleId)
+  const uploadImage = useTaleImageUpload()
+  const [imageError, setImageError] = useState(null)
   const [title, setTitle] = useState(scene?.title || '')
 
   useEffect(() => {
@@ -33,6 +40,22 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
     }
     return ''
   }, [scene?.id])
+
+  const uploadSceneFile = useCallback(
+    async (file) => {
+      const validation = validateImageFile(file)
+      if (!validation.valid) {
+        throw new Error(validation.error)
+      }
+      return uploadImage.mutateAsync({
+        taleId,
+        scope: 'scenes',
+        entityId: scene.id,
+        file,
+      })
+    },
+    [scene?.id, taleId, uploadImage]
+  )
 
   const editor = useEditor({
     extensions: createEditorExtensions(placeholder),
@@ -52,6 +75,75 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
       onWordCountChange?.(ed.storage.characterCount.words())
     },
   }, [scene?.id, placeholder])
+
+  useEffect(() => {
+    if (!editor || !scene?.id) return
+
+    setSceneImageUploadHandlers({
+      onPaste: async (ed, files) => {
+        setImageError(null)
+        for (const file of files) {
+          try {
+            const result = await uploadSceneFile(file)
+            ed
+              .chain()
+              .focus()
+              .setSceneImage(
+                buildSceneImageAttrs({
+                  sourceType: result.sourceType,
+                  storagePath: result.storagePath,
+                  externalUrl: result.externalUrl,
+                })
+              )
+              .run()
+          } catch (err) {
+            setImageError(err.message || 'Could not insert image.')
+          }
+        }
+      },
+      onDrop: async (ed, files, pos) => {
+        setImageError(null)
+        let insertPos = pos
+        for (const file of files) {
+          try {
+            const result = await uploadSceneFile(file)
+            const attrs = buildSceneImageAttrs({
+              sourceType: result.sourceType,
+              storagePath: result.storagePath,
+              externalUrl: result.externalUrl,
+            })
+            ed.chain().focus().insertContentAt(insertPos, { type: 'sceneImage', attrs }).run()
+            insertPos += 1
+          } catch (err) {
+            setImageError(err.message || 'Could not insert image.')
+          }
+        }
+      },
+    })
+
+    return () => {
+      setSceneImageUploadHandlers({ onPaste: null, onDrop: null })
+    }
+  }, [editor, scene?.id, uploadSceneFile])
+
+  const handleInsertSceneImage = useCallback(
+    (result) => {
+      if (!editor) return
+      setImageError(null)
+      editor
+        .chain()
+        .focus()
+        .setSceneImage(
+          buildSceneImageAttrs({
+            sourceType: result.sourceType,
+            storagePath: result.storagePath,
+            externalUrl: result.externalUrl,
+          })
+        )
+        .run()
+    },
+    [editor]
+  )
 
   if (!scene) {
     return (
@@ -117,9 +209,20 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
         tabSize={tabSize}
         tabSizeOptions={tabSizeOptions}
         onTabSizeChange={setTabSize}
+        taleId={taleId}
+        sceneId={scene.id}
+        onInsertSceneImage={handleInsertSceneImage}
+        onImageError={setImageError}
       />
 
-      <div className="flex-1 overflow-y-auto px-6 py-4">
+      {imageError && (
+        <p className="border-b border-bronze-dark/30 bg-error/10 px-6 py-2 text-sm text-error" role="alert">
+          {imageError}
+        </p>
+      )}
+
+      <div className="relative flex-1 overflow-y-auto px-6 py-4">
+        <ImageBubbleMenu editor={editor} />
         <EditorContent editor={editor} />
       </div>
     </div>

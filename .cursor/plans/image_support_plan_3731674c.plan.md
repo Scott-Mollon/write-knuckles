@@ -19,13 +19,13 @@ todos:
     status: completed
   - id: tiptap-scene-image
     content: Create SceneImage extension with display modes, FileHandler, NodeView signed URL resolution
-    status: pending
+    status: completed
   - id: editor-ui
     content: Wire toolbar upload, ImageBubbleMenu (display/alt/delete), and editor CSS for all display modes
-    status: pending
+    status: completed
   - id: plain-text-search
     content: Update plainText.js to include SceneImage with alt text for scene search indexing
-    status: pending
+    status: completed
   - id: tale-cover
     content: Add cover image columns to tales, cover editor in TaleSettingsModal, TaleCard with left-side cover + placeholder on DashboardPage
     status: completed
@@ -40,7 +40,8 @@ isProject: false
 - **Upload infrastructure (step 2 — done):** `src/lib/images/*`, `useSignedStorageUrl`, `useTaleImageUpload`, `useTaleImageFromUrl`, and `ImageUpload` component.
 - **Tale cover (step 3 — done):** migration `012`, `useUpdateTaleCover`, `TaleCard` on dashboard, cover editor in Tale Settings.
 - **Reference galleries (step 4 — done):** `reference_images` table, gallery UI in Research mode, hero images on pin cards.
-- **TipTap** ([`src/lib/editor/extensions.js`](c:\Users\scott\Documents\code\write-knuckles\src\lib\editor\extensions.js)) has no image extension; scene content is TipTap JSON in `write.scenes.content`.
+- **TipTap scene images (step 5 — done):** `SceneImage` extension, `FileHandler` paste/drop, `ImageBubbleMenu`, toolbar `ImageUpload`, signed URL NodeView, display-mode CSS.
+- **TipTap** ([`src/lib/editor/extensions.js`](c:\Users\scott\Documents\code\write-knuckles\src\lib\editor\extensions.js)) registers `SceneImage` + `FileHandler`; scene content is TipTap JSON in `write.scenes.content`.
 - **Reference cards** share [`ReferencePinCard.jsx`](c:\Users\scott\Documents\code\write-knuckles\src\components\research\ReferencePinCard.jsx) via Character/Location/Research list components; forms live inline in each `*List.jsx`.
 - **RLS** is single-owner today (`auth.uid() = user_id` + `write.is_approved_user()`). No collaborator policies yet.
 
@@ -446,7 +447,7 @@ Recommended sequence to keep each step shippable:
 2. ~~**`storage.js` + `urls.js` + `useSignedStorageUrl` + `useTaleImageUpload` + `useTaleImageFromUrl` + `ImageUpload`**~~ — **done** (storage helpers + hooks + component; no UI consumers yet)
 3. ~~**Tale cover columns + `useUpdateTaleCover` + TaleSettingsModal cover section + `TaleCard` on dashboard**~~ — **done**
 4. ~~**Reference images DB + hooks + gallery UI + card hero display**~~ — **done**
-5. **SceneImage extension + editor integration** — depends on upload hook from step 2
+5. ~~**SceneImage extension + editor integration**~~ — **done**
 6. **Polish** — CSS themes (light/dark editor), error toasts, alt-text prompts
 
 ---

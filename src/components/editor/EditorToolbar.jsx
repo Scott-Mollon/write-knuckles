@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useEditorState } from '@tiptap/react'
+import ImageUpload from '../images/ImageUpload'
 
 const ToolbarButton = ({ onClick, active, disabled, title, children, className = '' }) => (
   <button
@@ -198,6 +199,10 @@ const EditorToolbar = ({
   tabSize,
   tabSizeOptions = [],
   onTabSizeChange,
+  taleId,
+  sceneId,
+  onInsertSceneImage,
+  onImageError,
 }) => {
   const [highlightColor, setHighlightColor] = useState(DEFAULT_HIGHLIGHT_COLOR)
 
@@ -423,6 +428,18 @@ const EditorToolbar = ({
       >
         <span className="inline-block w-4 border-t border-current" />
       </ToolbarButton>
+
+      {taleId && sceneId && onInsertSceneImage && (
+        <ImageUpload
+          taleId={taleId}
+          scope="scenes"
+          entityId={sceneId}
+          compact
+          allowUrl
+          onAdded={onInsertSceneImage}
+          onError={onImageError}
+        />
+      )}
 
       <span className="editor-toolbar-sep mx-1">|</span>
 
