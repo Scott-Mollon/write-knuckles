@@ -64,7 +64,7 @@ const AboutPage = () => {
               pipeline, not a paywall on your words. Start a Tale, outline on The Rack, draft scenes
               in a focused editor, map structure on the Story Board, walk a Beat Sheet, and keep
               Characters, Locations, and Research within reach. All features that in other offerings
-              require a monthly subscription; but Write Knuckles provides free to use.
+              require a monthly subscription; but Write Knuckles provides for free.
             </p>
             <p>
               The goal is straightforward: remove friction so you can stay in the story. Drag chapters

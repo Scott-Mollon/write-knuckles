@@ -28,7 +28,9 @@ supabase/migrations/010_write_knuckles_bootstrap.sql
 
    **New instance:** run only `010` — it creates the full `write` schema in one step.
 
-   **Existing databases** on the incremental chain (`001`–`009`) should keep applying only the migrations they are missing. Do not run `010` on top of `001`–`009`.
+   **Existing databases** on the incremental chain (`001`–`010`) should keep applying only the migrations they are missing. Do not run `010` on top of `001`–`009`.
+
+   After `010`, apply any newer incremental migrations (e.g. `011_tale_images_storage.sql` for image storage).
 
    Then add yourself to the invite list (replace with your email):
 
@@ -60,7 +62,7 @@ App runs at http://localhost:5174
 
 **Fresh install:** run only `010_write_knuckles_bootstrap.sql`.
 
-**Incremental upgrades:** `001`–`009` are the historical chain for the shared Bronze Knuckles database. Check `write.schema_migrations` to see which versions are already applied. Do not run `010` on a database that already went through `001`–`009`.
+**Incremental upgrades:** `001`–`011` are the historical chain for the shared Bronze Knuckles database. Check `write.schema_migrations` to see which versions are already applied. Do not run `010` on a database that already went through `001`–`009`.
 
 Each migration records itself in `write.schema_migrations` when it completes:
 
