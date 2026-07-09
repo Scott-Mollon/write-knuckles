@@ -1,10 +1,26 @@
-import { useId, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTaleImageFromUrl } from '../../hooks/useTaleImageFromUrl'
 import { useTaleImageUpload } from '../../hooks/useTaleImageUpload'
 import { validateImageFile } from '../../lib/images/storage'
 import { fieldClass, labelClass } from '../research/referenceStyles'
 
 const ACCEPT = 'image/jpeg,image/png,image/webp,image/gif'
+const COMPACT_POPOVER_WIDTH = 288
+
+const getCompactPopoverPosition = (anchor) => {
+  const rect = anchor.getBoundingClientRect()
+  const margin = 8
+  const left = Math.min(
+    Math.max(margin, rect.right - COMPACT_POPOVER_WIDTH),
+    window.innerWidth - COMPACT_POPOVER_WIDTH - margin,
+  )
+
+  return {
+    top: rect.bottom + 4,
+    left,
+  }
+}
 
 const ImageIcon = () => (
   <svg
@@ -320,12 +336,39 @@ const ImageUpload = ({
   className = '',
 }) => {
   const [popoverOpen, setPopoverOpen] = useState(false)
+  const [popoverPosition, setPopoverPosition] = useState(null)
+  const triggerRef = useRef(null)
   const popoverId = useId()
+
+  useLayoutEffect(() => {
+    if (!popoverOpen || !triggerRef.current) return undefined
+
+    const updatePosition = () => {
+      if (!triggerRef.current) return
+      setPopoverPosition(getCompactPopoverPosition(triggerRef.current))
+    }
+
+    updatePosition()
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+
+    return () => {
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+    }
+  }, [popoverOpen])
+
+  useEffect(() => {
+    if (!popoverOpen) {
+      setPopoverPosition(null)
+    }
+  }, [popoverOpen])
 
   if (compact) {
     return (
-      <div className={`relative ${className}`}>
+      <div className={className}>
         <button
+          ref={triggerRef}
           type="button"
           title="Add image"
           aria-expanded={popoverOpen}
@@ -336,17 +379,18 @@ const ImageUpload = ({
           <ImageIcon />
         </button>
 
-        {popoverOpen && (
+        {popoverOpen && popoverPosition && createPortal(
           <>
             <button
               type="button"
-              className="fixed inset-0 z-40 cursor-default"
+              className="fixed inset-0 z-[90] cursor-default"
               aria-label="Close image menu"
               onClick={() => setPopoverOpen(false)}
             />
             <div
               id={popoverId}
-              className="absolute right-0 top-full z-50 mt-1 w-72 rounded border border-bronze-dark/50 bg-ink p-3 shadow-xl"
+              className="fixed z-[100] w-72 rounded border border-bronze-dark/50 bg-ink p-3 shadow-xl"
+              style={{ top: popoverPosition.top, left: popoverPosition.left }}
               role="dialog"
               aria-label="Add image"
             >
@@ -364,7 +408,8 @@ const ImageUpload = ({
                 onError={onError}
               />
             </div>
-          </>
+          </>,
+          document.body,
         )}
       </div>
     )
