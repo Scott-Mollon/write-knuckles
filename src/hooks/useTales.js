@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { writeDb } from '../clients/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { deleteTaleImage } from '../lib/images/storage'
 
 export const useTales = () => {
   const { user } = useAuth()
@@ -128,6 +129,20 @@ export const useDeleteTale = () => {
 
   return useMutation({
     mutationFn: async (taleId) => {
+      const { data: tale } = await writeDb
+        .from('tales')
+        .select('cover_source_type, cover_storage_path')
+        .eq('id', taleId)
+        .maybeSingle()
+
+      if (tale?.cover_source_type === 'upload' && tale.cover_storage_path) {
+        try {
+          await deleteTaleImage(tale.cover_storage_path)
+        } catch {
+          // Tale row delete proceeds even if storage cleanup fails
+        }
+      }
+
       const { error } = await writeDb.from('tales').delete().eq('id', taleId)
       if (error) throw error
     },
@@ -150,6 +165,80 @@ export const useUpdateTale = (taleId) => {
           subtitle: subtitle?.trim() || null,
           genre: genre?.trim() || null,
           target_word_count: Number(targetWordCount),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', taleId)
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['tale', taleId], data)
+      queryClient.invalidateQueries({ queryKey: ['tales'] })
+    },
+  })
+}
+
+async function removePreviousCoverUpload(previousTale, nextStoragePath = null) {
+  if (previousTale?.cover_source_type !== 'upload' || !previousTale.cover_storage_path) {
+    return
+  }
+  if (nextStoragePath && previousTale.cover_storage_path === nextStoragePath) {
+    return
+  }
+  try {
+    await deleteTaleImage(previousTale.cover_storage_path)
+  } catch {
+    // Continue — DB update is source of truth
+  }
+}
+
+export const useUpdateTaleCover = (taleId) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (payload) => {
+      const { action, previousTale } = payload
+
+      if (action === 'clear') {
+        await removePreviousCoverUpload(previousTale)
+        const { data, error } = await writeDb
+          .from('tales')
+          .update({
+            cover_source_type: null,
+            cover_storage_path: null,
+            cover_external_url: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', taleId)
+          .select()
+          .single()
+        if (error) throw error
+        return data
+      }
+
+      const { sourceType, storagePath, externalUrl } = payload
+      await removePreviousCoverUpload(previousTale, storagePath)
+
+      const coverFields =
+        sourceType === 'upload'
+          ? {
+              cover_source_type: 'upload',
+              cover_storage_path: storagePath,
+              cover_external_url: null,
+            }
+          : {
+              cover_source_type: 'url',
+              cover_storage_path: null,
+              cover_external_url: externalUrl,
+            }
+
+      const { data, error } = await writeDb
+        .from('tales')
+        .update({
+          ...coverFields,
           updated_at: new Date().toISOString(),
         })
         .eq('id', taleId)

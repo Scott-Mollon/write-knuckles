@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useUpdateTale } from '../../hooks/useTales'
 import BeatSheetPicker from '../beats/BeatSheetPicker'
+import TaleCoverEditor from './TaleCoverEditor'
 
 const fieldClass =
   'w-full rounded border border-bronze-dark/50 bg-ink px-3 py-2 text-cream placeholder:text-cream/30 focus:border-bronze focus:outline-none'
@@ -83,7 +84,9 @@ const TaleSettingsModal = ({ tale, taleId, hasBeats, hasBeatLinks, onClose }) =>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
+          <TaleCoverEditor tale={tale} taleId={taleId} />
+
+          <div className="border-t border-bronze-dark/30 pt-5">
             <label htmlFor="tale-settings-title-input" className="mb-2 block font-ui text-xs uppercase text-cream/80">
               Title
             </label>

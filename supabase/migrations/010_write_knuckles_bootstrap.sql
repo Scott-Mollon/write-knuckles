@@ -59,9 +59,25 @@ create table if not exists write.tales (
   target_word_count int default 80000,
   beat_template_id uuid,
   progress jsonb default '{}'::jsonb,
+  cover_source_type text check (cover_source_type is null or cover_source_type in ('upload', 'url')),
+  cover_storage_path text,
+  cover_external_url text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  archived_at timestamptz
+  archived_at timestamptz,
+  constraint tales_cover_source_check check (
+    (cover_source_type is null and cover_storage_path is null and cover_external_url is null)
+    or (
+      cover_source_type = 'upload'
+      and cover_storage_path is not null
+      and cover_external_url is null
+    )
+    or (
+      cover_source_type = 'url'
+      and cover_external_url is not null
+      and cover_storage_path is null
+    )
+  )
 );
 
 -- Chapters
@@ -660,4 +676,8 @@ on conflict (version) do nothing;
 
 insert into write.schema_migrations (version, name)
 values ('011', 'tale_images_storage')
+on conflict (version) do nothing;
+
+insert into write.schema_migrations (version, name)
+values ('012', 'tale_cover')
 on conflict (version) do nothing;
