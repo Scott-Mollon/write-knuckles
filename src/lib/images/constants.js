@@ -25,6 +25,18 @@ export const IMAGE_SCOPES = ['scenes', 'characters', 'locations', 'research', 't
 
 export const REFERENCE_SCOPES = ['characters', 'locations', 'research']
 
+export const SCOPE_TO_ENTITY_TYPE = {
+  characters: 'character',
+  locations: 'location',
+  research: 'research',
+}
+
+export const ENTITY_TYPE_TO_SCOPE = {
+  character: 'characters',
+  location: 'locations',
+  research: 'research',
+}
+
 const MIME_TO_EXT = {
   'image/jpeg': '.jpg',
   'image/png': '.png',

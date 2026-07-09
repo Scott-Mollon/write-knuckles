@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { REFERENCE_TABS } from '../../constants/taleEditor'
+import { buildReferenceImageMeta } from '../../lib/images/referenceImages'
 import CharacterList from './CharacterList'
 import LocationList from './LocationList'
 import ResearchList from './ResearchList'
@@ -15,8 +16,13 @@ const ReferencePanel = ({
   characters,
   locations,
   researchItems,
+  referenceImages = [],
 }) => {
   const [tab, setTab] = useState(REFERENCE_TABS.CHARACTERS)
+  const imageMeta = useMemo(
+    () => buildReferenceImageMeta(referenceImages),
+    [referenceImages]
+  )
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -37,13 +43,13 @@ const ReferencePanel = ({
 
       <div className="flex min-h-0 flex-1 overflow-hidden p-4 sm:p-6">
         {tab === REFERENCE_TABS.CHARACTERS && (
-          <CharacterList taleId={taleId} characters={characters} />
+          <CharacterList taleId={taleId} characters={characters} imageMeta={imageMeta} />
         )}
         {tab === REFERENCE_TABS.LOCATIONS && (
-          <LocationList taleId={taleId} locations={locations} />
+          <LocationList taleId={taleId} locations={locations} imageMeta={imageMeta} />
         )}
         {tab === REFERENCE_TABS.RESEARCH && (
-          <ResearchList taleId={taleId} researchItems={researchItems} />
+          <ResearchList taleId={taleId} researchItems={researchItems} imageMeta={imageMeta} />
         )}
       </div>
     </div>

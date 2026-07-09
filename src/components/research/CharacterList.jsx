@@ -5,6 +5,10 @@ import {
   useUpdateCharacter,
 } from '../../hooks/useReferenceMutations'
 import {
+  getEntityHero,
+  getEntityImageCount,
+} from '../../lib/images/referenceImages'
+import {
   collectUniqueTags,
   filterItemsByTags,
   formatTags,
@@ -12,6 +16,7 @@ import {
   parseTags,
   tagsEqual,
 } from '../../lib/reference'
+import ReferenceImageGallery from '../images/ReferenceImageGallery'
 import ReferencePinBoard from './ReferencePinBoard'
 import { fieldClass, labelClass } from './referenceStyles'
 
@@ -57,6 +62,13 @@ const CharacterDetailForm = ({ character, taleId }) => {
 
   return (
     <div className="space-y-4">
+      <ReferenceImageGallery
+        taleId={taleId}
+        entityType="character"
+        entityId={character.id}
+        label="Images"
+      />
+
       <div>
         <label className={labelClass} htmlFor={`character-name-${character.id}`}>
           Name
@@ -116,7 +128,7 @@ const CharacterDetailForm = ({ character, taleId }) => {
   )
 }
 
-const CharacterList = ({ taleId, characters }) => {
+const CharacterList = ({ taleId, characters, imageMeta }) => {
   const create = useCreateCharacter(taleId)
   const del = useDeleteCharacter(taleId)
   const [selectedId, setSelectedId] = useState(null)
@@ -174,6 +186,8 @@ const CharacterList = ({ taleId, characters }) => {
         eyebrow: c.role || 'Character',
         preview: getJsonSummary(c.bio) || null,
         tags: c.tags || [],
+        heroImage: getEntityHero(imageMeta?.heroes, 'character', c.id),
+        imageCount: getEntityImageCount(imageMeta?.counts, 'character', c.id),
       })}
       detailTitle={selected?.name || 'Character'}
       detailSubtitle={selected?.role || 'No role set'}

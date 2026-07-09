@@ -64,6 +64,8 @@ const ReferencePinBoard = ({
                   eyebrow={props.eyebrow}
                   preview={props.preview}
                   tags={props.tags}
+                  heroImage={props.heroImage}
+                  imageCount={props.imageCount}
                   selected={selectedId === item.id}
                   onSelect={() => onSelect(item.id)}
                 />

@@ -1,9 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { writeDb } from '../clients/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { deleteEntityReferenceImages } from './useReferenceImages'
 
 const invalidateReference = (queryClient, taleId) => {
   queryClient.invalidateQueries({ queryKey: ['tale-reference', taleId] })
+  queryClient.invalidateQueries({ queryKey: ['reference-images', taleId] })
 }
 
 export const useCreateCharacter = (taleId) => {
@@ -61,6 +63,7 @@ export const useDeleteCharacter = (taleId) => {
 
   return useMutation({
     mutationFn: async (id) => {
+      await deleteEntityReferenceImages(taleId, 'character', id)
       const { error } = await writeDb.from('characters').delete().eq('id', id)
       if (error) throw error
     },
@@ -123,6 +126,7 @@ export const useDeleteLocation = (taleId) => {
 
   return useMutation({
     mutationFn: async (id) => {
+      await deleteEntityReferenceImages(taleId, 'location', id)
       const { error } = await writeDb.from('locations').delete().eq('id', id)
       if (error) throw error
     },
@@ -185,6 +189,7 @@ export const useDeleteResearchItem = (taleId) => {
 
   return useMutation({
     mutationFn: async (id) => {
+      await deleteEntityReferenceImages(taleId, 'research', id)
       const { error } = await writeDb.from('research_items').delete().eq('id', id)
       if (error) throw error
     },

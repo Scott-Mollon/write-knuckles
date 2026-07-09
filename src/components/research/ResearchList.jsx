@@ -5,12 +5,17 @@ import {
   useUpdateResearchItem,
 } from '../../hooks/useReferenceMutations'
 import {
+  getEntityHero,
+  getEntityImageCount,
+} from '../../lib/images/referenceImages'
+import {
   collectUniqueTags,
   filterItemsByTags,
   formatTags,
   parseTags,
   tagsEqual,
 } from '../../lib/reference'
+import ReferenceImageGallery from '../images/ReferenceImageGallery'
 import ReferencePinBoard from './ReferencePinBoard'
 import { fieldClass, labelClass } from './referenceStyles'
 
@@ -58,6 +63,13 @@ const ResearchDetailForm = ({ item, taleId }) => {
 
   return (
     <div className="space-y-4">
+      <ReferenceImageGallery
+        taleId={taleId}
+        entityType="research"
+        entityId={item.id}
+        label="Images"
+      />
+
       <div>
         <label className={labelClass} htmlFor={`research-title-${item.id}`}>
           Title
@@ -117,7 +129,7 @@ const ResearchDetailForm = ({ item, taleId }) => {
   )
 }
 
-const ResearchList = ({ taleId, researchItems }) => {
+const ResearchList = ({ taleId, researchItems, imageMeta }) => {
   const create = useCreateResearchItem(taleId)
   const del = useDeleteResearchItem(taleId)
   const [selectedId, setSelectedId] = useState(null)
@@ -175,6 +187,8 @@ const ResearchList = ({ taleId, researchItems }) => {
         eyebrow: item.url ? 'Source' : 'Note',
         preview: item.body || null,
         tags: item.tags || [],
+        heroImage: getEntityHero(imageMeta?.heroes, 'research', item.id),
+        imageCount: getEntityImageCount(imageMeta?.counts, 'research', item.id),
       })}
       detailTitle={selected?.title || 'Research'}
       detailSubtitle={selected?.url || (selected?.tags?.length ? selected.tags.join(', ') : 'Research note')}

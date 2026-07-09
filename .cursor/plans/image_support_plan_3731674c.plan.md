@@ -7,16 +7,16 @@ todos:
     status: completed
   - id: reference-images-schema
     content: Add write.reference_images table with hero unique constraint, RLS, avatar_url sync trigger for characters
-    status: pending
+    status: completed
   - id: upload-infra
     content: Build storage.js, useSignedStorageUrl, useTaleImageUpload, useTaleImageFromUrl, and reusable ImageUpload component (URL + drag-drop + picker)
     status: completed
   - id: reference-gallery
     content: Add useReferenceImages hook, ReferenceImageGallery, wire into Character/Location/Research detail forms
-    status: pending
+    status: completed
   - id: pin-card-hero
     content: Extend ReferencePinCard + list getCardProps to show hero image and image count badge
-    status: pending
+    status: completed
   - id: tiptap-scene-image
     content: Create SceneImage extension with display modes, FileHandler, NodeView signed URL resolution
     status: pending
@@ -39,6 +39,7 @@ isProject: false
 - **Storage foundation (step 1 — done):** migration `011` adds private bucket `write-tale-images`, `write.can_access_tale()`, and Storage RLS. Path convention: `{user_id}/{tale_id}/{scope}/{entity_id}/{uuid}.{ext}`.
 - **Upload infrastructure (step 2 — done):** `src/lib/images/*`, `useSignedStorageUrl`, `useTaleImageUpload`, `useTaleImageFromUrl`, and `ImageUpload` component.
 - **Tale cover (step 3 — done):** migration `012`, `useUpdateTaleCover`, `TaleCard` on dashboard, cover editor in Tale Settings.
+- **Reference galleries (step 4 — done):** `reference_images` table, gallery UI in Research mode, hero images on pin cards.
 - **TipTap** ([`src/lib/editor/extensions.js`](c:\Users\scott\Documents\code\write-knuckles\src\lib\editor\extensions.js)) has no image extension; scene content is TipTap JSON in `write.scenes.content`.
 - **Reference cards** share [`ReferencePinCard.jsx`](c:\Users\scott\Documents\code\write-knuckles\src\components\research\ReferencePinCard.jsx) via Character/Location/Research list components; forms live inline in each `*List.jsx`.
 - **RLS** is single-owner today (`auth.uid() = user_id` + `write.is_approved_user()`). No collaborator policies yet.
@@ -444,7 +445,7 @@ Recommended sequence to keep each step shippable:
 1. ~~**Storage + RLS + `can_access_tale`**~~ — **done** (`011_tale_images_storage.sql`)
 2. ~~**`storage.js` + `urls.js` + `useSignedStorageUrl` + `useTaleImageUpload` + `useTaleImageFromUrl` + `ImageUpload`**~~ — **done** (storage helpers + hooks + component; no UI consumers yet)
 3. ~~**Tale cover columns + `useUpdateTaleCover` + TaleSettingsModal cover section + `TaleCard` on dashboard**~~ — **done**
-4. **Reference images DB + hooks + gallery UI + card hero display** — visible win in Research mode
+4. ~~**Reference images DB + hooks + gallery UI + card hero display**~~ — **done**
 5. **SceneImage extension + editor integration** — depends on upload hook from step 2
 6. **Polish** — CSS themes (light/dark editor), error toasts, alt-text prompts
 

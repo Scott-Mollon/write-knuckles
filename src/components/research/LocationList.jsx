@@ -5,6 +5,10 @@ import {
   useUpdateLocation,
 } from '../../hooks/useReferenceMutations'
 import {
+  getEntityHero,
+  getEntityImageCount,
+} from '../../lib/images/referenceImages'
+import {
   collectUniqueTags,
   filterItemsByTags,
   formatTags,
@@ -12,6 +16,7 @@ import {
   parseTags,
   tagsEqual,
 } from '../../lib/reference'
+import ReferenceImageGallery from '../images/ReferenceImageGallery'
 import ReferencePinBoard from './ReferencePinBoard'
 import { fieldClass, labelClass } from './referenceStyles'
 
@@ -57,6 +62,13 @@ const LocationDetailForm = ({ location, taleId }) => {
 
   return (
     <div className="space-y-4">
+      <ReferenceImageGallery
+        taleId={taleId}
+        entityType="location"
+        entityId={location.id}
+        label="Images"
+      />
+
       <div>
         <label className={labelClass} htmlFor={`location-name-${location.id}`}>
           Name
@@ -116,7 +128,7 @@ const LocationDetailForm = ({ location, taleId }) => {
   )
 }
 
-const LocationList = ({ taleId, locations }) => {
+const LocationList = ({ taleId, locations, imageMeta }) => {
   const create = useCreateLocation(taleId)
   const del = useDeleteLocation(taleId)
   const [selectedId, setSelectedId] = useState(null)
@@ -174,6 +186,8 @@ const LocationList = ({ taleId, locations }) => {
         eyebrow: 'Location',
         preview: loc.description || getJsonSummary(loc.notes) || null,
         tags: loc.tags || [],
+        heroImage: getEntityHero(imageMeta?.heroes, 'location', loc.id),
+        imageCount: getEntityImageCount(imageMeta?.counts, 'location', loc.id),
       })}
       detailTitle={selected?.name || 'Location'}
       detailSubtitle={selected?.description || 'No description'}

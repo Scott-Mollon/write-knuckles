@@ -73,6 +73,7 @@ const TaleEditorPage = () => {
   const characters = reference?.characters || []
   const locations = reference?.locations || []
   const researchItems = reference?.researchItems || []
+  const referenceImages = reference?.referenceImages || []
   const characterLinks = reference?.characterLinks || []
   const locationLinks = reference?.locationLinks || []
 
@@ -180,6 +181,7 @@ const TaleEditorPage = () => {
           characters={characters}
           locations={locations}
           researchItems={researchItems}
+          referenceImages={referenceImages}
         />
       )}
 

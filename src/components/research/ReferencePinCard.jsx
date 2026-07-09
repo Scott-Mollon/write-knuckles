@@ -1,3 +1,4 @@
+import ReferenceImageDisplay from '../images/ReferenceImageDisplay'
 import { toneForId } from './referenceStyles'
 
 const ReferencePinCard = ({
@@ -6,10 +7,13 @@ const ReferencePinCard = ({
   eyebrow,
   preview,
   tags = [],
+  heroImage = null,
+  imageCount = 0,
   selected = false,
   onSelect,
 }) => {
   const tone = toneForId(id)
+  const extraImages = imageCount > 1 ? imageCount - 1 : 0
 
   return (
     <button
@@ -22,7 +26,27 @@ const ReferencePinCard = ({
       }`}
     >
       <div className={`h-1.5 rounded-t ${tone.bar}`} />
-      <div className={`bg-gradient-to-b ${tone.wash} px-3 pb-3 pt-3`}>
+
+      {heroImage ? (
+        <div className="relative flex h-32 items-center justify-center border-b border-bronze-dark/30 bg-surface/50">
+          <ReferenceImageDisplay
+            image={heroImage}
+            alt={title ? `Hero for ${title}` : 'Hero image'}
+            sizeClass="max-h-32 w-full"
+            objectFit="scale-down"
+            className="rounded-none border-0"
+          />
+          {extraImages > 0 && (
+            <span className="absolute bottom-2 right-2 rounded bg-ink/80 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-cream/70">
+              +{extraImages}
+            </span>
+          )}
+        </div>
+      ) : (
+        <div className={`bg-gradient-to-b ${tone.wash} px-3 pt-3`} />
+      )}
+
+      <div className={`${heroImage ? 'bg-surface/50' : `bg-gradient-to-b ${tone.wash}`} px-3 pb-3 pt-3`}>
         {eyebrow && (
           <p className="mb-1 font-ui text-[10px] uppercase tracking-widest text-cream/45">{eyebrow}</p>
         )}

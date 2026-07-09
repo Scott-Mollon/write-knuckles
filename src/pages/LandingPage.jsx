@@ -74,9 +74,9 @@ const LandingPage = () => {
           <p id="landing-brand" className="landing-hero__brand">
             Write Knuckles
           </p>
-          <h1 className="landing-hero__headline">Structure the story. Write the scene.</h1>
+          <h1 className="landing-hero__headline">Knock Out Your Story</h1>
           <p className="landing-hero__support">
-            The back room where the story gets written — Rack, Story Board, and Beat Sheets in one desk.
+            The back room where the story gets written — Rack, Story Board, and Beat Sheets all in one desk.
           </p>
           <p className="landing-hero__note">Write Knuckles is in Beta and currently invite-only.</p>
           <p className="landing-hero__note">
@@ -179,7 +179,7 @@ const LandingPage = () => {
 
       <section className="landing-cta-band">
         <div className="landing-cta-band__inner">
-          <h2 className="landing-cta-band__title">Knuckle Down and Write Your Story</h2>
+          <h2 className="landing-cta-band__title">Knuckle Down and Knock Out Your Story</h2>
           <p className="landing-cta-band__body">
             Write Knuckles is in Beta and currently invite-only.
           </p>
