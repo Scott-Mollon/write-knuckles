@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useUpdateTaleCover } from '../../hooks/useTales'
+import { confirmAction } from '../../lib/confirmAction'
 import { taleHasCover } from '../../lib/images/resolveImageUrl'
 import ImageUpload from '../images/ImageUpload'
 import TaleCoverThumbnail from './TaleCoverThumbnail'
@@ -28,7 +29,7 @@ const TaleCoverEditor = ({ tale, taleId }) => {
 
   const handleRemove = async () => {
     if (!hasCover) return
-    if (!window.confirm('Remove this cover image?')) return
+    if (!(await confirmAction('Remove this cover image?'))) return
 
     setError(null)
     try {

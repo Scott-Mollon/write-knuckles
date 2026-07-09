@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { SCENE_STATUSES, SCENE_STATUS_COLORS, POV_COLOR_TAGS, DEFAULT_SCENE_COLOR } from '../../constants/taleEditor'
 import { useUpdateSceneMeta } from '../../hooks/useSceneMutations'
 import { useCreateBeatLink, useDeleteBeatLink } from '../../hooks/useBeatLinks'
+import { confirmUnlink } from '../../lib/confirmAction'
 import { getSceneBeatLinks } from '../../lib/beats'
 import SceneReferenceLinks from './SceneReferenceLinks'
 
@@ -71,7 +72,8 @@ const Inspector = ({
     createLink.mutate({ beatKey, sceneId: scene.id })
   }
 
-  const handleUnlinkBeat = (linkId) => {
+  const handleUnlinkBeat = async (linkId, beatTitle) => {
+    if (!(await confirmUnlink(`beat "${beatTitle}"`))) return
     deleteLink.mutate(linkId)
   }
 
@@ -183,7 +185,7 @@ const Inspector = ({
                     <span className="px-2 py-1">{linkedBeat.title}</span>
                     <button
                       type="button"
-                      onClick={() => handleUnlinkBeat(sceneLinks[0].id)}
+                      onClick={() => handleUnlinkBeat(sceneLinks[0].id, linkedBeat.title)}
                       className="pr-1.5 text-bronze/60 hover:text-error"
                       title="Unlink beat"
                       aria-label={`Unlink ${linkedBeat.title}`}

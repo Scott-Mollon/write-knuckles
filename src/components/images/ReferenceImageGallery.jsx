@@ -7,6 +7,7 @@ import {
   useSetReferenceHero,
 } from '../../hooks/useReferenceImages'
 import { ENTITY_TYPE_TO_SCOPE } from '../../lib/images/constants'
+import { confirmDelete } from '../../lib/confirmAction'
 import ImageUpload from './ImageUpload'
 import ReferenceImageDisplay from './ReferenceImageDisplay'
 
@@ -63,7 +64,7 @@ const ReferenceImageGallery = ({ taleId, entityType, entityId, label = 'Images' 
   }
 
   const handleDelete = async (image) => {
-    if (!window.confirm('Delete this image?')) return
+    if (!(await confirmDelete('this image'))) return
     setError(null)
     try {
       await deleteImage.mutateAsync({ image })

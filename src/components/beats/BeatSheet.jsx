@@ -5,6 +5,7 @@ import {
   getBeatWordProgress,
 } from '../../lib/beats'
 import { useCreateBeatLink, useDeleteBeatLink } from '../../hooks/useBeatLinks'
+import { confirmUnlink } from '../../lib/confirmAction'
 import BeatWordBar from './BeatWordBar'
 import BeatSheetPicker from './BeatSheetPicker'
 import SceneLinkSelect from './SceneLinkSelect'
@@ -22,9 +23,15 @@ const BeatSheet = ({ beats, beatLinks, scenes, chapters = [], tale, onOpenScene 
     createLink.mutate({ beatKey, sceneId })
   }
 
-  const handleUnlink = (beatKey, sceneId) => {
+  const handleUnlink = async (beatKey, sceneId) => {
     const link = beatLinks.find((l) => l.beat_key === beatKey && l.scene_id === sceneId)
-    if (link) deleteLink.mutate(link.id)
+    if (!link) return
+
+    const scene = scenes.find((s) => s.id === sceneId)
+    const sceneLabel = scene ? formatSceneLabel(scene, chapters) : 'this scene'
+    if (!(await confirmUnlink(`scene "${sceneLabel}" from this beat`))) return
+
+    deleteLink.mutate(link.id)
   }
 
   if (beats.length === 0) {

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useDeleteTale } from '../../hooks/useTales'
+import { confirmDelete } from '../../lib/confirmAction'
 import TaleCoverThumbnail from './TaleCoverThumbnail'
 
 const TaleCard = ({ tale }) => {
@@ -36,8 +37,8 @@ const TaleCard = ({ tale }) => {
 
         <button
           type="button"
-          onClick={() => {
-            if (window.confirm(`Delete "${tale.title}"? This cannot be undone.`)) {
+          onClick={async () => {
+            if (await confirmDelete(`"${tale.title}"`, { irreversible: true })) {
               deleteTale.mutate(tale.id)
             }
           }}

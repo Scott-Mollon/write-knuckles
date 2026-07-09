@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useBeatTemplates } from '../../hooks/useTales'
 import { useApplyBeatTemplate } from '../../hooks/useApplyBeatTemplate'
+import { confirmAction } from '../../lib/confirmAction'
 import Loading from '../../pages/Loading'
 
 const BeatSheetPicker = ({
@@ -43,7 +44,7 @@ const BeatSheetPicker = ({
       const message = hasBeatLinks
         ? `Replace the beat sheet with "${selected.name}"? Scene-to-beat links will be removed.`
         : `Replace the beat sheet with "${selected.name}"?`
-      if (!window.confirm(message)) return
+      if (!(await confirmAction(message))) return
     }
 
     try {

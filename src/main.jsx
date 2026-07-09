@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { ConfirmProvider } from './contexts/ConfirmContext'
 import NavBar from './components/NavBar'
 import Loading from './pages/Loading'
 import './index.css'
@@ -90,7 +91,9 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <Router>
       <AuthProvider>
-        <AppShell />
+        <ConfirmProvider>
+          <AppShell />
+        </ConfirmProvider>
       </AuthProvider>
     </Router>
   </QueryClientProvider>

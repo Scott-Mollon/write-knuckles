@@ -10,6 +10,7 @@ import {
   getSceneCharacterLinks,
   getSceneLocationLinks,
 } from '../../lib/reference'
+import { confirmUnlink } from '../../lib/confirmAction'
 
 const chipClass = 'inline-flex max-w-full items-start gap-1 rounded bg-bronze/20 text-xs text-bronze'
 const selectClass =
@@ -52,7 +53,11 @@ const SceneReferenceLinks = ({
                   {link && (
                     <button
                       type="button"
-                      onClick={() => deleteCharLink.mutate(link.id)}
+                      onClick={async () => {
+                        if (await confirmUnlink(`character "${c.name}"`)) {
+                          deleteCharLink.mutate(link.id)
+                        }
+                      }}
                       className="pr-1.5 text-bronze/60 hover:text-error"
                       title="Unlink character"
                       aria-label={`Unlink ${c.name}`}
@@ -102,7 +107,11 @@ const SceneReferenceLinks = ({
                   {link && (
                     <button
                       type="button"
-                      onClick={() => deleteLocLink.mutate(link.id)}
+                      onClick={async () => {
+                        if (await confirmUnlink(`location "${loc.name}"`)) {
+                          deleteLocLink.mutate(link.id)
+                        }
+                      }}
                       className="pr-1.5 text-bronze/60 hover:text-error"
                       title="Unlink location"
                       aria-label={`Unlink ${loc.name}`}

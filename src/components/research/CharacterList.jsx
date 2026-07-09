@@ -194,10 +194,8 @@ const CharacterList = ({ taleId, characters, imageMeta }) => {
       onDelete={
         selected
           ? () => {
-              if (window.confirm(`Delete "${selected.name}"?`)) {
-                del.mutate(selected.id)
-                setSelectedId(null)
-              }
+              del.mutate(selected.id)
+              setSelectedId(null)
             }
           : undefined
       }

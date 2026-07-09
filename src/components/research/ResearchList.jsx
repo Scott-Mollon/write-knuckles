@@ -195,10 +195,8 @@ const ResearchList = ({ taleId, researchItems, imageMeta }) => {
       onDelete={
         selected
           ? () => {
-              if (window.confirm(`Delete "${selected.title}"?`)) {
-                del.mutate(selected.id)
-                setSelectedId(null)
-              }
+              del.mutate(selected.id)
+              setSelectedId(null)
             }
           : undefined
       }

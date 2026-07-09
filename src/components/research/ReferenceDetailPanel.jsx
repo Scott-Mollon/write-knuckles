@@ -1,3 +1,5 @@
+import { confirmDelete } from '../../lib/confirmAction'
+
 const ReferenceDetailPanel = ({
   title,
   subtitle,
@@ -29,7 +31,11 @@ const ReferenceDetailPanel = ({
       <div className="border-t border-bronze-dark/30 px-4 py-3">
         <button
           type="button"
-          onClick={onDelete}
+          onClick={async () => {
+            if (await confirmDelete(`"${title}"`, { irreversible: true })) {
+              onDelete()
+            }
+          }}
           className="font-ui text-xs uppercase tracking-wide text-error/80 hover:text-error"
         >
           {deleteLabel}

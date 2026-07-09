@@ -6,6 +6,7 @@ import {
   useApproveUser,
   useSetUserAccess,
 } from '../hooks/useApprovedUsers'
+import { confirmAction } from '../lib/confirmAction'
 import Loading from './Loading'
 
 const getApprovalForEmail = (approvals, email) => {
@@ -73,6 +74,10 @@ const AccessAdminPage = () => {
   const handleToggleAccess = async (account) => {
     const approval = getApprovalForEmail(approvalList, account.email)
     const isActive = approval && !approval.revoked_at
+
+    if (isActive && !(await confirmAction(`Revoke access for ${account.email}?`))) {
+      return
+    }
 
     try {
       await setUserAccess.mutateAsync({
@@ -224,11 +229,14 @@ const AccessAdminPage = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setUserAccess.mutate({
-                    email: u.email,
-                    approval: u,
-                    action: 'revoke',
-                  })}
+                  onClick={async () => {
+                    if (!(await confirmAction(`Revoke pre-approval for ${u.email}?`))) return
+                    setUserAccess.mutate({
+                      email: u.email,
+                      approval: u,
+                      action: 'revoke',
+                    })
+                  }}
                   disabled={setUserAccess.isPending}
                   className="shrink-0 text-xs text-cream/40 hover:text-error"
                 >

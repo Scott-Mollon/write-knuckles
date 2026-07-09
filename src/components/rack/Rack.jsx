@@ -24,6 +24,7 @@ import {
   useUpdateChapterMeta,
 } from '../../hooks/useSceneMutations'
 import ChapterTitleInput from '../chapters/ChapterTitleInput'
+import { confirmDelete } from '../../lib/confirmAction'
 import { getScenePovColor } from '../../lib/scenePov'
 
 const SortableScene = ({ scene, isActive, onSelect, onDelete, canDelete }) => {
@@ -39,32 +40,35 @@ const SortableScene = ({ scene, isActive, onSelect, onDelete, canDelete }) => {
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="mb-1 flex items-center gap-1">
-      <button
-        type="button"
-        className="cursor-grab px-1 text-cream/30 hover:text-cream/60 active:cursor-grabbing"
-        aria-label="Drag scene"
-        {...attributes}
-        {...listeners}
-      >
-        ⠿
-      </button>
-      <button
-        type="button"
-        onClick={() => onSelect(scene.id)}
-        className={`min-w-0 flex-1 truncate rounded border-l-[3px] py-1 pl-2 pr-2 text-left text-sm ${
-          isActive ? 'bg-bronze/20 text-bronze' : 'text-cream/70 hover:bg-ink'
-        }`}
-        style={{ borderLeftColor: getScenePovColor(scene) }}
-      >
-        {scene.title}
-      </button>
+    <div className="mb-1 flex items-center gap-1">
+      <div ref={setNodeRef} style={style} className="flex min-w-0 flex-1 items-center gap-1">
+        <button
+          type="button"
+          className="cursor-grab px-1 text-cream/30 hover:text-cream/60 active:cursor-grabbing"
+          aria-label="Drag scene"
+          {...attributes}
+          {...listeners}
+        >
+          ⠿
+        </button>
+        <button
+          type="button"
+          onClick={() => onSelect(scene.id)}
+          className={`min-w-0 flex-1 truncate rounded border-l-[3px] py-1 pl-2 pr-2 text-left text-sm ${
+            isActive ? 'bg-bronze/20 text-bronze' : 'text-cream/70 hover:bg-ink'
+          }`}
+          style={{ borderLeftColor: getScenePovColor(scene) }}
+        >
+          {scene.title}
+        </button>
+      </div>
       {canDelete && (
         <button
           type="button"
-          onClick={() => onDelete(scene.id)}
-          className="px-1 text-xs text-cream/30 hover:text-error"
+          onClick={() => onDelete(scene)}
+          className="shrink-0 px-1 text-xs text-cream/30 hover:text-error"
           title="Delete scene"
+          aria-label={`Delete ${scene.title}`}
         >
           ×
         </button>
@@ -99,36 +103,39 @@ const SortableChapter = ({
   const sceneIds = chapter.scenes.map((s) => `scene-${s.id}`)
 
   return (
-    <div ref={setNodeRef} style={style} className="mb-4">
+    <div className="mb-4">
       <div className="mb-1 flex items-start gap-1">
-        <button
-          type="button"
-          className="cursor-grab px-1 text-cream/30 hover:text-cream/60 active:cursor-grabbing"
-          aria-label="Drag chapter"
-          {...attributes}
-          {...listeners}
-        >
-          ⠿
-        </button>
-        <ChapterTitleInput
-          chapter={chapter}
-          chapterIndex={chapterIndex}
-          onSave={onSaveChapterTitle}
-        />
-        <button
-          type="button"
-          onClick={() => onAddScene(chapter.id)}
-          className="px-1 text-xs text-bronze hover:text-cream"
-          title="Add scene"
-        >
-          + Scene
-        </button>
+        <div ref={setNodeRef} style={style} className="flex min-w-0 flex-1 items-start gap-1">
+          <button
+            type="button"
+            className="cursor-grab px-1 text-cream/30 hover:text-cream/60 active:cursor-grabbing"
+            aria-label="Drag chapter"
+            {...attributes}
+            {...listeners}
+          >
+            ⠿
+          </button>
+          <ChapterTitleInput
+            chapter={chapter}
+            chapterIndex={chapterIndex}
+            onSave={onSaveChapterTitle}
+          />
+          <button
+            type="button"
+            onClick={() => onAddScene(chapter.id)}
+            className="px-1 text-xs text-bronze hover:text-cream"
+            title="Add scene"
+          >
+            + Scene
+          </button>
+        </div>
         {canDeleteChapter && (
           <button
             type="button"
-            onClick={() => onDeleteChapter(chapter.id)}
-            className="px-1 text-xs text-cream/30 hover:text-error"
+            onClick={() => onDeleteChapter(chapter)}
+            className="shrink-0 px-1 text-xs text-cream/30 hover:text-error"
             title="Delete chapter"
+            aria-label="Delete chapter"
           >
             ×
           </button>
@@ -305,18 +312,27 @@ const Rack = ({ taleId, chapters, activeSceneId, onSelectScene, totalScenes }) =
     onSelectScene(scene.id)
   }
 
-  const handleDeleteChapter = async (chapterId) => {
+  const handleDeleteChapter = async (chapter) => {
     if (localChapters.length <= 1) return
-    if (!window.confirm('Delete this chapter and all its scenes?')) return
-    await deleteChapter.mutateAsync(chapterId)
+
+    const label = chapter.title?.trim()
+      ? `chapter "${chapter.title}" and all its scenes`
+      : 'this chapter and all its scenes'
+
+    if (!(await confirmDelete(label, { irreversible: true }))) return
+
+    await deleteChapter.mutateAsync(chapter.id)
   }
 
-  const handleDeleteScene = async (sceneId) => {
+  const handleDeleteScene = async (scene) => {
     if (totalScenes <= 1) return
-    if (!window.confirm('Delete this scene?')) return
-    await deleteScene.mutateAsync(sceneId)
-    if (activeSceneId === sceneId) {
-      const remaining = localChapters.flatMap((ch) => ch.scenes).filter((s) => s.id !== sceneId)
+
+    const label = scene.title?.trim() ? `"${scene.title}"` : 'this scene'
+    if (!(await confirmDelete(label, { irreversible: true }))) return
+
+    await deleteScene.mutateAsync(scene.id)
+    if (activeSceneId === scene.id) {
+      const remaining = localChapters.flatMap((ch) => ch.scenes).filter((s) => s.id !== scene.id)
       if (remaining[0]) onSelectScene(remaining[0].id)
     }
   }
