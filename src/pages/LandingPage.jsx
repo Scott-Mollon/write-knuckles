@@ -19,7 +19,7 @@ const FEATURES = [
   {
     id: 'editor',
     title: 'Scene editor',
-    body: 'Write with drop caps, scene dividers, live word count, and autosave that locks in your work.',
+    body: 'Write with drop caps, images, scene dividers, live word count, and autosave that locks in your work.',
     src: '/marketing/feature-editor.png',
     alt: 'TipTap scene editor with toolbar and prose',
     caption: 'feature-editor.png — Editor with toolbar & word count',
