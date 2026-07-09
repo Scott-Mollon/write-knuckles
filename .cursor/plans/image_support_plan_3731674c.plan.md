@@ -10,7 +10,7 @@ todos:
     status: pending
   - id: upload-infra
     content: Build storage.js, useSignedStorageUrl, useTaleImageUpload, useTaleImageFromUrl, and reusable ImageUpload component (URL + drag-drop + picker)
-    status: pending
+    status: completed
   - id: reference-gallery
     content: Add useReferenceImages hook, ReferenceImageGallery, wire into Character/Location/Research detail forms
     status: pending
@@ -36,7 +36,8 @@ isProject: false
 
 ## Current state
 
-- **No Supabase Storage** in write-knuckles today — only URL text columns (`characters.avatar_url` unused; `research_items.url` is an external link).
+- **Storage foundation (step 1 — done):** migration `011` adds private bucket `write-tale-images`, `write.can_access_tale()`, and Storage RLS. Path convention: `{user_id}/{tale_id}/{scope}/{entity_id}/{uuid}.{ext}`.
+- **Upload infrastructure (step 2 — done):** `src/lib/images/*`, `useSignedStorageUrl`, `useTaleImageUpload`, `useTaleImageFromUrl`, and `ImageUpload` component. Metadata persistence (reference_images, tale cover) lands in steps 3–4.
 - **TipTap** ([`src/lib/editor/extensions.js`](c:\Users\scott\Documents\code\write-knuckles\src\lib\editor\extensions.js)) has no image extension; scene content is TipTap JSON in `write.scenes.content`.
 - **Reference cards** share [`ReferencePinCard.jsx`](c:\Users\scott\Documents\code\write-knuckles\src\components\research\ReferencePinCard.jsx) via Character/Location/Research list components; forms live inline in each `*List.jsx`.
 - **RLS** is single-owner today (`auth.uid() = user_id` + `write.is_approved_user()`). No collaborator policies yet.
@@ -439,8 +440,8 @@ flowchart LR
 
 Recommended sequence to keep each step shippable:
 
-1. **Storage + RLS + `can_access_tale`** — foundation, testable via Supabase dashboard
-2. **`storage.js` + `urls.js` + `useSignedStorageUrl` + `useTaleImageUpload` + `useTaleImageFromUrl` + `ImageUpload`** — reusable input (URL + upload), no UI consumers yet
+1. ~~**Storage + RLS + `can_access_tale`**~~ — **done** (`011_tale_images_storage.sql`)
+2. ~~**`storage.js` + `urls.js` + `useSignedStorageUrl` + `useTaleImageUpload` + `useTaleImageFromUrl` + `ImageUpload`**~~ — **done** (storage helpers + hooks + component; no UI consumers yet)
 3. **Tale cover columns + `useUpdateTaleCover` + TaleSettingsModal cover section + `TaleCard` on dashboard** — visible win on home screen
 4. **Reference images DB + hooks + gallery UI + card hero display** — visible win in Research mode
 5. **SceneImage extension + editor integration** — depends on upload hook from step 2
