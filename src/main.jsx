@@ -2,6 +2,7 @@ import { StrictMode, lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import CookieConsent from 'react-cookie-consent'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ConfirmProvider } from './contexts/ConfirmContext'
 import NavBar from './components/NavBar'
@@ -36,7 +37,10 @@ const AppShell = () => {
   const { loading, isSignedIn } = useAuth()
   // Landing has its own marketing header; hide app NavBar for guests (and while auth loads) on `/`
   const hideNav =
-    pathname === '/about' || (pathname === '/' && (loading || !isSignedIn()))
+    pathname === '/about' ||
+    pathname === '/privacy' ||
+    pathname === '/terms' ||
+    (pathname === '/' && (loading || !isSignedIn()))
 
   return (
     <>
@@ -96,6 +100,15 @@ const App = () => (
         </ConfirmProvider>
       </AuthProvider>
     </Router>
+    <CookieConsent
+      location="bottom"
+      buttonText="I Accept"
+      expires={365}
+      buttonStyle={{ backgroundColor: 'var(--main-color)', marginRight: '100px' }}
+    >
+      Write Knuckles only uses essential cookies for the website. Non-essential cookies are not used for
+      analytics or any other purpose.
+    </CookieConsent>
   </QueryClientProvider>
 )
 

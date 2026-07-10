@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase, writeDb } from '../clients/supabase'
+import { deleteMyAccount as deleteMyAccountRequest } from '../lib/deleteAccount'
 
 const AuthContext = createContext()
 
@@ -144,6 +145,49 @@ export const AuthProvider = ({ children }) => {
     return supabase.auth.signOut()
   }
 
+  const deleteAccount = async () => {
+    try {
+      await deleteMyAccountRequest()
+      setUser(null)
+      setSession(null)
+      setAdmin(false)
+      setApproved(false)
+      await supabase.auth.signOut()
+      return { success: true }
+    } catch (err) {
+      return {
+        success: false,
+        message: err.message || 'Failed to delete account. Please try again.',
+      }
+    }
+  }
+
+  const updateProfile = async ({ firstName, lastName }) => {
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        data: {
+          first_name: firstName?.trim() || '',
+          last_name: lastName?.trim() || '',
+        },
+      })
+
+      if (error) {
+        return { success: false, message: error.message }
+      }
+
+      if (data.user) {
+        setUser(data.user)
+      }
+
+      return { success: true }
+    } catch {
+      return {
+        success: false,
+        message: 'Failed to update profile. Please try again.',
+      }
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -156,6 +200,8 @@ export const AuthProvider = ({ children }) => {
         admin,
         approved,
         signout,
+        deleteAccount,
+        updateProfile,
         session,
       }}
     >

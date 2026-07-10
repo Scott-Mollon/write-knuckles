@@ -29,6 +29,7 @@
     "@tiptap/react": "^3.27.3",
     "@tiptap/starter-kit": "^3.27.3",
     "react": "^19.1.0",
+    "react-cookie-consent": "^9.0.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.3",
     "zustand": "^5.0.6"

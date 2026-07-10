@@ -1,5 +1,6 @@
 -- Write Knuckles bootstrap (consolidated starting point)
 -- Run this alone on a new Supabase project to create the full write schema.
+-- Includes migrations 011–015 (image storage, tale covers, reference images, account deletion).
 -- Databases already on migrations 001–009 should continue with incremental files instead.
 
 create schema if not exists write;
@@ -79,6 +80,10 @@ create table if not exists write.tales (
     )
   )
 );
+
+comment on column write.tales.cover_source_type is 'upload | url — null when no cover';
+comment on column write.tales.cover_storage_path is 'Path in write-tale-images when cover_source_type = upload';
+comment on column write.tales.cover_external_url is 'HTTPS URL when cover_source_type = url';
 
 -- Chapters
 create table if not exists write.chapters (
@@ -215,6 +220,9 @@ create unique index if not exists reference_images_one_hero_per_entity
 
 create index if not exists reference_images_entity_sort
   on write.reference_images (entity_type, entity_id, sort_order);
+
+comment on table write.reference_images is
+  'Image galleries for character, location, and research reference cards.';
 
 -- Scene ↔ character/location links
 create table if not exists write.scene_character_links (
@@ -462,6 +470,89 @@ grant execute on function write.link_approved_user() to authenticated;
 grant execute on function write.list_registered_users() to authenticated;
 grant execute on function write.search_scenes(uuid, text) to authenticated;
 
+create or replace function write.delete_my_account()
+returns void
+language plpgsql
+security definer
+set search_path = write, public, auth, storage
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_email text;
+  v_submission record;
+  v_bucket_id text;
+begin
+  if v_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  select email into v_email from auth.users where id = v_user_id;
+
+  for v_submission in
+    select s.id
+    from public."Submissions" s
+    left join public."Contributors" c on c.id = s.contributor_id
+    where s.user_id = v_user_id
+       or c.user_id = v_user_id
+  loop
+    v_bucket_id := 'sub-bucket-' || v_submission.id::text;
+
+    delete from storage.objects
+    where bucket_id = v_bucket_id;
+
+    delete from storage.buckets
+    where id = v_bucket_id;
+  end loop;
+
+  delete from public."Texts"
+  where submission_id in (
+    select s.id
+    from public."Submissions" s
+    left join public."Contributors" c on c.id = s.contributor_id
+    where s.user_id = v_user_id
+       or c.user_id = v_user_id
+  );
+
+  delete from public."Submissions"
+  where user_id = v_user_id
+     or contributor_id in (
+       select id from public."Contributors" where user_id = v_user_id
+     );
+
+  delete from public."Contributors"
+  where user_id = v_user_id;
+
+  delete from storage.objects
+  where bucket_id = 'write-tale-images'
+    and name like v_user_id::text || '/%';
+
+  delete from write.tales where user_id = v_user_id;
+
+  delete from write.beat_templates where user_id = v_user_id;
+
+  update write.approved_users
+  set
+    revoked_at = now(),
+    user_id = null
+  where user_id = v_user_id
+    or (
+      revoked_at is null
+      and v_email is not null
+      and lower(email) = lower(v_email)
+    );
+
+  delete from public."Admins" where admin_id = v_user_id;
+
+  delete from auth.users where id = v_user_id;
+end;
+$$;
+
+comment on function write.delete_my_account() is
+  'Deletes the caller''s magazine submissions, Write Knuckles data, storage files, and auth account.';
+
+revoke all on function write.delete_my_account() from public;
+grant execute on function write.delete_my_account() to authenticated;
+
 -- RLS
 alter table write.approved_users enable row level security;
 alter table write.tales enable row level security;
@@ -649,7 +740,8 @@ end $$;
 -- insert into write.approved_users (email, notes)
 -- values ('you@example.com', 'Founder');
 
--- Tale-scoped image storage (see 011_tale_images_storage.sql for incremental deploys)
+-- Tale-scoped image storage
+-- Path convention: {user_id}/{tale_id}/{scope}/{entity_id}/{uuid}.{ext}
 create or replace function write.tale_id_from_storage_path(p_path text)
 returns uuid
 language plpgsql
@@ -674,6 +766,9 @@ begin
 end;
 $$;
 
+comment on function write.tale_id_from_storage_path(text) is
+  'Extracts tale_id (2nd path segment) from write-tale-images object keys.';
+
 create or replace function write.can_access_tale(p_tale_id uuid)
 returns boolean
 language sql
@@ -689,6 +784,9 @@ as $$
     );
 $$;
 
+comment on function write.can_access_tale(uuid) is
+  'True when the signed-in approved user owns the tale. Add collaborator OR branch later.';
+
 create or replace function write.can_access_storage_path(p_path text)
 returns boolean
 language sql
@@ -700,6 +798,9 @@ as $$
     and (string_to_array(p_path, '/'))[1] = auth.uid()::text
     and write.can_access_tale(write.tale_id_from_storage_path(p_path));
 $$;
+
+comment on function write.can_access_storage_path(text) is
+  'Validates write-tale-images object paths against user ownership and tale access.';
 
 grant execute on function write.tale_id_from_storage_path(text) to authenticated;
 grant execute on function write.can_access_tale(uuid) to authenticated;
@@ -753,4 +854,12 @@ on conflict (version) do nothing;
 
 insert into write.schema_migrations (version, name)
 values ('013', 'reference_images')
+on conflict (version) do nothing;
+
+insert into write.schema_migrations (version, name)
+values ('014', 'delete_my_account')
+on conflict (version) do nothing;
+
+insert into write.schema_migrations (version, name)
+values ('015', 'delete_my_account_magazine')
 on conflict (version) do nothing;
