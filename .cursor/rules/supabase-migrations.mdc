@@ -1,0 +1,49 @@
+---
+description: Supabase CLI migration workflow for the write schema
+globs: supabase/**
+alwaysApply: false
+---
+
+# Supabase migrations (Write Knuckles)
+
+Shared Bronze Knuckles project (`public` = magazine). This repo owns only the `write` schema and `write-tale-images` storage policies.
+
+## Adding schema changes
+
+1. `supabase migration new <descriptive_name>`
+2. Edit only the new file in `supabase/migrations/`
+3. Test locally: `supabase db reset`
+4. Deploy: `supabase db push` (use `--dry-run` first on prod)
+
+## Do not
+
+- Edit `20250710143000_write_knuckles_bootstrap.sql` for new features (frozen baseline)
+- Add files to `supabase/migrations_legacy/` (read-only archive)
+- Apply schema changes via Supabase SQL Editor or MCP `apply_migration` on production
+- Use MCP `apply_migration` to iterate — develop locally, commit SQL, then push
+- Create or reference `write.schema_migrations` (removed; use `supabase migration list`)
+- Add DDL for `public` magazine tables (`Admins`, `Submissions`, etc.)
+
+## RLS and security
+
+- Enable RLS on every new table in `write`
+- Add matching policies; remember UPDATE requires a SELECT policy
+- RLS may reference `public."Admins"` for magazine-admin checks — do not create that table here
+- Run `supabase db advisors` or MCP `get_advisors` before deploy
+
+## Seeds vs migrations
+
+- Schema → `supabase/migrations/`
+- Demo/sample data → `supabase/seeds/` or `supabase/seed.sql` (not numbered migrations)
+
+## Examples
+
+```bash
+# ✅ New feature
+supabase migration new add_tale_collaborators
+supabase db reset
+supabase db push
+
+# ❌ Editing bootstrap for a new table
+# supabase/migrations/20250710143000_write_knuckles_bootstrap.sql
+```
