@@ -21,7 +21,7 @@ const DashboardPage = () => {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="font-ui text-3xl uppercase tracking-wide text-bronze">Your Tales</h1>
-          <p className="mt-2 text-cream/70">No tales started yet? Let's knock one out.</p>
+          <p className="mt-2 text-cream/70">Got a tale to tell? Let's knock it out.</p>
         </div>
         <Link
           to="/new"
