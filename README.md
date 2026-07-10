@@ -20,17 +20,20 @@ VITE_APP_URL=http://localhost:5174
 VITE_COOKIE_DOMAIN=.bronzeknucklesmagazine.com
 ```
 
-2. Run the database migration in Supabase SQL Editor:
+2. Apply database migrations with the [Supabase CLI](https://supabase.com/docs/guides/cli):
 
+```bash
+supabase login
+supabase link --project-ref rjquutusbwfrfpbwrxxd
+supabase db push
 ```
-supabase/migrations/010_write_knuckles_bootstrap.sql
+
+   For local development (requires Docker):
+
+```bash
+supabase start
+supabase db reset
 ```
-
-   **New instance:** run only `010` — it creates the full `write` schema in one step.
-
-   **Existing databases** on the incremental chain (`001`–`010`) should keep applying only the migrations they are missing. Do not run `010` on top of `001`–`009`.
-
-   After `010`, apply any newer incremental migrations (e.g. `011`–`013` for image support).
 
    Then add yourself to the invite list (replace with your email):
 
@@ -40,12 +43,6 @@ values ('you@example.com', 'Founder');
 ```
 
    Manage approvals in the app at `/admin/access` (magazine admins only).
-
-   Verify applied migrations:
-
-```sql
-select * from write.schema_migrations order by version;
-```
 
 3. In Supabase dashboard → **Project Settings → API → Exposed schemas**, add `write` alongside `public`.
 
@@ -60,33 +57,22 @@ App runs at http://localhost:5174
 
 ## Database migrations
 
-**Fresh install:** run only `010_write_knuckles_bootstrap.sql`.
-
-**Incremental upgrades:** `001`–`013` are the historical chain for the shared Bronze Knuckles database. Check `write.schema_migrations` to see which versions are already applied. Do not run `010` on a database that already went through `001`–`009`.
-
-Each migration records itself in `write.schema_migrations` when it completes:
-
-| Column | Meaning |
-|--------|---------|
-| `version` | Numeric prefix from the filename (`001`, `002`, …) |
-| `name` | Short slug for the migration |
-| `applied_at` | When it was recorded |
+Migrations live in `supabase/migrations/` and are applied with the Supabase CLI. Legacy SQL Editor migrations (`001`–`016`) are archived in `supabase/migrations_legacy/`.
 
 **Check what's deployed:**
 
-```sql
-select * from write.schema_migrations order by version;
+```bash
+supabase migration list
 ```
 
-**Adding a new migration** — create `002_something.sql` and end the file with:
+**Add a new migration:**
 
-```sql
-insert into write.schema_migrations (version, name)
-values ('002', 'something')
-on conflict (version) do nothing;
+```bash
+supabase migration new your_change_description
+# edit the new file, then:
+supabase db reset    # test locally
+supabase db push     # deploy to remote
 ```
-
-The migrations table is not exposed to client apps (RLS enabled, no policies).
 
 ## Production SSO
 

@@ -1,6 +1,6 @@
 # Write Knuckles sample seeds
 
-Optional demo data for marketing screenshots and local walkthroughs. These are **not** migrations — they do not touch `write.schema_migrations`.
+Optional demo data for marketing screenshots and local walkthroughs. These are **not** migrations.
 
 ## The Maltese Falcon
 
