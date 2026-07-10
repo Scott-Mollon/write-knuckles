@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { getUserDisplayName } from '../lib/userProfile'
 import ProfileDialog from './ProfileDialog'
+
+const MAGAZINE_CONTACT = 'https://bronzeknucklesmagazine.com/contact'
 
 const NavBar = () => {
   const { isSignedIn, signout, user, admin } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const menuRef = useRef(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (!menuOpen) return undefined
@@ -82,6 +85,28 @@ const NavBar = () => {
                     onClick={openProfile}
                   >
                     Profile
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="block w-full px-3 py-2 text-left normal-case hover:bg-surface/40 hover:text-bronze"
+                    onClick={() => {
+                      setMenuOpen(false)
+                      navigate('/feature-requests')
+                    }}
+                  >
+                    Feature Requests
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="block w-full px-3 py-2 text-left normal-case hover:bg-surface/40 hover:text-bronze"
+                    onClick={() => {
+                      setMenuOpen(false)
+                      window.open(MAGAZINE_CONTACT, '_blank', 'noopener,noreferrer')
+                    }}
+                  >
+                    Report an Issue
                   </button>
                   <Link
                     to="/privacy"

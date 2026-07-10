@@ -22,6 +22,7 @@ const AccessAdminPage = lazy(() => import('./pages/AccessAdminPage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const TermsPage = lazy(() => import('./pages/TermsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
+const FeatureRequestPage = lazy(() => import('./pages/FeatureRequestPage'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,6 +76,14 @@ const AppShell = () => {
               <ApprovedRoute>
                 <TaleEditorPage />
               </ApprovedRoute>
+            }
+          />
+          <Route
+            path="/feature-requests"
+            element={
+              <ProtectedRoute>
+                <FeatureRequestPage />
+              </ProtectedRoute>
             }
           />
           <Route
