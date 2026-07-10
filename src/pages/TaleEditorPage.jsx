@@ -14,6 +14,7 @@ import BeatSheet from '../components/beats/BeatSheet'
 import ReferencePanel from '../components/research/ReferencePanel'
 import SearchMode from '../components/search/SearchMode'
 import TaleSettingsModal from '../components/tale/TaleSettingsModal'
+import TaleExportModal from '../components/tale/TaleExportModal'
 import Loading from './Loading'
 
 const TaleEditorPage = () => {
@@ -22,6 +23,7 @@ const TaleEditorPage = () => {
   const [activeSceneId, setActiveSceneId] = useState(null)
   const [liveWordCount, setLiveWordCount] = useState(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
 
   const { data: tale, isLoading: taleLoading } = useTale(taleId)
   const { data: structure, isLoading: structureLoading } = useTaleStructure(taleId)
@@ -64,6 +66,11 @@ const TaleEditorPage = () => {
     setSettingsOpen(true)
   }, [autosave])
 
+  const handleOpenExport = useCallback(async () => {
+    await autosave.flush()
+    setExportOpen(true)
+  }, [autosave])
+
   if (taleLoading || structureLoading || referenceLoading) return <Loading />
 
   const beats = structure?.taleBeats?.beats || []
@@ -91,6 +98,13 @@ const TaleEditorPage = () => {
             className="font-ui text-xs uppercase text-cream/50 hover:text-bronze"
           >
             Settings
+          </button>
+          <button
+            type="button"
+            onClick={handleOpenExport}
+            className="font-ui text-xs uppercase text-cream/50 hover:text-bronze"
+          >
+            Export
           </button>
           {beatProgress.total > 0 && (
             <span className="hidden text-xs text-cream/40 sm:inline">
@@ -200,6 +214,16 @@ const TaleEditorPage = () => {
           hasBeats={beats.length > 0}
           hasBeatLinks={beatLinks.length > 0}
           onClose={() => setSettingsOpen(false)}
+        />
+      )}
+
+      {exportOpen && (
+        <TaleExportModal
+          tale={tale}
+          taleId={taleId}
+          chapters={structure?.chapters || []}
+          onClose={() => setExportOpen(false)}
+          onBeforeExport={() => autosave.flush()}
         />
       )}
     </div>

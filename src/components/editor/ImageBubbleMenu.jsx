@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BubbleMenu } from '@tiptap/react/menus'
 import { SCENE_IMAGE_DISPLAY_MODES } from '../../lib/editor/sceneImage'
 
@@ -12,6 +12,8 @@ const DISPLAY_LABELS = {
 const ImageBubbleMenu = ({ editor }) => {
   const [alt, setAlt] = useState('')
   const [url, setUrl] = useState('')
+  const altInputRef = useRef(null)
+  const urlInputRef = useRef(null)
 
   const attrs = editor?.getAttributes('sceneImage') || {}
   const isUrlImage = attrs.sourceType === 'url'
@@ -20,8 +22,12 @@ const ImageBubbleMenu = ({ editor }) => {
     if (!editor) return
     const sync = () => {
       const next = editor.getAttributes('sceneImage')
-      setAlt(next.alt || '')
-      setUrl(next.src || '')
+      if (document.activeElement !== altInputRef.current) {
+        setAlt(next.alt || '')
+      }
+      if (document.activeElement !== urlInputRef.current) {
+        setUrl(next.src || '')
+      }
     }
     sync()
     editor.on('selectionUpdate', sync)
@@ -44,11 +50,24 @@ const ImageBubbleMenu = ({ editor }) => {
     editor.chain().focus().updateAttributes('sceneImage', { src: trimmed }).run()
   }
 
+  const keepEditorSelection = (event) => {
+    if (event.target instanceof Element && event.target.closest('input, textarea, select')) {
+      return
+    }
+    event.preventDefault()
+  }
+
+  const focusMenuInput = (event) => {
+    event.preventDefault()
+    event.currentTarget.focus()
+  }
+
   return (
     <BubbleMenu
       editor={editor}
       shouldShow={({ editor: ed }) => ed.isActive('sceneImage')}
       className="image-bubble-menu flex flex-wrap items-center gap-2 rounded border border-bronze-dark/50 bg-ink px-2 py-1.5 shadow-lg"
+      onMouseDown={keepEditorSelection}
     >
       {SCENE_IMAGE_DISPLAY_MODES.map((mode) => (
         <button
@@ -69,14 +88,18 @@ const ImageBubbleMenu = ({ editor }) => {
       <span className="text-cream/20">|</span>
 
       <input
+        ref={altInputRef}
         type="text"
         value={alt}
+        onMouseDown={focusMenuInput}
         onChange={(e) => setAlt(e.target.value)}
         onBlur={saveAlt}
         onKeyDown={(e) => {
+          e.stopPropagation()
           if (e.key === 'Enter') {
             e.preventDefault()
             saveAlt()
+            altInputRef.current?.blur()
           }
         }}
         placeholder="Alt text"
@@ -86,14 +109,18 @@ const ImageBubbleMenu = ({ editor }) => {
 
       {isUrlImage && (
         <input
+          ref={urlInputRef}
           type="url"
           value={url}
+          onMouseDown={focusMenuInput}
           onChange={(e) => setUrl(e.target.value)}
           onBlur={saveUrl}
           onKeyDown={(e) => {
+            e.stopPropagation()
             if (e.key === 'Enter') {
               e.preventDefault()
               saveUrl()
+              urlInputRef.current?.blur()
             }
           }}
           placeholder="Image URL"

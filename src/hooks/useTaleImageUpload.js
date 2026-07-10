@@ -28,6 +28,7 @@ export function useTaleImageUpload() {
         sourceType: 'upload',
         storagePath,
         signedUrl,
+        originalFileName: file.name,
         taleId,
         scope,
         entityId,

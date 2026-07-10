@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { writeDb } from '../clients/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { deleteTaleImage } from '../lib/images/storage'
+import { deleteExportFile } from '../lib/export/storage'
+import { fetchTaleExportStoragePaths } from './useTaleExports'
 
 export const useTales = () => {
   const { user } = useAuth()
@@ -141,6 +143,13 @@ export const useDeleteTale = () => {
         } catch {
           // Tale row delete proceeds even if storage cleanup fails
         }
+      }
+
+      try {
+        const exportPaths = await fetchTaleExportStoragePaths(taleId)
+        await Promise.all(exportPaths.map((path) => deleteExportFile(path)))
+      } catch {
+        // Tale row delete proceeds even if export storage cleanup fails
       }
 
       const { error } = await writeDb.from('tales').delete().eq('id', taleId)

@@ -1,6 +1,7 @@
 import { Node, mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
 import SceneImageNodeView from '../../components/editor/SceneImageNodeView'
+import { getSceneImageDisplayLabel } from './sceneImageLabel'
 
 export const SCENE_IMAGE_DISPLAY_MODES = ['block', 'float-left', 'float-right', 'full']
 
@@ -59,8 +60,7 @@ export const SceneImage = Node.create({
   },
 
   renderText({ node }) {
-    const alt = node.attrs.alt?.trim()
-    return alt ? `[${alt}]` : '[image]'
+    return `[${getSceneImageDisplayLabel(node.attrs)}]`
   },
 
   addCommands() {

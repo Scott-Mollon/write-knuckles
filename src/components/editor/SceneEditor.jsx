@@ -3,6 +3,7 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import { createEditorExtensions } from '../../lib/editor/extensions'
 import { normalizeContent, isSceneContentEmpty } from '../../lib/editor/plainText'
 import { buildSceneImageAttrs } from '../../lib/editor/sceneImage'
+import { defaultAltFromFile, defaultAltFromUploadResult } from '../../lib/editor/sceneImageLabel'
 import { setSceneImageUploadHandlers } from '../../lib/editor/sceneImageUploadBridge'
 import { pickRandomScenePlaceholder } from '../../constants/scenePlaceholders'
 import { SAVE_STATES } from '../../hooks/useAutosave'
@@ -93,6 +94,7 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
                   sourceType: result.sourceType,
                   storagePath: result.storagePath,
                   externalUrl: result.externalUrl,
+                  alt: defaultAltFromFile(file),
                 })
               )
               .run()
@@ -111,6 +113,7 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
               sourceType: result.sourceType,
               storagePath: result.storagePath,
               externalUrl: result.externalUrl,
+              alt: defaultAltFromFile(file),
             })
             ed.chain().focus().insertContentAt(insertPos, { type: 'sceneImage', attrs }).run()
             insertPos += 1
@@ -138,6 +141,7 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
             sourceType: result.sourceType,
             storagePath: result.storagePath,
             externalUrl: result.externalUrl,
+            alt: defaultAltFromUploadResult(result),
           })
         )
         .run()

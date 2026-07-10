@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { probeImageUrl, validateImageUrl } from '../lib/images/urls'
+import { labelFromImageUrl } from '../lib/editor/sceneImageLabel'
 
 /**
  * Validate and probe an external image URL. Metadata persistence lands in
@@ -18,6 +19,7 @@ export function useTaleImageFromUrl() {
       return {
         sourceType: 'url',
         externalUrl: probedUrl,
+        originalFileName: labelFromImageUrl(probedUrl) || undefined,
         taleId,
         scope,
         entityId,
