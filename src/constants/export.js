@@ -5,6 +5,12 @@ export const EXPORT_FORMATS = {
     extension: '.txt',
     enabled: true,
   },
+  html: {
+    id: 'html',
+    label: 'HTML',
+    extension: '.html',
+    enabled: true,
+  },
   pdf: {
     id: 'pdf',
     label: 'PDF',
@@ -36,44 +42,44 @@ export const EXPORT_OPTION_DEFS = [
   {
     key: 'includeCover',
     label: 'Include cover image',
-    formats: ['pdf', 'docx'],
+    formats: ['pdf', 'docx', 'html'],
     requiresCover: true,
   },
   {
     key: 'titlePage',
     label: 'Title page (title and author)',
-    formats: ['txt', 'pdf', 'docx'],
+    formats: ['txt', 'pdf', 'docx', 'html'],
   },
   {
     key: 'includeSubtitle',
     label: 'Include subtitle on title page',
-    formats: ['txt', 'pdf', 'docx'],
+    formats: ['txt', 'pdf', 'docx', 'html'],
     requiresTitlePage: true,
   },
   {
     key: 'includeChapterWord',
     label: 'Include word "Chapter"',
-    formats: ['txt', 'pdf', 'docx'],
+    formats: ['txt', 'pdf', 'docx', 'html'],
   },
   {
     key: 'includeChapterNumber',
     label: 'Include chapter number',
-    formats: ['txt', 'pdf', 'docx'],
+    formats: ['txt', 'pdf', 'docx', 'html'],
   },
   {
     key: 'includeChapterTitle',
     label: 'Include chapter title',
-    formats: ['txt', 'pdf', 'docx'],
+    formats: ['txt', 'pdf', 'docx', 'html'],
   },
   {
     key: 'chapterPageBreak',
     label: 'Start each chapter on a new page',
-    formats: ['pdf', 'docx'],
+    formats: ['pdf', 'docx', 'html'],
   },
   {
     key: 'includeImages',
     label: 'Include images',
-    formats: ['pdf', 'docx'],
+    formats: ['pdf', 'docx', 'html'],
   },
   {
     key: 'includeImagePlaceholders',

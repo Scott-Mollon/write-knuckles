@@ -21,6 +21,29 @@ export async function deleteExportFile(storagePath) {
   if (error) throw error
 }
 
+export async function fetchExportHtmlContent(exportRow) {
+  if (!exportRow.storage_path) throw new Error('Export file is unavailable.')
+
+  const { data, error } = await supabase.storage
+    .from(TALE_EXPORTS_BUCKET)
+    .download(exportRow.storage_path)
+
+  if (error) throw error
+  if (!data) throw new Error('Export file is unavailable.')
+
+  return data.text()
+}
+
+export async function openExportHtmlInBrowser(exportRow) {
+  const signedUrl = await createExportSignedUrl(exportRow.storage_path)
+  if (!signedUrl) throw new Error('Export file is unavailable.')
+
+  const opened = window.open(signedUrl, '_blank')
+  if (!opened) {
+    throw new Error('Pop-up blocked. Allow pop-ups for this site, or use the in-app preview.')
+  }
+}
+
 export async function downloadExportFile(exportRow) {
   if (!exportRow.storage_path) throw new Error('Export file is unavailable.')
 

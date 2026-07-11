@@ -1,4 +1,5 @@
 import { buildChapterHeading } from './chapterHeading.ts'
+import { prepareSceneContent } from './prepareSceneContent.ts'
 import { blocksHaveText, tiptapToBlocks } from './tiptapToBlocks.ts'
 import type {
   ChapterRow,
@@ -46,17 +47,27 @@ export function buildManuscriptModel({
       const chapterScenes = (scenesByChapter.get(chapter.id) || [])
         .sort((a, b) => a.sort_order - b.sort_order)
         .map((scene) => {
-          let blocks = tiptapToBlocks(scene.content)
+          const preparedContent = prepareSceneContent(
+            scene.content,
+            scene.plain_text,
+            format,
+            options,
+          )
+          let blocks = tiptapToBlocks(preparedContent)
           if (format === 'txt' && !options.includeImagePlaceholders) {
             blocks = blocks.filter((block) => block.type !== 'image')
           }
-          if ((format === 'pdf' || format === 'docx') && !options.includeImages) {
+          if ((format === 'pdf' || format === 'docx' || format === 'html') && !options.includeImages) {
             blocks = blocks.filter((block) => block.type !== 'image')
           }
           if (!blocksHaveText(blocks) && scene.plain_text?.trim()) {
             blocks = [{ type: 'paragraph', spans: [{ text: scene.plain_text.trim(), marks: [] }] }]
           }
-          return { id: scene.id, blocks }
+          return {
+            id: scene.id,
+            blocks,
+            content: format === 'html' ? preparedContent : undefined,
+          }
         })
         .filter((scene) => blocksHaveText(scene.blocks))
 

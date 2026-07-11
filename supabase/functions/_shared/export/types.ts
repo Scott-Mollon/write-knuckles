@@ -1,4 +1,4 @@
-export type ExportFormat = 'txt' | 'pdf' | 'docx'
+export type ExportFormat = 'txt' | 'pdf' | 'docx' | 'html'
 
 export type ExportOptions = {
   includeChapterWord: boolean
@@ -47,6 +47,7 @@ export type ContentBlock =
 export type ManuscriptScene = {
   id: string
   blocks: ContentBlock[]
+  content?: unknown
 }
 
 export type ManuscriptChapter = {

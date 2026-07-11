@@ -112,7 +112,7 @@ export async function resolveExportImages({
 }): Promise<ExportImageBundle> {
   const sceneImages = new Map<string, ResolvedImage>()
 
-  if ((format === 'pdf' || format === 'docx') && options.includeImages) {
+  if ((format === 'pdf' || format === 'docx' || format === 'html') && options.includeImages) {
     const keys = collectSceneImageKeys(manuscript)
     for (const key of keys) {
       try {
@@ -124,7 +124,7 @@ export async function resolveExportImages({
   }
 
   let cover: ResolvedImage | null = null
-  if ((format === 'pdf' || format === 'docx') && options.includeCover && taleHasCover(tale)) {
+  if ((format === 'pdf' || format === 'docx' || format === 'html') && options.includeCover && taleHasCover(tale)) {
     try {
       if (tale.cover_source_type === 'upload' && tale.cover_storage_path) {
         await resolveImageKey(`storage:${tale.cover_storage_path}`, supabase, sceneImages)

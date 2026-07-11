@@ -16,8 +16,10 @@ import {
 } from '../../lib/export/formatOptionsSummary'
 import {
   downloadExportFile,
+  fetchExportHtmlContent,
   formatExportDate,
   formatFileSize,
+  openExportHtmlInBrowser,
 } from '../../lib/export/storage'
 import { formatChapterLabel } from '../../lib/chapters'
 import {
@@ -146,6 +148,8 @@ const TaleExportModal = ({ tale, taleId, chapters, onClose, onBeforeExport }) =>
   const [scope, setScope] = useState(() => buildDefaultScope(chapters))
   const [selectedExportIds, setSelectedExportIds] = useState(new Set())
   const [error, setError] = useState(null)
+  const [htmlPreview, setHtmlPreview] = useState(null)
+  const [htmlPreviewLoadingId, setHtmlPreviewLoadingId] = useState(null)
 
   useEffect(() => {
     const prefs = readTaleExportPreferences(taleId)
@@ -196,6 +200,35 @@ const TaleExportModal = ({ tale, taleId, chapters, onClose, onBeforeExport }) =>
     } catch (err) {
       setError(err.message || 'Export failed.')
     }
+  }
+
+  const handleView = async (row) => {
+    setError(null)
+    setHtmlPreviewLoadingId(row.id)
+
+    try {
+      const html = await fetchExportHtmlContent(row)
+      setHtmlPreview({ title: row.file_name || 'Export', html, row })
+    } catch (err) {
+      setError(err.message || 'Could not open export.')
+    } finally {
+      setHtmlPreviewLoadingId(null)
+    }
+  }
+
+  const handleOpenPreviewInBrowser = async () => {
+    if (!htmlPreview?.row) return
+
+    try {
+      await openExportHtmlInBrowser(htmlPreview.row)
+    } catch (err) {
+      setError(err.message || 'Could not open export in a new tab.')
+    }
+  }
+
+  const handlePrintPreview = () => {
+    const frame = document.getElementById('tale-export-html-preview-frame')
+    frame?.contentWindow?.print()
   }
 
   const handleDownload = async (row) => {
@@ -310,9 +343,16 @@ const TaleExportModal = ({ tale, taleId, chapters, onClose, onBeforeExport }) =>
               </div>
             </div>
 
-            <p className="text-xs text-cream/45">
-              Drop-cap styling is not included yet.
-            </p>
+            {format === 'html' && (
+              <p className="text-xs text-cream/45">
+                HTML exports open in an in-app preview.
+              </p>
+            )}
+            {format === 'pdf' && (
+              <p className="text-xs text-cream/45">
+                Drop-cap styling is not included in PDF export yet.
+              </p>
+            )}
 
             {error && <p className="text-sm text-error">{error}</p>}
 
@@ -368,13 +408,25 @@ const TaleExportModal = ({ tale, taleId, chapters, onClose, onBeforeExport }) =>
                         {summarizeExportScope(row.scope, chapters)}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleDownload(row)}
-                      className="shrink-0 font-ui text-xs uppercase text-bronze hover:underline"
-                    >
-                      Download
-                    </button>
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      {row.format === 'html' && (
+                        <button
+                          type="button"
+                          onClick={() => handleView(row)}
+                          disabled={htmlPreviewLoadingId === row.id}
+                          className="font-ui text-xs uppercase text-bronze hover:underline disabled:opacity-50"
+                        >
+                          {htmlPreviewLoadingId === row.id ? 'Loading…' : 'View'}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(row)}
+                        className="font-ui text-xs uppercase text-bronze hover:underline"
+                      >
+                        Download
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -382,6 +434,50 @@ const TaleExportModal = ({ tale, taleId, chapters, onClose, onBeforeExport }) =>
           </section>
         </div>
       </div>
+
+      {htmlPreview && (
+        <div
+          className="fixed inset-0 z-[60] flex flex-col bg-ink"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="tale-export-preview-title"
+        >
+          <div className="flex items-center justify-between gap-3 border-b border-bronze-dark/40 px-4 py-3">
+            <h3 id="tale-export-preview-title" className="truncate font-ui text-sm uppercase text-bronze">
+              {htmlPreview.title}
+            </h3>
+            <div className="flex shrink-0 items-center gap-3">
+              <button
+                type="button"
+                onClick={handlePrintPreview}
+                className="font-ui text-xs uppercase text-bronze hover:underline"
+              >
+                Print
+              </button>
+              <button
+                type="button"
+                onClick={handleOpenPreviewInBrowser}
+                className="font-ui text-xs uppercase text-bronze hover:underline"
+              >
+                Open in browser
+              </button>
+              <button
+                type="button"
+                onClick={() => setHtmlPreview(null)}
+                className="font-ui text-xs uppercase text-cream/60 hover:text-bronze"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+          <iframe
+            id="tale-export-html-preview-frame"
+            title={htmlPreview.title}
+            srcDoc={htmlPreview.html}
+            className="h-full w-full flex-1 border-0 bg-[#f4efe4]"
+          />
+        </div>
+      )}
     </div>
   )
 }

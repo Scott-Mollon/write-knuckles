@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { buildManuscriptModel, manuscriptHasContent } from '../_shared/export/buildManuscriptModel.ts'
 import { validateExportOptions } from '../_shared/export/chapterHeading.ts'
+import { exportHtml, encodeHtmlBuffer } from '../_shared/export/exportHtml.ts'
 import { exportPdf } from '../_shared/export/exportPdf.ts'
 import { encodeTxtBuffer, exportTxt } from '../_shared/export/exportTxt.ts'
 import { resolveExportImages } from '../_shared/export/resolveExportImages.ts'
@@ -73,8 +74,8 @@ function parseRequest(body: unknown): ExportRequest | { error: string } {
   if (typeof b.taleId !== 'string' || !b.taleId) return { error: 'taleId is required.' }
 
   const format = b.format
-  if (format !== 'txt' && format !== 'pdf') {
-    return { error: 'Only plain text (.txt) and PDF (.pdf) export are available in this release.' }
+  if (format !== 'txt' && format !== 'pdf' && format !== 'html') {
+    return { error: 'Only plain text (.txt), PDF (.pdf), and HTML (.html) export are available in this release.' }
   }
 
   const options = normalizeOptions(b.options)
@@ -121,6 +122,16 @@ async function generateExportBuffer({
     format,
     supabase: serviceSupabase,
   })
+
+  if (format === 'html') {
+    const html = exportHtml(manuscript, options, images)
+    return {
+      buffer: encodeHtmlBuffer(html),
+      contentType: 'text/html',
+      extension: 'html',
+    }
+  }
+
   const buffer = await exportPdf(manuscript, options, images)
   return {
     buffer,
@@ -171,7 +182,7 @@ Deno.serve(async (req) => {
     const { taleId, format, options, scope } = parsed
 
     const taleSelect =
-      format === 'pdf'
+      format === 'pdf' || format === 'html'
         ? 'id, user_id, title, author, subtitle, cover_source_type, cover_storage_path, cover_external_url'
         : 'id, user_id, title, author, subtitle'
 
@@ -210,7 +221,7 @@ Deno.serve(async (req) => {
     }
 
     let serviceSupabase = supabase
-    if (format === 'pdf') {
+    if (format === 'pdf' || format === 'html') {
       if (!serviceRoleKey) {
         return jsonResponse({ error: 'Server configuration error.' }, 500)
       }
