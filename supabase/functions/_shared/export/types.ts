@@ -8,6 +8,7 @@ export type ExportOptions = {
   includeSubtitle: boolean
   chapterPageBreak: boolean
   includeCover: boolean
+  includeImages: boolean
   includeImagePlaceholders: boolean
 }
 
@@ -35,7 +36,13 @@ export type ContentBlock =
   | { type: 'paragraph'; spans: InlineSpan[]; textAlign?: string }
   | { type: 'heading'; level: number; spans: InlineSpan[] }
   | { type: 'divider' }
-  | { type: 'image'; alt: string }
+  | {
+      type: 'image'
+      alt: string
+      imageKey: string | null
+      display?: string
+      width?: number | null
+    }
 
 export type ManuscriptScene = {
   id: string
@@ -61,6 +68,13 @@ export type TaleRow = {
   title: string
   author: string | null
   subtitle: string | null
+  cover_source_type?: string | null
+  cover_storage_path?: string | null
+  cover_external_url?: string | null
+}
+
+export type ResolvedImage = {
+  dataUrl: string
 }
 
 export type ChapterRow = {

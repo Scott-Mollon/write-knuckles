@@ -1,5 +1,6 @@
 import type { ContentBlock, InlineMark, InlineSpan } from './types.ts'
 import { imageDisplayLabel } from './imageLabel.ts'
+import { sceneImageKey } from './sceneImageKey.ts'
 
 type TipTapNode = {
   type?: string
@@ -58,8 +59,17 @@ function blockFromNode(node: TipTapNode): ContentBlock | null {
     }
     case 'sceneDivider':
       return { type: 'divider' }
-    case 'sceneImage':
-      return { type: 'image', alt: imageDisplayLabel(node.attrs || {}) }
+    case 'sceneImage': {
+      const attrs = node.attrs || {}
+      const width = attrs.width
+      return {
+        type: 'image',
+        alt: imageDisplayLabel(attrs),
+        imageKey: sceneImageKey(attrs),
+        display: typeof attrs.display === 'string' ? attrs.display : 'block',
+        width: typeof width === 'number' ? width : null,
+      }
+    }
     case 'horizontalRule':
       return { type: 'divider' }
     default:

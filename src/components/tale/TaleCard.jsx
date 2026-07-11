@@ -3,12 +3,17 @@ import { useDeleteTale } from '../../hooks/useTales'
 import { confirmDelete } from '../../lib/confirmAction'
 import TaleCoverThumbnail from './TaleCoverThumbnail'
 
-const TaleCard = ({ tale }) => {
+const TaleCard = ({ tale, onOpenSettings, onOpenExport }) => {
   const deleteTale = useDeleteTale()
 
   const progress = tale.target_word_count
     ? Math.min(100, Math.round((tale.word_count / tale.target_word_count) * 100))
     : 0
+
+  const stopCardNavigation = (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+  }
 
   return (
     <div className="flex items-stretch gap-4 border border-bronze-dark/50 bg-surface/50 p-4 hover:border-bronze sm:p-5">
@@ -35,17 +40,40 @@ const TaleCard = ({ tale }) => {
           </div>
         </Link>
 
-        <button
-          type="button"
-          onClick={async () => {
-            if (await confirmDelete(`"${tale.title}"`, { irreversible: true })) {
-              deleteTale.mutate(tale.id)
-            }
-          }}
-          className="shrink-0 self-start text-sm text-cream/40 hover:text-punch"
-        >
-          Delete
-        </button>
+        <div className="flex shrink-0 flex-col items-end gap-2 self-start">
+          <button
+            type="button"
+            onClick={(e) => {
+              stopCardNavigation(e)
+              onOpenSettings?.(tale)
+            }}
+            className="font-ui text-xs uppercase tracking-wide text-cream/50 hover:text-bronze"
+          >
+            Settings
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              stopCardNavigation(e)
+              onOpenExport?.(tale)
+            }}
+            className="font-ui text-xs uppercase tracking-wide text-cream/50 hover:text-bronze"
+          >
+            Export
+          </button>
+          <button
+            type="button"
+            onClick={async (e) => {
+              stopCardNavigation(e)
+              if (await confirmDelete(`"${tale.title}"`, { irreversible: true })) {
+                deleteTale.mutate(tale.id)
+              }
+            }}
+            className="text-sm text-cream/40 hover:text-punch"
+          >
+            Delete
+          </button>
+        </div>
       </div>
     </div>
   )

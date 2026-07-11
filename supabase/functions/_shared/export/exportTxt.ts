@@ -1,4 +1,5 @@
 import { spansToPlainText } from './tiptapToBlocks.ts'
+import { formatAuthorLine } from './formatAuthor.ts'
 import type { ContentBlock, ExportOptions, ManuscriptModel } from './types.ts'
 
 function blockToText(block: ContentBlock, options: ExportOptions): string {
@@ -25,7 +26,8 @@ export function exportTxt(model: ManuscriptModel, options: ExportOptions): strin
     if (options.includeSubtitle && model.subtitle?.trim()) {
       lines.push(model.subtitle.trim())
     }
-    if (model.author?.trim()) lines.push(model.author.trim())
+    const authorLine = formatAuthorLine(model.author)
+    if (authorLine) lines.push(authorLine)
     lines.push('')
     lines.push('')
   }

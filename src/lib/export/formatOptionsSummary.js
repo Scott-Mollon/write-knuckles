@@ -14,6 +14,9 @@ export function summarizeExportOptions(options, format) {
   if (options.titlePage && options.includeSubtitle !== false) parts.push('subtitle')
   if (options.chapterPageBreak && format !== 'txt') parts.push('ch. breaks')
   if (options.includeCover && format !== 'txt') parts.push('cover')
+  if (format !== 'txt') {
+    parts.push(options.includeImages !== false ? 'images' : 'no images')
+  }
   if (format === 'txt') {
     parts.push(options.includeImagePlaceholders !== false ? 'img placeholders' : 'no img placeholders')
   }

@@ -9,8 +9,7 @@ export const EXPORT_FORMATS = {
     id: 'pdf',
     label: 'PDF',
     extension: '.pdf',
-    enabled: false,
-    comingSoon: true,
+    enabled: true,
   },
   docx: {
     id: 'docx',
@@ -29,6 +28,7 @@ export const DEFAULT_EXPORT_OPTIONS = {
   includeSubtitle: true,
   chapterPageBreak: true,
   includeCover: false,
+  includeImages: true,
   includeImagePlaceholders: true,
 }
 
@@ -37,6 +37,7 @@ export const EXPORT_OPTION_DEFS = [
     key: 'includeCover',
     label: 'Include cover image',
     formats: ['pdf', 'docx'],
+    requiresCover: true,
   },
   {
     key: 'titlePage',
@@ -70,16 +71,22 @@ export const EXPORT_OPTION_DEFS = [
     formats: ['pdf', 'docx'],
   },
   {
+    key: 'includeImages',
+    label: 'Include images',
+    formats: ['pdf', 'docx'],
+  },
+  {
     key: 'includeImagePlaceholders',
     label: 'Include image placeholders ([Image: …])',
     formats: ['txt'],
   },
 ]
 
-export function isExportOptionVisible(optionKey, format, options = {}) {
+export function isExportOptionVisible(optionKey, format, options = {}, context = {}) {
   const def = EXPORT_OPTION_DEFS.find((item) => item.key === optionKey)
   if (!def?.formats.includes(format)) return false
   if (def.requiresTitlePage && !options.titlePage) return false
+  if (def.requiresCover && !context.taleHasCover) return false
   return true
 }
 

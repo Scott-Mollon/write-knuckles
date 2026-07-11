@@ -1,10 +1,14 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTales } from '../hooks/useTales'
 import TaleCard from '../components/tale/TaleCard'
+import DashboardTaleModals from '../components/tale/DashboardTaleModals'
 import Loading from './Loading'
 
 const DashboardPage = () => {
   const { data: tales, isLoading, error } = useTales()
+  const [settingsTale, setSettingsTale] = useState(null)
+  const [exportTale, setExportTale] = useState(null)
 
   if (isLoading) return <Loading />
 
@@ -41,10 +45,28 @@ const DashboardPage = () => {
       ) : (
         <div className="grid gap-4">
           {tales.map((tale) => (
-            <TaleCard key={tale.id} tale={tale} />
+            <TaleCard
+              key={tale.id}
+              tale={tale}
+              onOpenSettings={(tale) => {
+                setExportTale(null)
+                setSettingsTale(tale)
+              }}
+              onOpenExport={(tale) => {
+                setSettingsTale(null)
+                setExportTale(tale)
+              }}
+            />
           ))}
         </div>
       )}
+
+      <DashboardTaleModals
+        settingsTale={settingsTale}
+        exportTale={exportTale}
+        onCloseSettings={() => setSettingsTale(null)}
+        onCloseExport={() => setExportTale(null)}
+      />
     </div>
   )
 }

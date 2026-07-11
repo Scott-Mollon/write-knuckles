@@ -435,7 +435,7 @@ const EditorToolbar = ({
           scope="scenes"
           entityId={sceneId}
           compact
-          allowUrl
+          allowUrl={false}
           onAdded={onInsertSceneImage}
           onError={onImageError}
         />

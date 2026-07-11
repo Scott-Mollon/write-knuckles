@@ -47,7 +47,7 @@ const TaleCoverEditor = ({ tale, taleId }) => {
       <div>
         <p className="mb-2 font-ui text-xs uppercase text-cream/80">Cover image</p>
         <p className="mb-3 text-xs text-cream/45">
-          Shown on your dashboard tale card. External links may break if the host removes the file.
+          Shown on your dashboard tale card. Upload JPEG, PNG, WebP, or GIF (max 10 MB).
         </p>
         <div className="flex flex-wrap items-start gap-4">
           <TaleCoverThumbnail tale={tale} title={tale?.title} sizeClass="h-36 w-24" />
@@ -70,7 +70,7 @@ const TaleCoverEditor = ({ tale, taleId }) => {
         taleId={taleId}
         scope="tales"
         entityId={taleId}
-        allowUrl
+        allowUrl={false}
         multiple={false}
         onAdded={handleAdded}
         onError={setError}

@@ -21,6 +21,7 @@ import {
   formatFileSize,
 } from '../../lib/export/storage'
 import { formatChapterLabel } from '../../lib/chapters'
+import { taleHasCover } from '../../lib/images/resolveImageUrl'
 
 const ExportScopePicker = ({ chapters, scope, onChange }) => {
   const sortedChapters = useMemo(
@@ -147,8 +148,13 @@ const TaleExportModal = ({ tale, taleId, chapters, onClose, onBeforeExport }) =>
     setScope(buildDefaultScope(chapters))
   }, [chapters])
 
+  const exportOptionContext = useMemo(
+    () => ({ taleHasCover: taleHasCover(tale) }),
+    [tale],
+  )
+
   const visibleOptions = EXPORT_OPTION_DEFS.filter((def) =>
-    isExportOptionVisible(def.key, format, options),
+    isExportOptionVisible(def.key, format, options, exportOptionContext),
   )
 
   const toggleOption = (key) => {

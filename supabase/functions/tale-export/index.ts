@@ -1,9 +1,12 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { buildManuscriptModel, manuscriptHasContent } from '../_shared/export/buildManuscriptModel.ts'
 import { validateExportOptions } from '../_shared/export/chapterHeading.ts'
+import { exportPdf } from '../_shared/export/exportPdf.ts'
 import { encodeTxtBuffer, exportTxt } from '../_shared/export/exportTxt.ts'
+import { resolveExportImages } from '../_shared/export/resolveExportImages.ts'
 import type {
   ChapterRow,
+  ExportFormat,
   ExportOptions,
   ExportRequest,
   ExportScope,
@@ -46,6 +49,7 @@ function normalizeOptions(raw: unknown): ExportOptions | null {
     includeSubtitle: o.includeSubtitle !== false,
     chapterPageBreak: Boolean(o.chapterPageBreak),
     includeCover: Boolean(o.includeCover),
+    includeImages: o.includeImages !== false,
     includeImagePlaceholders: o.includeImagePlaceholders !== false,
   }
 }
@@ -67,8 +71,10 @@ function parseRequest(body: unknown): ExportRequest | { error: string } {
   const b = body as Record<string, unknown>
 
   if (typeof b.taleId !== 'string' || !b.taleId) return { error: 'taleId is required.' }
-  if (b.format !== 'txt') {
-    return { error: 'Only plain text (.txt) export is available in this release.' }
+
+  const format = b.format
+  if (format !== 'txt' && format !== 'pdf') {
+    return { error: 'Only plain text (.txt) and PDF (.pdf) export are available in this release.' }
   }
 
   const options = normalizeOptions(b.options)
@@ -83,7 +89,44 @@ function parseRequest(body: unknown): ExportRequest | { error: string } {
   const optionsError = validateExportOptions(options)
   if (optionsError) return { error: optionsError }
 
-  return { taleId: b.taleId, format: 'txt', options, scope }
+  return { taleId: b.taleId, format, options, scope }
+}
+
+async function generateExportBuffer({
+  format,
+  manuscript,
+  options,
+  tale,
+  serviceSupabase,
+}: {
+  format: ExportFormat
+  manuscript: ReturnType<typeof buildManuscriptModel>
+  options: ExportOptions
+  tale: TaleRow
+  serviceSupabase: ReturnType<typeof createClient>
+}): Promise<{ buffer: Uint8Array; contentType: string; extension: string }> {
+  if (format === 'txt') {
+    const text = exportTxt(manuscript, options)
+    return {
+      buffer: encodeTxtBuffer(text),
+      contentType: 'text/plain',
+      extension: 'txt',
+    }
+  }
+
+  const images = await resolveExportImages({
+    tale,
+    manuscript,
+    options,
+    format,
+    supabase: serviceSupabase,
+  })
+  const buffer = await exportPdf(manuscript, options, images)
+  return {
+    buffer,
+    contentType: 'application/pdf',
+    extension: 'pdf',
+  }
 }
 
 Deno.serve(async (req) => {
@@ -103,6 +146,7 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     if (!supabaseUrl || !supabaseAnonKey) {
       return jsonResponse({ error: 'Server configuration error.' }, 500)
     }
@@ -126,9 +170,14 @@ Deno.serve(async (req) => {
 
     const { taleId, format, options, scope } = parsed
 
+    const taleSelect =
+      format === 'pdf'
+        ? 'id, user_id, title, author, subtitle, cover_source_type, cover_storage_path, cover_external_url'
+        : 'id, user_id, title, author, subtitle'
+
     const { data: tale, error: taleError } = await writeDb
       .from('tales')
-      .select('id, user_id, title, author, subtitle')
+      .select(taleSelect)
       .eq('id', taleId)
       .maybeSingle()
 
@@ -153,23 +202,38 @@ Deno.serve(async (req) => {
       scenes: (scenesRes.data || []) as SceneRow[],
       options,
       scope,
+      format,
     })
 
     if (!manuscriptHasContent(manuscript)) {
       return jsonResponse({ error: 'Nothing to export in the selected scope.' }, 400)
     }
 
-    const text = exportTxt(manuscript, options)
-    const fileBuffer = encodeTxtBuffer(text)
+    let serviceSupabase = supabase
+    if (format === 'pdf') {
+      if (!serviceRoleKey) {
+        return jsonResponse({ error: 'Server configuration error.' }, 500)
+      }
+      serviceSupabase = createClient(supabaseUrl, serviceRoleKey)
+    }
+
+    const { buffer: fileBuffer, contentType, extension } = await generateExportBuffer({
+      format,
+      manuscript,
+      options,
+      tale: tale as TaleRow,
+      serviceSupabase,
+    })
+
     const version = (versionRes.data?.version ?? 0) + 1
     const exportId = crypto.randomUUID()
-    const fileName = `${slugifyTitle(tale.title)}-v${version}.txt`
-    const storagePath = `${userId}/${taleId}/exports/${exportId}.txt`
+    const fileName = `${slugifyTitle(tale.title)}-v${version}.${extension}`
+    const storagePath = `${userId}/${taleId}/exports/${exportId}.${extension}`
 
     const { error: uploadError } = await supabase.storage
       .from(TALE_EXPORTS_BUCKET)
       .upload(storagePath, fileBuffer, {
-        contentType: 'text/plain',
+        contentType,
         upsert: false,
         cacheControl: '3600',
       })

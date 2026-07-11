@@ -2,6 +2,7 @@ import { buildChapterHeading } from './chapterHeading.ts'
 import { blocksHaveText, tiptapToBlocks } from './tiptapToBlocks.ts'
 import type {
   ChapterRow,
+  ExportFormat,
   ExportOptions,
   ExportScope,
   ManuscriptModel,
@@ -19,12 +20,14 @@ export function buildManuscriptModel({
   scenes,
   options,
   scope,
+  format = 'txt',
 }: {
   tale: TaleRow
   chapters: ChapterRow[]
   scenes: SceneRow[]
   options: ExportOptions
   scope: ExportScope
+  format?: ExportFormat
 }): ManuscriptModel {
   const sortedChapters = [...chapters].sort((a, b) => a.sort_order - b.sort_order)
   const scenesByChapter = new Map<string, SceneRow[]>()
@@ -44,7 +47,10 @@ export function buildManuscriptModel({
         .sort((a, b) => a.sort_order - b.sort_order)
         .map((scene) => {
           let blocks = tiptapToBlocks(scene.content)
-          if (!options.includeImagePlaceholders) {
+          if (format === 'txt' && !options.includeImagePlaceholders) {
+            blocks = blocks.filter((block) => block.type !== 'image')
+          }
+          if ((format === 'pdf' || format === 'docx') && !options.includeImages) {
             blocks = blocks.filter((block) => block.type !== 'image')
           }
           if (!blocksHaveText(blocks) && scene.plain_text?.trim()) {

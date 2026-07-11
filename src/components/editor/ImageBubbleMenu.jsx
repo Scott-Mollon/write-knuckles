@@ -11,12 +11,9 @@ const DISPLAY_LABELS = {
 
 const ImageBubbleMenu = ({ editor }) => {
   const [alt, setAlt] = useState('')
-  const [url, setUrl] = useState('')
   const altInputRef = useRef(null)
-  const urlInputRef = useRef(null)
 
   const attrs = editor?.getAttributes('sceneImage') || {}
-  const isUrlImage = attrs.sourceType === 'url'
 
   useEffect(() => {
     if (!editor) return
@@ -24,9 +21,6 @@ const ImageBubbleMenu = ({ editor }) => {
       const next = editor.getAttributes('sceneImage')
       if (document.activeElement !== altInputRef.current) {
         setAlt(next.alt || '')
-      }
-      if (document.activeElement !== urlInputRef.current) {
-        setUrl(next.src || '')
       }
     }
     sync()
@@ -42,12 +36,6 @@ const ImageBubbleMenu = ({ editor }) => {
 
   const saveAlt = () => {
     editor.chain().focus().updateAttributes('sceneImage', { alt: alt.trim() }).run()
-  }
-
-  const saveUrl = () => {
-    const trimmed = url.trim()
-    if (!trimmed) return
-    editor.chain().focus().updateAttributes('sceneImage', { src: trimmed }).run()
   }
 
   const keepEditorSelection = (event) => {
@@ -106,28 +94,6 @@ const ImageBubbleMenu = ({ editor }) => {
         aria-label="Image alt text"
         className="w-28 rounded border border-bronze-dark/40 bg-surface/80 px-2 py-0.5 text-xs text-cream"
       />
-
-      {isUrlImage && (
-        <input
-          ref={urlInputRef}
-          type="url"
-          value={url}
-          onMouseDown={focusMenuInput}
-          onChange={(e) => setUrl(e.target.value)}
-          onBlur={saveUrl}
-          onKeyDown={(e) => {
-            e.stopPropagation()
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              saveUrl()
-              urlInputRef.current?.blur()
-            }
-          }}
-          placeholder="Image URL"
-          aria-label="Image URL"
-          className="w-40 rounded border border-bronze-dark/40 bg-surface/80 px-2 py-0.5 text-xs text-cream"
-        />
-      )}
 
       <button
         type="button"

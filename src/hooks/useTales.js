@@ -228,21 +228,21 @@ export const useUpdateTaleCover = (taleId) => {
         return data
       }
 
-      const { sourceType, storagePath, externalUrl } = payload
+      const { sourceType, storagePath } = payload
+      if (sourceType === 'url') {
+        throw new Error('Cover images must be uploaded. URL covers are not supported.')
+      }
+      if (sourceType !== 'upload' || !storagePath) {
+        throw new Error('Cover image upload is required.')
+      }
+
       await removePreviousCoverUpload(previousTale, storagePath)
 
-      const coverFields =
-        sourceType === 'upload'
-          ? {
-              cover_source_type: 'upload',
-              cover_storage_path: storagePath,
-              cover_external_url: null,
-            }
-          : {
-              cover_source_type: 'url',
-              cover_storage_path: null,
-              cover_external_url: externalUrl,
-            }
+      const coverFields = {
+        cover_source_type: 'upload',
+        cover_storage_path: storagePath,
+        cover_external_url: null,
+      }
 
       const { data, error } = await writeDb
         .from('tales')
