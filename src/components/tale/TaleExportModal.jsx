@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   buildDefaultScope,
   countScopedScenes,
-  DEFAULT_EXPORT_OPTIONS,
   EXPORT_FORMATS,
   EXPORT_OPTION_DEFS,
   isExportOptionVisible,
@@ -21,6 +20,10 @@ import {
   formatFileSize,
 } from '../../lib/export/storage'
 import { formatChapterLabel } from '../../lib/chapters'
+import {
+  readTaleExportPreferences,
+  writeTaleExportPreferences,
+} from '../../lib/export/exportPreferences'
 import { taleHasCover } from '../../lib/images/resolveImageUrl'
 
 const ExportScopePicker = ({ chapters, scope, onChange }) => {
@@ -138,11 +141,21 @@ const TaleExportModal = ({ tale, taleId, chapters, onClose, onBeforeExport }) =>
   const createExport = useCreateTaleExport(taleId)
   const deleteExports = useDeleteTaleExports(taleId)
 
-  const [format, setFormat] = useState('txt')
-  const [options, setOptions] = useState(DEFAULT_EXPORT_OPTIONS)
+  const [format, setFormat] = useState(() => readTaleExportPreferences(taleId).format)
+  const [options, setOptions] = useState(() => readTaleExportPreferences(taleId).options)
   const [scope, setScope] = useState(() => buildDefaultScope(chapters))
   const [selectedExportIds, setSelectedExportIds] = useState(new Set())
   const [error, setError] = useState(null)
+
+  useEffect(() => {
+    const prefs = readTaleExportPreferences(taleId)
+    setFormat(prefs.format)
+    setOptions(prefs.options)
+  }, [taleId])
+
+  useEffect(() => {
+    writeTaleExportPreferences(taleId, { format, options })
+  }, [taleId, format, options])
 
   useEffect(() => {
     setScope(buildDefaultScope(chapters))
