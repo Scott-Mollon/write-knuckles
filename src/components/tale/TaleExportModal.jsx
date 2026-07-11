@@ -147,7 +147,9 @@ const TaleExportModal = ({ tale, taleId, chapters, onClose, onBeforeExport }) =>
     setScope(buildDefaultScope(chapters))
   }, [chapters])
 
-  const visibleOptions = EXPORT_OPTION_DEFS.filter((def) => isExportOptionVisible(def.key, format))
+  const visibleOptions = EXPORT_OPTION_DEFS.filter((def) =>
+    isExportOptionVisible(def.key, format, options),
+  )
 
   const toggleOption = (key) => {
     setOptions((prev) => ({ ...prev, [key]: !prev[key] }))

@@ -22,8 +22,10 @@ export function exportTxt(model: ManuscriptModel, options: ExportOptions): strin
 
   if (options.titlePage) {
     lines.push(model.title)
+    if (options.includeSubtitle && model.subtitle?.trim()) {
+      lines.push(model.subtitle.trim())
+    }
     if (model.author?.trim()) lines.push(model.author.trim())
-    if (model.subtitle?.trim()) lines.push(model.subtitle.trim())
     lines.push('')
     lines.push('')
   }

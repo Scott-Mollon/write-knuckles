@@ -5,6 +5,7 @@ export type ExportOptions = {
   includeChapterNumber: boolean
   includeChapterTitle: boolean
   titlePage: boolean
+  includeSubtitle: boolean
   chapterPageBreak: boolean
   includeCover: boolean
   includeImagePlaceholders: boolean

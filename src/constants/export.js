@@ -26,6 +26,7 @@ export const DEFAULT_EXPORT_OPTIONS = {
   includeChapterNumber: true,
   includeChapterTitle: true,
   titlePage: true,
+  includeSubtitle: true,
   chapterPageBreak: true,
   includeCover: false,
   includeImagePlaceholders: true,
@@ -41,6 +42,12 @@ export const EXPORT_OPTION_DEFS = [
     key: 'titlePage',
     label: 'Title page (title and author)',
     formats: ['txt', 'pdf', 'docx'],
+  },
+  {
+    key: 'includeSubtitle',
+    label: 'Include subtitle on title page',
+    formats: ['txt', 'pdf', 'docx'],
+    requiresTitlePage: true,
   },
   {
     key: 'includeChapterWord',
@@ -69,9 +76,11 @@ export const EXPORT_OPTION_DEFS = [
   },
 ]
 
-export function isExportOptionVisible(optionKey, format) {
+export function isExportOptionVisible(optionKey, format, options = {}) {
   const def = EXPORT_OPTION_DEFS.find((item) => item.key === optionKey)
-  return def?.formats.includes(format) ?? false
+  if (!def?.formats.includes(format)) return false
+  if (def.requiresTitlePage && !options.titlePage) return false
+  return true
 }
 
 export function validateExportOptions() {

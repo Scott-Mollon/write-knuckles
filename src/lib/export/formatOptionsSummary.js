@@ -11,6 +11,7 @@ export function summarizeExportOptions(options, format) {
   if (headingParts.length) parts.push(headingParts.join('+'))
 
   if (options.titlePage) parts.push('title page')
+  if (options.titlePage && options.includeSubtitle !== false) parts.push('subtitle')
   if (options.chapterPageBreak && format !== 'txt') parts.push('ch. breaks')
   if (options.includeCover && format !== 'txt') parts.push('cover')
   if (format === 'txt') {

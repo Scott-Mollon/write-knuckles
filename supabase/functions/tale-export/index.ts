@@ -43,6 +43,7 @@ function normalizeOptions(raw: unknown): ExportOptions | null {
     includeChapterNumber: Boolean(o.includeChapterNumber),
     includeChapterTitle: Boolean(o.includeChapterTitle),
     titlePage: Boolean(o.titlePage),
+    includeSubtitle: o.includeSubtitle !== false,
     chapterPageBreak: Boolean(o.chapterPageBreak),
     includeCover: Boolean(o.includeCover),
     includeImagePlaceholders: o.includeImagePlaceholders !== false,

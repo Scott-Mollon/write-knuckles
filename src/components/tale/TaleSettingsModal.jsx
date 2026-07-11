@@ -100,20 +100,6 @@ const TaleSettingsModal = ({ tale, taleId, hasBeats, hasBeatLinks, onClose }) =>
           </div>
 
           <div>
-            <label htmlFor="tale-settings-author" className="mb-2 block font-ui text-xs uppercase text-cream/80">
-              Author
-            </label>
-            <input
-              id="tale-settings-author"
-              type="text"
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-              placeholder="Optional"
-              className={fieldClass}
-            />
-          </div>
-
-          <div>
             <label htmlFor="tale-settings-subtitle" className="mb-2 block font-ui text-xs uppercase text-cream/80">
               Subtitle
             </label>
@@ -122,6 +108,20 @@ const TaleSettingsModal = ({ tale, taleId, hasBeats, hasBeatLinks, onClose }) =>
               type="text"
               value={subtitle}
               onChange={(e) => setSubtitle(e.target.value)}
+              placeholder="Optional"
+              className={fieldClass}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="tale-settings-author" className="mb-2 block font-ui text-xs uppercase text-cream/80">
+              Author
+            </label>
+            <input
+              id="tale-settings-author"
+              type="text"
+              value={author}
+              onChange={(e) => setAuthor(e.target.value)}
               placeholder="Optional"
               className={fieldClass}
             />
