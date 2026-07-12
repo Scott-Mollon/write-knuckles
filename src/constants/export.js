@@ -21,8 +21,7 @@ export const EXPORT_FORMATS = {
     id: 'docx',
     label: 'Word Document',
     extension: '.docx',
-    enabled: false,
-    comingSoon: true,
+    enabled: true,
   },
 }
 

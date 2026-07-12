@@ -350,7 +350,12 @@ const TaleExportModal = ({ tale, taleId, chapters, onClose, onBeforeExport }) =>
             )}
             {format === 'pdf' && (
               <p className="text-xs text-cream/45">
-                Scene font and size choices are included in PDF export. Drop-cap styling is not included yet.
+                Scene font and size choices are included. Drop-cap styling is not included yet.
+              </p>
+            )}
+            {format === 'docx' && (
+              <p className="text-xs text-cream/45">
+                Word export includes scene fonts, images, cover, and chapter page breaks. Drop-cap styling is not included yet.
               </p>
             )}
 

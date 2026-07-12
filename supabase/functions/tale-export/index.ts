@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { buildManuscriptModel, manuscriptHasContent } from '../_shared/export/buildManuscriptModel.ts'
 import { validateExportOptions } from '../_shared/export/chapterHeading.ts'
+import { exportDocx } from '../_shared/export/exportDocx.ts'
 import { exportHtml, encodeHtmlBuffer } from '../_shared/export/exportHtml.ts'
 import { exportPdf } from '../_shared/export/exportPdf.ts'
 import { encodeTxtBuffer, exportTxt } from '../_shared/export/exportTxt.ts'
@@ -74,8 +75,8 @@ function parseRequest(body: unknown): ExportRequest | { error: string } {
   if (typeof b.taleId !== 'string' || !b.taleId) return { error: 'taleId is required.' }
 
   const format = b.format
-  if (format !== 'txt' && format !== 'pdf' && format !== 'html') {
-    return { error: 'Only plain text (.txt), PDF (.pdf), and HTML (.html) export are available in this release.' }
+  if (format !== 'txt' && format !== 'pdf' && format !== 'html' && format !== 'docx') {
+    return { error: 'Only plain text (.txt), PDF (.pdf), HTML (.html), and Word (.docx) export are available.' }
   }
 
   const options = normalizeOptions(b.options)
@@ -132,6 +133,15 @@ async function generateExportBuffer({
     }
   }
 
+  if (format === 'docx') {
+    const buffer = await exportDocx(manuscript, options, images)
+    return {
+      buffer,
+      contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      extension: 'docx',
+    }
+  }
+
   const buffer = await exportPdf(manuscript, options, images)
   return {
     buffer,
@@ -182,7 +192,7 @@ Deno.serve(async (req) => {
     const { taleId, format, options, scope } = parsed
 
     const taleSelect =
-      format === 'pdf' || format === 'html'
+      format === 'pdf' || format === 'html' || format === 'docx'
         ? 'id, user_id, title, author, subtitle, cover_source_type, cover_storage_path, cover_external_url'
         : 'id, user_id, title, author, subtitle'
 
@@ -221,7 +231,7 @@ Deno.serve(async (req) => {
     }
 
     let serviceSupabase = supabase
-    if (format === 'pdf' || format === 'html') {
+    if (format === 'pdf' || format === 'html' || format === 'docx') {
       if (!serviceRoleKey) {
         return jsonResponse({ error: 'Server configuration error.' }, 500)
       }
