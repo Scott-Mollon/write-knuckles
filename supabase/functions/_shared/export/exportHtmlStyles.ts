@@ -1,3 +1,5 @@
+import { EXPORT_SCENE_GOOGLE_FONTS_URL } from './sceneFonts.ts'
+
 export const EXPORT_HTML_STYLES = `
 :root {
   --export-bg: #f4efe4;
@@ -224,5 +226,4 @@ body {
 }
 `
 
-export const EXPORT_HTML_FONT_LINK =
-  'https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&display=swap'
+export const EXPORT_HTML_FONT_LINK = EXPORT_SCENE_GOOGLE_FONTS_URL

@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import { useEditorState } from '@tiptap/react'
 import ImageUpload from '../images/ImageUpload'
+import {
+  SCENE_FONT_GROUPS,
+  SCENE_FONT_OPTIONS,
+  sceneFontPreviewFamily,
+} from '../../constants/sceneFonts'
 
 const ToolbarButton = ({ onClick, active, disabled, title, children, className = '' }) => (
   <button
@@ -138,21 +143,6 @@ const AlignRightIcon = () => (
   </svg>
 )
 
-const FONT_OPTIONS = [
-  { label: 'Arial', value: 'Arial, Helvetica, sans-serif' },
-  { label: 'Courier New', value: '"Courier New", Courier, monospace' },
-  { label: 'Courier Prime', value: '' },
-  { label: 'EB Garamond', value: '"EB Garamond", Garamond, serif' },
-  { label: 'Garamond', value: 'Garamond, "Palatino Linotype", Palatino, serif' },
-  { label: 'Georgia', value: 'Georgia, serif' },
-  { label: 'Libre Baskerville', value: '"Libre Baskerville", Baskerville, serif' },
-  { label: 'Literata', value: 'Literata, Georgia, serif' },
-  { label: 'Lora', value: 'Lora, Georgia, serif' },
-  { label: 'Merriweather', value: 'Merriweather, Georgia, serif' },
-  { label: 'Palatino', value: 'Palatino, "Palatino Linotype", "Book Antiqua", serif' },
-  { label: 'Times New Roman', value: '"Times New Roman", Times, serif' },
-]
-
 const FONT_SIZE_OPTIONS = [
   { label: 'Default', value: '' },
   { label: '10', value: '10px' },
@@ -276,10 +266,18 @@ const EditorToolbar = ({
         onChange={handleFontChange}
         className="editor-toolbar-select rounded px-2 py-1 text-sm"
       >
-        {FONT_OPTIONS.map((font) => (
-          <option key={font.label} value={font.value} style={{ fontFamily: font.value || '"Courier Prime", monospace' }}>
-            {font.label}
-          </option>
+        {SCENE_FONT_GROUPS.map((group) => (
+          <optgroup key={group.id} label={group.label}>
+            {SCENE_FONT_OPTIONS.filter((font) => font.group === group.id).map((font) => (
+              <option
+                key={font.label}
+                value={font.value}
+                style={{ fontFamily: sceneFontPreviewFamily(font.value) }}
+              >
+                {font.label}
+              </option>
+            ))}
+          </optgroup>
         ))}
       </select>
 

@@ -350,7 +350,7 @@ const TaleExportModal = ({ tale, taleId, chapters, onClose, onBeforeExport }) =>
             )}
             {format === 'pdf' && (
               <p className="text-xs text-cream/45">
-                Drop-cap styling is not included in PDF export yet.
+                Scene font and size choices are included in PDF export. Drop-cap styling is not included yet.
               </p>
             )}
 

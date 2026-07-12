@@ -16,7 +16,7 @@ const TaleCard = ({ tale, onOpenSettings, onOpenExport }) => {
   }
 
   return (
-    <div className="flex items-stretch gap-4 border border-bronze-dark/50 bg-surface/50 p-4 hover:border-bronze sm:p-5">
+    <div className="relative flex items-stretch gap-4 border border-bronze-dark/50 bg-surface/50 p-4 pb-10 hover:border-bronze sm:p-5 sm:pb-11">
       <Link
         to={`/tale/${tale.id}`}
         className="shrink-0 transition opacity-90 hover:opacity-100"
@@ -61,20 +61,21 @@ const TaleCard = ({ tale, onOpenSettings, onOpenExport }) => {
           >
             Export
           </button>
-          <button
-            type="button"
-            onClick={async (e) => {
-              stopCardNavigation(e)
-              if (await confirmDelete(`"${tale.title}"`, { irreversible: true })) {
-                deleteTale.mutate(tale.id)
-              }
-            }}
-            className="text-sm text-cream/40 hover:text-punch"
-          >
-            Delete
-          </button>
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={async (e) => {
+          stopCardNavigation(e)
+          if (await confirmDelete(`"${tale.title}"`, { irreversible: true })) {
+            deleteTale.mutate(tale.id)
+          }
+        }}
+        className="absolute bottom-4 right-4 font-ui text-xs uppercase tracking-wide text-cream/40 hover:text-punch sm:bottom-5 sm:right-5"
+      >
+        Delete
+      </button>
     </div>
   )
 }

@@ -30,6 +30,8 @@ export type InlineSpan = {
   text: string
   marks: InlineMark[]
   href?: string
+  fontFamily?: string
+  fontSize?: number
 }
 
 export type ContentBlock =

@@ -48,8 +48,33 @@ function blockAttrs(attrs: Record<string, unknown> | undefined): string {
   return attrParts.length ? ` ${attrParts.join(' ')}` : ''
 }
 
+function sanitizeCssValue(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  if (!trimmed || /[<>"']|javascript:/i.test(trimmed)) return null
+  return trimmed
+}
+
+function textStyleAttr(mark: { attrs?: Record<string, unknown> }): string | null {
+  const styles: string[] = []
+  const fontFamily = sanitizeCssValue(mark.attrs?.fontFamily)
+  const fontSize = sanitizeCssValue(mark.attrs?.fontSize)
+  const color = sanitizeCssValue(mark.attrs?.color)
+
+  if (fontFamily) styles.push(`font-family: ${fontFamily}`)
+  if (fontSize) styles.push(`font-size: ${fontSize}`)
+  if (color) styles.push(`color: ${color}`)
+
+  return styles.length ? styles.join('; ') : null
+}
+
 function wrapMark(html: string, mark: { type?: string; attrs?: Record<string, unknown> }): string {
   switch (mark.type) {
+    case 'textStyle': {
+      const style = textStyleAttr(mark)
+      if (!style) return html
+      return `<span style="${escapeHtml(style)}">${html}</span>`
+    }
     case 'bold':
     case 'strong':
       return `<strong>${html}</strong>`

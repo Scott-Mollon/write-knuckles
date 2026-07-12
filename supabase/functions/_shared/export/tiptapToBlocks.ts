@@ -22,6 +22,8 @@ function spansFromNode(node: TipTapNode): InlineSpan[] {
   if (node.type === 'text') {
     const marks: InlineMark[] = []
     let href: string | undefined
+    let fontFamily: string | undefined
+    let fontSize: number | undefined
 
     for (const mark of node.marks || []) {
       const mapped = markFromType(mark.type)
@@ -29,9 +31,18 @@ function spansFromNode(node: TipTapNode): InlineSpan[] {
       if (mark.type === 'link' && typeof mark.attrs?.href === 'string') {
         href = mark.attrs.href
       }
+      if (mark.type === 'textStyle') {
+        if (typeof mark.attrs?.fontFamily === 'string' && mark.attrs.fontFamily.trim()) {
+          fontFamily = mark.attrs.fontFamily
+        }
+        if (typeof mark.attrs?.fontSize === 'string') {
+          const match = mark.attrs.fontSize.trim().match(/^([\d.]+)px$/i)
+          if (match) fontSize = parseFloat(match[1])
+        }
+      }
     }
 
-    return [{ text: node.text || '', marks, href }]
+    return [{ text: node.text || '', marks, href, fontFamily, fontSize }]
   }
 
   const spans: InlineSpan[] = []

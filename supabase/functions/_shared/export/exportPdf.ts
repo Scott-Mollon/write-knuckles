@@ -3,6 +3,14 @@ import pdfFonts from 'npm:pdfmake/build/vfs_fonts.js'
 import type { Content, TDocumentDefinitions } from 'npm:pdfmake/interfaces'
 import type { ExportImageBundle } from './resolveExportImages.ts'
 import { formatAuthorLine } from './formatAuthor.ts'
+import {
+  collectPdfFontsFromModel,
+  ensurePdfFonts,
+  pdfFontForRender,
+  pxToPdfFontSize,
+  resolvePdfFontKey,
+} from './pdfFontRegistry.ts'
+import { PDF_DEFAULT_BODY_FONT } from './sceneFonts.ts'
 import type { ContentBlock, ExportOptions, InlineSpan, ManuscriptModel } from './types.ts'
 
 // pdfmake ships Roboto in vfs_fonts
@@ -20,15 +28,24 @@ function spanToPdfText(span: InlineSpan): Record<string, unknown> {
   if (span.marks.includes('italic')) item.italics = true
   if (span.marks.includes('underline')) item.decoration = 'underline'
   if (span.marks.includes('link') && span.href) item.link = span.href
+  item.font = pdfFontForRender(resolvePdfFontKey(span.fontFamily))
+  if (span.fontSize) item.fontSize = pxToPdfFontSize(span.fontSize)
   return item
 }
 
 function spansToPdfText(spans: InlineSpan[]): string | Array<Record<string, unknown>> {
   const filtered = spans.filter((span) => span.text.length > 0)
   if (filtered.length === 0) return ''
-  if (filtered.length === 1 && filtered[0].marks.length === 0 && !filtered[0].href) {
-    return filtered[0].text
-  }
+
+  const hasRich = filtered.some(
+    (span) =>
+      span.marks.length > 0 ||
+      span.href ||
+      span.fontFamily ||
+      span.fontSize,
+  )
+
+  if (!hasRich && filtered.length === 1) return filtered[0].text
   return filtered.map(spanToPdfText)
 }
 
@@ -113,6 +130,7 @@ function buildTitlePage(model: ManuscriptModel, options: ExportOptions): Content
   if (options.titlePage) {
     items.push({
       text: model.title,
+      font: 'Roboto',
       fontSize: 24,
       bold: true,
       alignment: 'center',
@@ -122,6 +140,7 @@ function buildTitlePage(model: ManuscriptModel, options: ExportOptions): Content
     if (options.includeSubtitle && model.subtitle?.trim()) {
       items.push({
         text: model.subtitle.trim(),
+        font: 'Roboto',
         fontSize: 14,
         italics: true,
         alignment: 'center',
@@ -133,6 +152,7 @@ function buildTitlePage(model: ManuscriptModel, options: ExportOptions): Content
     if (authorLine) {
       items.push({
         text: authorLine,
+        font: 'Roboto',
         fontSize: 12,
         alignment: 'center',
         margin: [0, 0, 0, 0] as [number, number, number, number],
@@ -177,6 +197,7 @@ export function buildPdfDefinition(
     if (chapter.heading) {
       content.push({
         text: chapter.heading,
+        font: 'Roboto',
         fontSize: 16,
         bold: true,
         margin: [0, chapterIndex === 0 ? 0 : 12, 0, 12] as [number, number, number, number],
@@ -204,7 +225,7 @@ export function buildPdfDefinition(
     pageSize: 'LETTER',
     pageMargins: PAGE_MARGINS,
     defaultStyle: {
-      font: 'Roboto',
+      font: PDF_DEFAULT_BODY_FONT,
       fontSize: 11,
       lineHeight: 1.3,
     },
@@ -217,6 +238,9 @@ export async function exportPdf(
   options: ExportOptions,
   images: ExportImageBundle,
 ): Promise<Uint8Array> {
+  const fontsNeeded = collectPdfFontsFromModel(model)
+  await ensurePdfFonts(fontsNeeded, vfs)
+
   const doc = buildPdfDefinition(model, options, images)
   const pdf = pdfMake.createPdf(doc)
   const buffer = await pdf.getBuffer()
