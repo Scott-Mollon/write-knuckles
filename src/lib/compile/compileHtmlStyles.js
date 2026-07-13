@@ -271,7 +271,8 @@ body {
   .pagedjs_page,
   .pagedjs_sheet,
   .pagedjs_area,
-  .pagedjs_pagebox {
+  .pagedjs_pagebox,
+  .pagedjs_margin {
     outline: none !important;
     box-shadow: none !important;
     border: none !important;

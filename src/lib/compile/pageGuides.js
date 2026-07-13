@@ -52,7 +52,25 @@ export function syncPageGuidesInDocument(doc, enabled) {
     }
   }
 
+  ensurePrintGuideSuppressionInDocument(doc)
+
   return true
+}
+
+export function ensurePrintGuideSuppressionInDocument(doc) {
+  const win = doc?.defaultView
+  if (!win || win.__wkPrintGuideListener) return
+
+  win.__wkPrintGuideListener = true
+  win.addEventListener('beforeprint', () => {
+    win.__wkGuidesWereEnabled = doc.documentElement.dataset.showPageGuides === 'true'
+    syncPageGuidesInDocument(doc, false)
+  })
+  win.addEventListener('afterprint', () => {
+    if (win.__wkGuidesWereEnabled) {
+      syncPageGuidesInDocument(doc, true)
+    }
+  })
 }
 
 export function ensureCompilePageChromeInDocument(doc) {
@@ -154,6 +172,19 @@ export function buildPageGuidesBootScript(chromeCss) {
     window.addEventListener('message', (event) => {
       if (event.data && event.data.type === ${JSON.stringify(WK_SET_PAGE_GUIDES)}) {
         wkApplyPageGuides(Boolean(event.data.enabled));
+      }
+    });
+  }
+
+  if (!window.__wkPrintGuideListener) {
+    window.__wkPrintGuideListener = true;
+    window.addEventListener('beforeprint', () => {
+      window.__wkGuidesWereEnabled = document.documentElement.dataset.showPageGuides === 'true';
+      wkApplyPageGuides(false);
+    });
+    window.addEventListener('afterprint', () => {
+      if (window.__wkGuidesWereEnabled) {
+        wkApplyPageGuides(true);
       }
     });
   }
