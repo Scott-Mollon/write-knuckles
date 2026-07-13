@@ -100,6 +100,10 @@ body {
   margin: 0 0 1.25rem;
 }
 
+.export-chapter .scene-editor-prose + .scene-editor-prose {
+  margin-top: 1em;
+}
+
 .scene-editor-prose {
   color: var(--export-text);
 }
