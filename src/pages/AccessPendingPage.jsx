@@ -1,8 +1,8 @@
-import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { planLabel } from '../constants/account'
 
 const AccessPendingPage = () => {
-  const { user, signout } = useAuth()
+  const { user, plan, signout } = useAuth()
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-57px)] max-w-lg flex-col items-center justify-center p-8 text-center">
@@ -11,8 +11,9 @@ const AccessPendingPage = () => {
         Write Knuckles is the back room — access is by approval only.
       </p>
       <p className="mt-2 text-cream/60">
-        Signed in as <span className="text-cream">{user?.email}</span>, but this account
-        isn&apos;t on the invite list yet.
+        You have a <span className="text-cream">{planLabel(plan)}</span> account signed in as{' '}
+        <span className="text-cream">{user?.email}</span>, but this account isn&apos;t on the
+        invite list yet.
       </p>
       <p className="mt-6 text-sm text-cream/50">
         If you believe you should have access, contact the magazine editor.

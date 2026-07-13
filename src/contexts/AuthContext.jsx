@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase, writeDb } from '../clients/supabase'
+import { PLAN_FREE, normalizePlan } from '../constants/account'
 import { deleteMyAccount as deleteMyAccountRequest } from '../lib/deleteAccount'
 
 const AuthContext = createContext()
@@ -11,6 +12,7 @@ export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null)
   const [admin, setAdmin] = useState(false)
   const [approved, setApproved] = useState(false)
+  const [plan, setPlan] = useState(PLAN_FREE)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
@@ -19,6 +21,7 @@ export const AuthProvider = ({ children }) => {
       if (currentSession?.user) {
         setApprovalLoading(true)
         checkAdmin(currentSession.user.id)
+        checkPlan(currentSession.user.id)
         checkApproved()
       }
       setLoading(false)
@@ -31,10 +34,14 @@ export const AuthProvider = ({ children }) => {
         setApprovalLoading(true)
         checkAdmin(nextSession.user.id)
         // Defer until the Supabase client attaches the new session JWT to API calls.
-        setTimeout(() => checkApproved(), 0)
+        setTimeout(() => {
+          checkPlan(nextSession.user.id)
+          checkApproved()
+        }, 0)
       } else {
         setAdmin(false)
         setApproved(false)
+        setPlan(PLAN_FREE)
         setApprovalLoading(false)
       }
     })
@@ -50,6 +57,36 @@ export const AuthProvider = ({ children }) => {
 
     if (!error) {
       setAdmin(data?.length === 1)
+    }
+  }
+
+  const checkPlan = async (userId) => {
+    if (!userId) {
+      setPlan(PLAN_FREE)
+      return
+    }
+
+    try {
+      const { data, error } = await writeDb
+        .from('profiles')
+        .select('plan')
+        .eq('user_id', userId)
+        .maybeSingle()
+
+      if (error) {
+        if (import.meta.env.DEV) {
+          console.error('Plan check failed:', error.message, error)
+        }
+        setPlan(PLAN_FREE)
+        return
+      }
+
+      setPlan(normalizePlan(data?.plan))
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error('Plan check error:', err)
+      }
+      setPlan(PLAN_FREE)
     }
   }
 
@@ -142,6 +179,7 @@ export const AuthProvider = ({ children }) => {
     setSession(null)
     setAdmin(false)
     setApproved(false)
+    setPlan(PLAN_FREE)
     return supabase.auth.signOut()
   }
 
@@ -152,6 +190,7 @@ export const AuthProvider = ({ children }) => {
       setSession(null)
       setAdmin(false)
       setApproved(false)
+      setPlan(PLAN_FREE)
       await supabase.auth.signOut()
       return { success: true }
     } catch (err) {
@@ -199,6 +238,8 @@ export const AuthProvider = ({ children }) => {
         user,
         admin,
         approved,
+        plan,
+        refreshPlan: () => checkPlan(user?.id),
         signout,
         deleteAccount,
         updateProfile,

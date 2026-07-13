@@ -149,3 +149,25 @@ export const useSetUserAccess = () => {
     },
   })
 }
+
+export const useSetUserPlan = () => {
+  const queryClient = useQueryClient()
+  const { user, refreshPlan } = useAuth()
+
+  return useMutation({
+    mutationFn: async ({ userId, plan }) => {
+      const { error } = await writeDb.rpc('set_user_plan', {
+        target_user_id: userId,
+        new_plan: plan,
+      })
+      if (error) throw error
+      return { userId }
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['registered-users'] })
+      if (result?.userId && result.userId === user?.id) {
+        refreshPlan?.()
+      }
+    },
+  })
+}

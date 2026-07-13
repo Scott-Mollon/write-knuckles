@@ -5,7 +5,9 @@ import {
   useRegisteredUsers,
   useApproveUser,
   useSetUserAccess,
+  useSetUserPlan,
 } from '../hooks/useApprovedUsers'
+import { PLAN_FREE, PLAN_PAID, isPaidPlan, normalizePlan, planLabel } from '../constants/account'
 import { confirmAction } from '../lib/confirmAction'
 import Loading from './Loading'
 
@@ -24,6 +26,7 @@ const AccessAdminPage = () => {
   const { data: registered, isLoading: registeredLoading, error: registeredError } = useRegisteredUsers()
   const approveUser = useApproveUser()
   const setUserAccess = useSetUserAccess()
+  const setUserPlan = useSetUserPlan()
 
   const [email, setEmail] = useState('')
   const [notes, setNotes] = useState('')
@@ -91,14 +94,36 @@ const AccessAdminPage = () => {
     }
   }
 
+  const handleTogglePlan = async (account) => {
+    const currentPlan = normalizePlan(account.plan)
+    const nextPlan = isPaidPlan(currentPlan) ? PLAN_FREE : PLAN_PAID
+    const actionLabel = nextPlan === PLAN_PAID ? 'Mark paid' : 'Mark free'
+
+    if (!(await confirmAction(`${actionLabel} for ${account.email}?`))) {
+      return
+    }
+
+    try {
+      await setUserPlan.mutateAsync({
+        userId: account.user_id,
+        plan: nextPlan,
+      })
+    } catch (err) {
+      setFormError(err.message || 'Failed to update plan.')
+    }
+  }
+
   const error = approvalsError || registeredError
+  const actionsPending = setUserAccess.isPending || setUserPlan.isPending
 
   return (
     <div className="mx-auto max-w-3xl p-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="font-ui text-2xl uppercase tracking-wide text-bronze">Write Access</h1>
-          <p className="mt-1 text-sm text-cream/60">Manage who can use Write Knuckles.</p>
+          <p className="mt-1 text-sm text-cream/60">
+            Manage who can use Write Knuckles and Free / Paid account plans.
+          </p>
         </div>
         <Link to="/" className="text-sm text-cream/50 hover:text-bronze">
           &larr; Tales
@@ -133,12 +158,13 @@ const AccessAdminPage = () => {
         {formError && <p className="mt-2 text-sm text-error">{formError}</p>}
         <p className="mt-2 text-xs text-cream/40">
           Approve someone before they sign up, or pick from registered accounts below.
+          Approval controls beta access; plan is separate (Free by default).
         </p>
       </form>
 
       {error && (
         <p className="mb-6 text-error">
-          Could not load access data. Ensure migrations 003 and 004 are applied and you are a magazine admin.
+          Could not load access data. Ensure migrations are applied and you are a magazine admin.
         </p>
       )}
 
@@ -164,6 +190,8 @@ const AccessAdminPage = () => {
               const approval = getApprovalForEmail(approvalList, account.email)
               const isActive = approval && !approval.revoked_at
               const isRevoked = approval?.revoked_at
+              const accountPlan = normalizePlan(account.plan)
+              const paid = isPaidPlan(accountPlan)
 
               return (
                 <li key={account.user_id} className="flex items-start justify-between gap-4 px-4 py-3">
@@ -175,7 +203,11 @@ const AccessAdminPage = () => {
                         <> · Last sign-in {new Date(account.last_sign_in_at).toLocaleDateString()}</>
                       )}
                     </div>
-                    <div className="mt-1">
+                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className={`text-xs uppercase ${paid ? 'text-bronze' : 'text-cream/40'}`}>
+                        {planLabel(accountPlan)}
+                      </span>
+                      <span className="text-cream/20">·</span>
                       {isActive && (
                         <span className="text-xs uppercase text-bronze">Approved</span>
                       )}
@@ -186,22 +218,32 @@ const AccessAdminPage = () => {
                         <span className="text-xs uppercase text-cream/50">Revoked</span>
                       )}
                       {isActive && approval?.notes && (
-                        <span className="ml-2 text-xs text-cream/40">· {approval.notes}</span>
+                        <span className="text-xs text-cream/40">· {approval.notes}</span>
                       )}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleToggleAccess(account)}
-                    disabled={setUserAccess.isPending}
-                    className={`shrink-0 text-xs uppercase ${
-                      isActive
-                        ? 'text-cream/40 hover:text-error'
-                        : 'text-bronze hover:text-cream'
-                    }`}
-                  >
-                    {isActive ? 'Revoke' : isRevoked ? 'Re-approve' : 'Approve'}
-                  </button>
+                  <div className="flex shrink-0 flex-col items-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleAccess(account)}
+                      disabled={actionsPending}
+                      className={`text-xs uppercase ${
+                        isActive
+                          ? 'text-cream/40 hover:text-error'
+                          : 'text-bronze hover:text-cream'
+                      }`}
+                    >
+                      {isActive ? 'Revoke' : isRevoked ? 'Re-approve' : 'Approve'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePlan(account)}
+                      disabled={actionsPending}
+                      className="text-xs uppercase text-cream/40 hover:text-bronze"
+                    >
+                      {paid ? 'Mark free' : 'Mark paid'}
+                    </button>
+                  </div>
                 </li>
               )
             })}

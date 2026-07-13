@@ -1,18 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { planLabel } from '../constants/account'
 import { confirmAction } from '../lib/confirmAction'
 import { getProfileNames } from '../lib/userProfile'
-
-const readOnlyFieldClass =
-  'w-full rounded border border-bronze-dark/50 bg-surface/20 px-3 py-2 text-cream'
 
 const editableFieldClass =
   'w-full rounded border border-bronze-dark/50 bg-ink px-3 py-2 text-cream placeholder:text-cream/30 focus:border-bronze focus:outline-none'
 
 const ProfileDialog = ({ onClose }) => {
   const navigate = useNavigate()
-  const { user, updateProfile, deleteAccount } = useAuth()
+  const { user, plan, updateProfile, deleteAccount } = useAuth()
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [saving, setSaving] = useState(false)
@@ -108,16 +106,13 @@ const ProfileDialog = ({ onClose }) => {
 
         <form onSubmit={handleSave} className="space-y-5">
           <div>
-            <label htmlFor="profile-email" className="mb-2 block font-ui text-xs uppercase text-cream/80">
-              Email
-            </label>
-            <div
-              id="profile-email"
-              className={`${readOnlyFieldClass} cursor-default select-text`}
-              aria-readonly="true"
-            >
-              {user?.email || '—'}
-            </div>
+            <div className="mb-1 font-ui text-xs uppercase text-cream/80">Email</div>
+            <p className="select-text text-cream">{user?.email || '—'}</p>
+          </div>
+
+          <div>
+            <div className="mb-1 font-ui text-xs uppercase text-cream/80">Account</div>
+            <p className="text-cream">{planLabel(plan)}</p>
           </div>
 
           <div>
@@ -150,36 +145,35 @@ const ProfileDialog = ({ onClose }) => {
             />
           </div>
 
-          <div className="flex justify-end gap-3">
-            <button
-              type="submit"
-              disabled={saving || deleting}
-              className="border border-bronze-dark px-3 py-2 font-ui text-sm uppercase tracking-wide text-bronze hover:border-bronze hover:bg-bronze/10 disabled:opacity-50"
-            >
-              {saving ? 'Saving…' : 'Save'}
-            </button>
-            <button
-              type="button"
+          <div className="flex items-center justify-between gap-3">
+            <Link
+              to="/reset"
+              className="font-ui text-sm uppercase tracking-wide text-bronze hover:text-cream"
               onClick={onClose}
-              disabled={saving || deleting}
-              className="border border-bronze-dark px-3 py-2 font-ui text-sm uppercase tracking-wide text-cream/60 hover:border-bronze hover:text-cream disabled:opacity-50"
             >
-              Close
-            </button>
+              Reset password
+            </Link>
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                disabled={saving || deleting}
+                className="border border-bronze-dark px-3 py-2 font-ui text-sm uppercase tracking-wide text-bronze hover:border-bronze hover:bg-bronze/10 disabled:opacity-50"
+              >
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={saving || deleting}
+                className="border border-bronze-dark px-3 py-2 font-ui text-sm uppercase tracking-wide text-cream/60 hover:border-bronze hover:text-cream disabled:opacity-50"
+              >
+                Close
+              </button>
+            </div>
           </div>
 
           {error && <p className="text-sm text-error">{error}</p>}
         </form>
-
-        <div className="mt-5 space-y-3 border-t border-bronze-dark/30 pt-5">
-          <Link
-            to="/reset"
-            className="block font-ui text-sm uppercase tracking-wide text-bronze hover:text-cream"
-            onClick={onClose}
-          >
-            Reset password
-          </Link>
-        </div>
 
         <div className="border-t border-bronze-dark/30 pt-5 mt-5">
           <p className="mb-3 text-sm leading-relaxed text-cream/60">
