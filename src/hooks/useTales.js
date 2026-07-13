@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { writeDb } from '../clients/supabase'
+import { canCreateTale, FREE_TALE_LIMIT_MESSAGE } from '../constants/account'
 import { useAuth } from '../contexts/AuthContext'
 import { deleteTaleImage } from '../lib/images/storage'
 import { serializeCompilePreferencesForDb } from '../lib/compile/compilePreferences.js'
@@ -66,10 +67,22 @@ export const useBeatTemplates = () => {
 
 export const useCreateTale = () => {
   const queryClient = useQueryClient()
-  const { user } = useAuth()
+  const { user, plan } = useAuth()
 
   return useMutation({
     mutationFn: async ({ title, author, genre, targetWordCount, beatTemplateId, beatStructure }) => {
+      const { count, error: countError } = await writeDb
+        .from('tales')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .is('archived_at', null)
+
+      if (countError) throw countError
+
+      if (!canCreateTale({ plan, taleCount: count ?? 0 })) {
+        throw new Error(FREE_TALE_LIMIT_MESSAGE)
+      }
+
       const { data: tale, error: taleError } = await writeDb
         .from('tales')
         .insert({

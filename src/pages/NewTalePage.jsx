@@ -1,11 +1,15 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useBeatTemplates, useCreateTale } from '../hooks/useTales'
+import { Link, useNavigate } from 'react-router-dom'
+import { canCreateTale, FREE_TALE_LIMIT_MESSAGE } from '../constants/account'
+import { useAuth } from '../contexts/AuthContext'
+import { useBeatTemplates, useCreateTale, useTales } from '../hooks/useTales'
 import Loading from './Loading'
 
 const NewTalePage = () => {
   const navigate = useNavigate()
-  const { data: templates, isLoading } = useBeatTemplates()
+  const { plan } = useAuth()
+  const { data: tales, isLoading: talesLoading } = useTales()
+  const { data: templates, isLoading: templatesLoading } = useBeatTemplates()
   const createTale = useCreateTale()
 
   const [title, setTitle] = useState('')
@@ -15,7 +19,22 @@ const NewTalePage = () => {
   const [beatTemplateId, setBeatTemplateId] = useState('')
   const [error, setError] = useState(null)
 
-  if (isLoading) return <Loading />
+  if (talesLoading || templatesLoading) return <Loading />
+
+  const taleCount = tales?.length ?? 0
+  const allowNewTale = canCreateTale({ plan, taleCount })
+
+  if (!allowNewTale) {
+    return (
+      <div className="mx-auto max-w-xl p-8">
+        <h1 className="font-ui text-3xl uppercase tracking-wide text-bronze">New Tale</h1>
+        <p className="mt-4 text-cream/70">{FREE_TALE_LIMIT_MESSAGE}</p>
+        <Link to="/" className="mt-8 inline-block text-bronze underline hover:text-cream">
+          &larr; Back to your tales
+        </Link>
+      </div>
+    )
+  }
 
   const selectedTemplate = templates?.find((t) => t.id === beatTemplateId) || templates?.[0]
 

@@ -7,7 +7,14 @@ import {
   useSetUserAccess,
   useSetUserPlan,
 } from '../hooks/useApprovedUsers'
-import { PLAN_FREE, PLAN_PAID, isPaidPlan, normalizePlan, planLabel } from '../constants/account'
+import {
+  PLAN_COMPLIMENTARY,
+  PLAN_FREE,
+  PLAN_PAID,
+  hasPaidEntitlements,
+  normalizePlan,
+  planLabel,
+} from '../constants/account'
 import { confirmAction } from '../lib/confirmAction'
 import Loading from './Loading'
 
@@ -20,6 +27,12 @@ const getApprovalForEmail = (approvals, email) => {
 
   return matches.find((a) => !a.revoked_at) || matches[0]
 }
+
+const PLAN_ACTIONS = [
+  { plan: PLAN_FREE, label: 'Mark free' },
+  { plan: PLAN_PAID, label: 'Mark paid' },
+  { plan: PLAN_COMPLIMENTARY, label: 'Mark complimentary' },
+]
 
 const AccessAdminPage = () => {
   const { data: approvals, isLoading: approvalsLoading, error: approvalsError } = useApprovedUsers()
@@ -94,12 +107,11 @@ const AccessAdminPage = () => {
     }
   }
 
-  const handleTogglePlan = async (account) => {
-    const currentPlan = normalizePlan(account.plan)
-    const nextPlan = isPaidPlan(currentPlan) ? PLAN_FREE : PLAN_PAID
-    const actionLabel = nextPlan === PLAN_PAID ? 'Mark paid' : 'Mark free'
+  const handleSetPlan = async (account, nextPlan) => {
+    const action = PLAN_ACTIONS.find((a) => a.plan === nextPlan)
+    if (!action) return
 
-    if (!(await confirmAction(`${actionLabel} for ${account.email}?`))) {
+    if (!(await confirmAction(`${action.label} for ${account.email}?`))) {
       return
     }
 
@@ -122,7 +134,7 @@ const AccessAdminPage = () => {
         <div>
           <h1 className="font-ui text-2xl uppercase tracking-wide text-bronze">Write Access</h1>
           <p className="mt-1 text-sm text-cream/60">
-            Manage who can use Write Knuckles and Free / Paid account plans.
+            Manage beta access and Free / Paid / Complimentary plans.
           </p>
         </div>
         <Link to="/" className="text-sm text-cream/50 hover:text-bronze">
@@ -157,8 +169,8 @@ const AccessAdminPage = () => {
         </div>
         {formError && <p className="mt-2 text-sm text-error">{formError}</p>}
         <p className="mt-2 text-xs text-cream/40">
-          Approve someone before they sign up, or pick from registered accounts below.
-          Approval controls beta access; plan is separate (Free by default).
+          Approval controls beta access. Plan is separate: Free by default, Paid for billable
+          accounts, Complimentary for gifts that must never be charged.
         </p>
       </form>
 
@@ -191,7 +203,7 @@ const AccessAdminPage = () => {
               const isActive = approval && !approval.revoked_at
               const isRevoked = approval?.revoked_at
               const accountPlan = normalizePlan(account.plan)
-              const paid = isPaidPlan(accountPlan)
+              const entitled = hasPaidEntitlements(accountPlan)
 
               return (
                 <li key={account.user_id} className="flex items-start justify-between gap-4 px-4 py-3">
@@ -204,7 +216,7 @@ const AccessAdminPage = () => {
                       )}
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-                      <span className={`text-xs uppercase ${paid ? 'text-bronze' : 'text-cream/40'}`}>
+                      <span className={`text-xs uppercase ${entitled ? 'text-bronze' : 'text-cream/40'}`}>
                         {planLabel(accountPlan)}
                       </span>
                       <span className="text-cream/20">·</span>
@@ -235,14 +247,17 @@ const AccessAdminPage = () => {
                     >
                       {isActive ? 'Revoke' : isRevoked ? 'Re-approve' : 'Approve'}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => handleTogglePlan(account)}
-                      disabled={actionsPending}
-                      className="text-xs uppercase text-cream/40 hover:text-bronze"
-                    >
-                      {paid ? 'Mark free' : 'Mark paid'}
-                    </button>
+                    {PLAN_ACTIONS.filter((action) => action.plan !== accountPlan).map((action) => (
+                      <button
+                        key={action.plan}
+                        type="button"
+                        onClick={() => handleSetPlan(account, action.plan)}
+                        disabled={actionsPending}
+                        className="text-xs uppercase text-cream/40 hover:text-bronze"
+                      >
+                        {action.label}
+                      </button>
+                    ))}
                   </div>
                 </li>
               )
