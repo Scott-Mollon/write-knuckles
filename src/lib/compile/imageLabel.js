@@ -1,12 +1,12 @@
 const UUID_FILENAME =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(\.[a-z0-9]+)?$/i
 
-function basenameFromPath(path: string): string {
+function basenameFromPath(path) {
   const parts = path.split('/').filter(Boolean)
   return parts[parts.length - 1] || ''
 }
 
-function labelFromImageUrl(url: string): string {
+function labelFromImageUrl(url) {
   try {
     const base = basenameFromPath(new URL(url).pathname)
     return base ? decodeURIComponent(base) : ''
@@ -15,7 +15,7 @@ function labelFromImageUrl(url: string): string {
   }
 }
 
-function displayNameFromStorageFilename(name: string): string {
+function displayNameFromStorageFilename(name) {
   if (!name) return ''
   if (UUID_FILENAME.test(name)) {
     const dot = name.lastIndexOf('.')
@@ -25,8 +25,7 @@ function displayNameFromStorageFilename(name: string): string {
   return name
 }
 
-/** Resolve a human-readable label for a scene image node. */
-export function imageDisplayLabel(attrs: Record<string, unknown> | undefined): string {
+export function imageDisplayLabel(attrs) {
   if (!attrs) return 'Image'
 
   const alt = typeof attrs.alt === 'string' ? attrs.alt.trim() : ''

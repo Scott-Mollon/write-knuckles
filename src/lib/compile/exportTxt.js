@@ -1,8 +1,7 @@
-import { spansToPlainText } from './tiptapToBlocks.ts'
-import { formatAuthorLine } from './formatAuthor.ts'
-import type { ContentBlock, ExportOptions, ManuscriptModel } from './types.ts'
+import { spansToPlainText } from './tiptapToBlocks.js'
+import { formatAuthorLine } from './formatAuthor.js'
 
-function blockToText(block: ContentBlock, options: ExportOptions): string {
+function blockToText(block) {
   switch (block.type) {
     case 'paragraph':
       return spansToPlainText(block.spans)
@@ -11,15 +10,14 @@ function blockToText(block: ContentBlock, options: ExportOptions): string {
     case 'divider':
       return '---'
     case 'image':
-      if (!options.includeImagePlaceholders) return ''
       return block.alt ? `[Image: ${block.alt}]` : '[Image]'
     default:
       return ''
   }
 }
 
-export function exportTxt(model: ManuscriptModel, options: ExportOptions): string {
-  const lines: string[] = []
+export function exportTxt(model, options) {
+  const lines = []
 
   if (options.titlePage) {
     lines.push(model.title)
@@ -47,7 +45,7 @@ export function exportTxt(model: ManuscriptModel, options: ExportOptions): strin
       }
 
       scene.blocks.forEach((block, blockIndex) => {
-        const text = blockToText(block, options)
+        const text = blockToText(block)
         if (!text && block.type !== 'divider') return
 
         if (block.type === 'image') {
@@ -76,8 +74,4 @@ export function exportTxt(model: ManuscriptModel, options: ExportOptions): strin
   })
 
   return `${lines.join('\n').trim()}\n`
-}
-
-export function encodeTxtBuffer(text: string): Uint8Array {
-  return new TextEncoder().encode(text)
 }

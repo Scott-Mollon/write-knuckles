@@ -1,19 +1,13 @@
-import type { ExportOptions } from './types.ts'
-
 const DEFAULT_CHAPTER_TITLE_RE = /^Chapter \d+$/
 
-export function getChapterCustomTitle(title: string | null | undefined): string {
+export function getChapterCustomTitle(title) {
   const trimmed = title?.trim() || ''
   if (!trimmed || DEFAULT_CHAPTER_TITLE_RE.test(trimmed)) return ''
   return trimmed
 }
 
-export function buildChapterHeading(
-  chapterTitle: string | null | undefined,
-  chapterIndex: number,
-  options: ExportOptions,
-): string | null {
-  const parts: string[] = []
+export function buildChapterHeading(chapterTitle, chapterIndex, options) {
+  const parts = []
   const customTitle = getChapterCustomTitle(chapterTitle)
 
   if (options.includeChapterWord) {
@@ -36,6 +30,6 @@ export function buildChapterHeading(
   return heading || null
 }
 
-export function validateExportOptions(_options: ExportOptions): string | null {
+export function validateCompileOptions(_options) {
   return null
 }

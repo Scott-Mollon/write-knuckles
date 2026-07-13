@@ -3,7 +3,7 @@ import { useDeleteTale } from '../../hooks/useTales'
 import { confirmDelete } from '../../lib/confirmAction'
 import TaleCoverThumbnail from './TaleCoverThumbnail'
 
-const TaleCard = ({ tale, onOpenSettings, onOpenExport }) => {
+const TaleCard = ({ tale, onOpenSettings, onOpenCompile }) => {
   const deleteTale = useDeleteTale()
 
   const progress = tale.target_word_count
@@ -55,11 +55,11 @@ const TaleCard = ({ tale, onOpenSettings, onOpenExport }) => {
             type="button"
             onClick={(e) => {
               stopCardNavigation(e)
-              onOpenExport?.(tale)
+              onOpenCompile?.(tale)
             }}
             className="font-ui text-xs uppercase tracking-wide text-cream/50 hover:text-bronze"
           >
-            Export
+            Compile
           </button>
         </div>
       </div>

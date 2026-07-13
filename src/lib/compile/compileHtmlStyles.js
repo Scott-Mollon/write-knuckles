@@ -1,6 +1,12 @@
-import { EXPORT_SCENE_GOOGLE_FONTS_URL } from './sceneFonts.ts'
+import { SCENE_GOOGLE_FONTS_CSS_URL } from '../../constants/sceneFonts.js'
+import { buildPageMarginRule, buildPageSizeRule, normalizePageLayout } from './pageLayout.js'
 
-export const EXPORT_HTML_STYLES = `
+export function compileHtmlStyles(pageLayoutInput) {
+  const pageLayout = normalizePageLayout(pageLayoutInput)
+  const pageSizeRule = buildPageSizeRule(pageLayout)
+  const pageMargin = buildPageMarginRule(pageLayout)
+
+  return `
 :root {
   --export-bg: #f4efe4;
   --export-text: #1a1410;
@@ -8,6 +14,13 @@ export const EXPORT_HTML_STYLES = `
   --export-accent: #726a2b;
   --export-divider: #938938;
   --export-mark-bg: rgba(147, 137, 56, 0.25);
+  --compile-page-size: ${pageSizeRule};
+  --compile-page-margin: ${pageMargin};
+}
+
+@page {
+  size: ${pageSizeRule};
+  margin: ${pageMargin};
 }
 
 * {
@@ -32,6 +45,8 @@ body {
 .export-cover {
   text-align: center;
   margin-bottom: 2.5rem;
+  page-break-after: always;
+  break-after: page;
 }
 
 .export-cover img {
@@ -44,6 +59,8 @@ body {
   text-align: center;
   padding: 4rem 1rem 5rem;
   page-break-after: always;
+  break-after: page;
+  min-height: 0;
 }
 
 .export-title-page h1 {
@@ -152,6 +169,8 @@ body {
 .scene-editor-prose .scene-image {
   margin: 1em 0;
   line-height: 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 .scene-editor-prose .scene-image--block {
@@ -215,8 +234,24 @@ body {
     padding: 0;
   }
 
+  .pagedjs_page,
+  .pagedjs_sheet,
+  .pagedjs_area,
+  .pagedjs_pagebox {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+  }
+
   .export-title-page {
     page-break-after: always;
+    break-after: page;
+  }
+
+  .export-cover {
+    page-break-after: always;
+    break-after: page;
   }
 
   .export-chapter.export-chapter-break {
@@ -225,5 +260,67 @@ body {
   }
 }
 `
+}
 
-export const EXPORT_HTML_FONT_LINK = EXPORT_SCENE_GOOGLE_FONTS_URL
+/** Screen-only Paged.js chrome; separate tag with media="screen" so Paged.js does not remove it. */
+export function compilePageChromeStyles() {
+  return `
+html,
+body {
+  background: #e5dfd3;
+}
+
+.manuscript-export {
+  max-width: none;
+  padding: 0;
+  margin: 0;
+}
+
+.pagedjs_pages {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+  padding: 2rem 0 3rem;
+}
+
+.pagedjs_page {
+  background: #faf8f4;
+  box-shadow:
+    0 0 0 1px rgba(26, 20, 16, 0.08),
+    0 14px 32px rgba(0, 0, 0, 0.38);
+}
+
+.pagedjs_sheet {
+  background: #faf8f4;
+}
+
+html.wk-page-guides .pagedjs_page {
+  box-shadow:
+    0 0 0 2px rgba(147, 137, 56, 0.35),
+    0 0 0 5px rgba(147, 137, 56, 0.08),
+    0 14px 32px rgba(0, 0, 0, 0.38);
+}
+
+html.wk-page-guides .pagedjs_sheet {
+  border: 1px solid rgba(147, 137, 56, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+}
+
+html.wk-page-guides .pagedjs_pagebox {
+  background:
+    linear-gradient(rgba(147, 137, 56, 0.03), rgba(147, 137, 56, 0.03)),
+    #faf8f4;
+}
+
+html.wk-page-guides .pagedjs_area {
+  box-shadow: inset 0 0 0 1px rgba(147, 137, 56, 0.28);
+}
+
+html.wk-page-guides .pagedjs_margin {
+  color: rgba(147, 137, 56, 0.12);
+}
+`
+}
+
+export const COMPILE_HTML_FONT_LINK = SCENE_GOOGLE_FONTS_CSS_URL

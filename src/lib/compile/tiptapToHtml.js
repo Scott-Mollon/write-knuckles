@@ -1,14 +1,6 @@
-import { sceneImageKey } from './sceneImageKey.ts'
+import { sceneImageKey } from './sceneImageKey.js'
 
-type TipTapNode = {
-  type?: string
-  text?: string
-  marks?: Array<{ type?: string; attrs?: Record<string, unknown> }>
-  attrs?: Record<string, unknown>
-  content?: TipTapNode[]
-}
-
-function escapeHtml(value: string): string {
+function escapeHtml(value) {
   return value
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -16,18 +8,18 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;')
 }
 
-function clampIndent(value: unknown): number {
+function clampIndent(value) {
   const n = typeof value === 'number' ? value : parseInt(String(value ?? 0), 10)
   if (!Number.isFinite(n)) return 0
   return Math.max(0, Math.min(8, n))
 }
 
-function blockAttrs(attrs: Record<string, unknown> | undefined): string {
+function blockAttrs(attrs) {
   if (!attrs) return ''
 
-  const attrParts: string[] = []
-  const classes: string[] = []
-  const styles: string[] = []
+  const attrParts = []
+  const classes = []
+  const styles = []
 
   if (attrs.dropCap) classes.push('dropcap')
 
@@ -48,15 +40,15 @@ function blockAttrs(attrs: Record<string, unknown> | undefined): string {
   return attrParts.length ? ` ${attrParts.join(' ')}` : ''
 }
 
-function sanitizeCssValue(value: unknown): string | null {
+function sanitizeCssValue(value) {
   if (typeof value !== 'string') return null
   const trimmed = value.trim()
   if (!trimmed || /[<>"']|javascript:/i.test(trimmed)) return null
   return trimmed
 }
 
-function textStyleAttr(mark: { attrs?: Record<string, unknown> }): string | null {
-  const styles: string[] = []
+function textStyleAttr(mark) {
+  const styles = []
   const fontFamily = sanitizeCssValue(mark.attrs?.fontFamily)
   const fontSize = sanitizeCssValue(mark.attrs?.fontSize)
   const color = sanitizeCssValue(mark.attrs?.color)
@@ -68,7 +60,7 @@ function textStyleAttr(mark: { attrs?: Record<string, unknown> }): string | null
   return styles.length ? styles.join('; ') : null
 }
 
-function wrapMark(html: string, mark: { type?: string; attrs?: Record<string, unknown> }): string {
+function wrapMark(html, mark) {
   switch (mark.type) {
     case 'textStyle': {
       const style = textStyleAttr(mark)
@@ -104,7 +96,7 @@ function wrapMark(html: string, mark: { type?: string; attrs?: Record<string, un
   }
 }
 
-function renderInline(nodes: TipTapNode[] | undefined): string {
+function renderInline(nodes) {
   if (!nodes?.length) return ''
 
   return nodes
@@ -122,10 +114,7 @@ function renderInline(nodes: TipTapNode[] | undefined): string {
     .join('')
 }
 
-function renderList(
-  node: TipTapNode,
-  ordered: boolean,
-): string {
+function renderList(node, ordered) {
   const tag = ordered ? 'ol' : 'ul'
   const items = (node.content || [])
     .filter((child) => child.type === 'listItem')
@@ -135,7 +124,7 @@ function renderList(
   return `<${tag}>${items}</${tag}>`
 }
 
-function renderSceneImage(node: TipTapNode): string {
+function renderSceneImage(node) {
   const attrs = node.attrs || {}
   const display = typeof attrs.display === 'string' ? attrs.display : 'block'
   const width = attrs.width
@@ -153,7 +142,7 @@ function renderSceneImage(node: TipTapNode): string {
   )
 }
 
-function renderBlock(node: TipTapNode): string {
+function renderBlock(node) {
   switch (node.type) {
     case 'paragraph':
       return `<p${blockAttrs(node.attrs)}>${renderInline(node.content)}</p>`
@@ -188,15 +177,15 @@ function renderBlock(node: TipTapNode): string {
   }
 }
 
-function renderBlocks(nodes: TipTapNode[] | undefined): string {
+function renderBlocks(nodes) {
   if (!nodes?.length) return ''
   return nodes.map(renderBlock).join('')
 }
 
-export function tiptapToHtml(content: unknown): string {
+export function tiptapToHtml(content) {
   if (!content || typeof content !== 'object') return ''
 
-  const doc = content as TipTapNode
+  const doc = content
   if (doc.type !== 'doc' || !Array.isArray(doc.content)) return ''
 
   return renderBlocks(doc.content)

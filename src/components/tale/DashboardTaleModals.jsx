@@ -1,9 +1,9 @@
 import { useTaleStructure } from '../../hooks/useTaleStructure'
-import TaleExportModal from './TaleExportModal'
+import TaleCompileModal from './TaleCompileModal'
 import TaleSettingsModal from './TaleSettingsModal'
 
-const DashboardTaleModals = ({ settingsTale, exportTale, onCloseSettings, onCloseExport }) => {
-  const structureTaleId = settingsTale?.id ?? exportTale?.id ?? null
+const DashboardTaleModals = ({ settingsTale, compileTale, onCloseSettings, onCloseCompile }) => {
+  const structureTaleId = settingsTale?.id ?? compileTale?.id ?? null
   const { data: structure, isLoading: structureLoading } = useTaleStructure(structureTaleId)
 
   const beats = structure?.taleBeats?.beats || []
@@ -21,21 +21,21 @@ const DashboardTaleModals = ({ settingsTale, exportTale, onCloseSettings, onClos
         />
       )}
 
-      {exportTale && structureLoading && (
+      {compileTale && structureLoading && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
           role="presentation"
         >
-          <p className="font-ui text-sm uppercase text-cream/70">Loading export…</p>
+          <p className="font-ui text-sm uppercase text-cream/70">Loading compile…</p>
         </div>
       )}
 
-      {exportTale && !structureLoading && structure && (
-        <TaleExportModal
-          tale={exportTale}
-          taleId={exportTale.id}
+      {compileTale && !structureLoading && structure && (
+        <TaleCompileModal
+          tale={compileTale}
+          taleId={compileTale.id}
           chapters={structure.chapters}
-          onClose={onCloseExport}
+          onClose={onCloseCompile}
         />
       )}
     </>

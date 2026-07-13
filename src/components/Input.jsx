@@ -18,7 +18,7 @@ const Input = ({
     placeholder={placeholder}
     required={required}
     onChange={onChange}
-    className={classNames}
+    className={['wk-input', classNames].filter(Boolean).join(' ')}
     disabled={disabled}
     autoComplete={autoComplete}
   />

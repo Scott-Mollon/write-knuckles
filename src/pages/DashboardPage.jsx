@@ -8,7 +8,7 @@ import Loading from './Loading'
 const DashboardPage = () => {
   const { data: tales, isLoading, error } = useTales()
   const [settingsTale, setSettingsTale] = useState(null)
-  const [exportTale, setExportTale] = useState(null)
+  const [compileTale, setCompileTale] = useState(null)
 
   if (isLoading) return <Loading />
 
@@ -49,12 +49,12 @@ const DashboardPage = () => {
               key={tale.id}
               tale={tale}
               onOpenSettings={(tale) => {
-                setExportTale(null)
+                setCompileTale(null)
                 setSettingsTale(tale)
               }}
-              onOpenExport={(tale) => {
+              onOpenCompile={(tale) => {
                 setSettingsTale(null)
-                setExportTale(tale)
+                setCompileTale(tale)
               }}
             />
           ))}
@@ -63,9 +63,9 @@ const DashboardPage = () => {
 
       <DashboardTaleModals
         settingsTale={settingsTale}
-        exportTale={exportTale}
+        compileTale={compileTale}
         onCloseSettings={() => setSettingsTale(null)}
-        onCloseExport={() => setExportTale(null)}
+        onCloseCompile={() => setCompileTale(null)}
       />
     </div>
   )

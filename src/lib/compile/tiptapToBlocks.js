@@ -1,16 +1,7 @@
-import type { ContentBlock, InlineMark, InlineSpan } from './types.ts'
-import { imageDisplayLabel } from './imageLabel.ts'
-import { sceneImageKey } from './sceneImageKey.ts'
+import { imageDisplayLabel } from './imageLabel.js'
+import { sceneImageKey } from './sceneImageKey.js'
 
-type TipTapNode = {
-  type?: string
-  text?: string
-  marks?: Array<{ type?: string; attrs?: Record<string, unknown> }>
-  attrs?: Record<string, unknown>
-  content?: TipTapNode[]
-}
-
-function markFromType(type: string | undefined): InlineMark | null {
+function markFromType(type) {
   if (type === 'bold') return 'bold'
   if (type === 'italic') return 'italic'
   if (type === 'underline') return 'underline'
@@ -18,12 +9,12 @@ function markFromType(type: string | undefined): InlineMark | null {
   return null
 }
 
-function spansFromNode(node: TipTapNode): InlineSpan[] {
+function spansFromNode(node) {
   if (node.type === 'text') {
-    const marks: InlineMark[] = []
-    let href: string | undefined
-    let fontFamily: string | undefined
-    let fontSize: number | undefined
+    const marks = []
+    let href
+    let fontFamily
+    let fontSize
 
     for (const mark of node.marks || []) {
       const mapped = markFromType(mark.type)
@@ -45,7 +36,7 @@ function spansFromNode(node: TipTapNode): InlineSpan[] {
     return [{ text: node.text || '', marks, href, fontFamily, fontSize }]
   }
 
-  const spans: InlineSpan[] = []
+  const spans = []
   for (const child of node.content || []) {
     if (child.type === 'hardBreak') {
       spans.push({ text: '\n', marks: [] })
@@ -56,7 +47,7 @@ function spansFromNode(node: TipTapNode): InlineSpan[] {
   return spans
 }
 
-function blockFromNode(node: TipTapNode): ContentBlock | null {
+function blockFromNode(node) {
   switch (node.type) {
     case 'paragraph':
       return {
@@ -94,13 +85,19 @@ function blockFromNode(node: TipTapNode): ContentBlock | null {
   }
 }
 
-export function tiptapToBlocks(content: unknown): ContentBlock[] {
+export function plainTextToSceneBlock(text) {
+  const trimmed = text.trim()
+  if (!trimmed) return []
+  return [{ type: 'paragraph', spans: [{ text: trimmed, marks: [] }] }]
+}
+
+export function tiptapToBlocks(content) {
   if (!content || typeof content !== 'object') return []
 
-  const doc = content as TipTapNode
+  const doc = content
   if (doc.type !== 'doc' || !Array.isArray(doc.content)) return []
 
-  const blocks: ContentBlock[] = []
+  const blocks = []
   for (const node of doc.content) {
     const block = blockFromNode(node)
     if (block) blocks.push(block)
@@ -108,15 +105,15 @@ export function tiptapToBlocks(content: unknown): ContentBlock[] {
   return blocks
 }
 
-export function blocksHaveText(blocks: ContentBlock[]): boolean {
+export function blocksHaveText(blocks) {
   for (const block of blocks) {
     if (block.type === 'divider' || block.type === 'image') return true
-    const spans = block.type === 'heading' ? block.spans : block.spans
-    if (spans.some((s) => s.text.trim())) return true
+    const spans = block.spans
+    if (spans?.some((s) => s.text.trim())) return true
   }
   return false
 }
 
-export function spansToPlainText(spans: InlineSpan[]): string {
+export function spansToPlainText(spans) {
   return spans.map((s) => s.text).join('')
 }

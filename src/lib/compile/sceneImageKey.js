@@ -1,4 +1,4 @@
-export function sceneImageKey(attrs: Record<string, unknown> | undefined): string | null {
+export function sceneImageKey(attrs) {
   if (!attrs) return null
 
   const storagePath = attrs.storagePath

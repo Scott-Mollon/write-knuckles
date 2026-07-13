@@ -1,10 +1,9 @@
-import { formatAuthorLine } from './formatAuthor.ts'
-import { EXPORT_HTML_FONT_LINK, EXPORT_HTML_STYLES } from './exportHtmlStyles.ts'
-import type { ExportImageBundle } from './resolveExportImages.ts'
-import { sceneContentToHtml } from './tiptapSceneToHtml.ts'
-import type { ExportOptions, ManuscriptModel } from './types.ts'
+import { formatAuthorLine } from './formatAuthor.js'
+import { COMPILE_HTML_FONT_LINK, compileHtmlStyles, compilePageChromeStyles } from './compileHtmlStyles.js'
+import { normalizePageLayout } from './pageLayout.js'
+import { sceneContentToHtml } from './tiptapSceneToHtml.js'
 
-function escapeHtml(value: string): string {
+function escapeHtml(value) {
   return value
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -12,12 +11,12 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;')
 }
 
-function buildCoverSection(cover: ExportImageBundle['cover']): string {
+function buildCoverSection(cover) {
   if (!cover) return ''
   return `<section class="export-cover"><img src="${cover.dataUrl}" alt="Cover"></section>`
 }
 
-function buildTitlePage(model: ManuscriptModel, options: ExportOptions): string {
+function buildTitlePage(model, options) {
   if (!options.titlePage) return ''
 
   const parts = [
@@ -38,12 +37,7 @@ function buildTitlePage(model: ManuscriptModel, options: ExportOptions): string 
   return parts.join('\n')
 }
 
-function buildChapterHtml(
-  chapterIndex: number,
-  chapter: ManuscriptModel['chapters'][number],
-  options: ExportOptions,
-  images: ExportImageBundle,
-): string {
+function buildChapterHtml(chapterIndex, chapter, options, images) {
   const breakClass =
     chapterIndex > 0 && options.chapterPageBreak ? ' export-chapter-break' : ''
 
@@ -65,11 +59,8 @@ function buildChapterHtml(
   return parts.join('\n')
 }
 
-export function exportHtml(
-  model: ManuscriptModel,
-  options: ExportOptions,
-  images: ExportImageBundle,
-): string {
+export function exportCompileHtml(model, options, images, { pageLayout } = {}) {
+  const layout = normalizePageLayout(pageLayout)
   const bodyParts = [
     buildCoverSection(images.cover),
     buildTitlePage(model, options),
@@ -77,15 +68,20 @@ export function exportHtml(
   ]
 
   const title = escapeHtml(model.title)
+  const styles = compileHtmlStyles(layout)
+  const chromeStyles = compilePageChromeStyles()
+  const guidesAttr = layout.showPageGuides ? 'true' : 'false'
+  const guidesClass = layout.showPageGuides ? ' wk-page-guides' : ''
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="${guidesClass.trim()}" data-compile-page-size="${escapeHtml(layout.pageSize)}" data-show-page-guides="${guidesAttr}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${title}</title>
-  <link rel="stylesheet" href="${EXPORT_HTML_FONT_LINK}">
-  <style>${EXPORT_HTML_STYLES}</style>
+  <link rel="stylesheet" href="${COMPILE_HTML_FONT_LINK}">
+  <style>${styles}</style>
+  <style media="screen" data-wk-compile-chrome data-pagedjs-ignore>${chromeStyles}</style>
 </head>
 <body>
   <article class="manuscript-export">
@@ -94,8 +90,4 @@ ${bodyParts.filter(Boolean).join('\n')}
 </body>
 </html>
 `
-}
-
-export function encodeHtmlBuffer(html: string): Uint8Array {
-  return new TextEncoder().encode(html)
 }
