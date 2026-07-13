@@ -1,0 +1,33 @@
+---
+description: Modals must not close when clicking the backdrop
+alwaysApply: true
+---
+
+# Modal dismissal
+
+Never close a modal when the user clicks outside the panel (on the backdrop/overlay). Users must dismiss modals explicitly via a close button, Cancel, or another intentional control.
+
+## Do not
+
+- Attach `onClick={onClose}` or `onClick={onCancel}` to the backdrop wrapper
+- Treat backdrop click as an implicit dismiss action
+
+## Do
+
+- Put `onClose` / `onCancel` only on explicit buttons (×, Cancel, Save & close, etc.)
+- Use `role="presentation"` on the backdrop with no click handler
+- Set `role="dialog"` (or `role="alertdialog"`) and `aria-modal="true"` on the panel
+
+## Example
+
+```jsx
+// ❌ BAD — closes when clicking outside
+<div className="fixed inset-0 ..." onClick={onClose}>
+  <div onClick={(e) => e.stopPropagation()}>...</div>
+</div>
+
+// ✅ GOOD — only explicit controls close
+<div className="fixed inset-0 ..." role="presentation">
+  <div role="dialog" aria-modal="true">...</div>
+</div>
+```

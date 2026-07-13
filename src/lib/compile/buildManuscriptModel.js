@@ -1,4 +1,4 @@
-import { buildChapterHeading } from './chapterHeading.js'
+import { buildChapterHeading, buildChapterHeadingParts } from './chapterHeading.js'
 import { prepareSceneContent } from './prepareSceneContent.js'
 import { blocksHaveText, plainTextToSceneBlock, tiptapToBlocks } from './tiptapToBlocks.js'
 
@@ -53,6 +53,7 @@ export function buildManuscriptModel({ tale, chapters, options, scope }) {
       return {
         id: chapter.id,
         heading: buildChapterHeading(chapter.title, chapterIndex, options),
+        headingParts: buildChapterHeadingParts(chapter.title, chapterIndex, options),
         scenes: chapterScenes,
       }
     })

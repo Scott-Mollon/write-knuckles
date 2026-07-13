@@ -133,12 +133,10 @@ const TaleSettingsModal = ({
   return (
     <div
       className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4"
-      onClick={onClose}
       role="presentation"
     >
       <div
         className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded border border-bronze-dark/50 bg-ink p-6 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="tale-settings-title"

@@ -1,6 +1,9 @@
 import { formatAuthorLine } from './formatAuthor.js'
+import { buildChapterHeadingHtml } from './chapterHeadingStyle.js'
 import { COMPILE_HTML_FONT_LINK, compileHtmlStyles, compilePageChromeStyles } from './compileHtmlStyles.js'
 import { normalizePageLayout } from './pageLayout.js'
+import { getPageNumberStyle } from './pageNumberStyle.js'
+import { buildCompileTextStyleAttr, getTitlePageStyles } from './titlePageStyle.js'
 import { sceneContentToHtml } from './tiptapSceneToHtml.js'
 
 function escapeHtml(value) {
@@ -11,40 +14,51 @@ function escapeHtml(value) {
     .replace(/"/g, '&quot;')
 }
 
-function buildCoverSection(cover) {
+function buildCoverSection(cover, options) {
   if (!cover) return ''
-  return `<section class="export-cover"><img src="${cover.dataUrl}" alt="Cover"></section>`
+  const frontMatterClass = options.includePageNumbers ? ' export-front-matter' : ''
+  return `<section class="export-cover${frontMatterClass}"><img src="${cover.dataUrl}" alt="Cover"></section>`
 }
 
 function buildTitlePage(model, options) {
-  if (!options.titlePage) return ''
+  const styles = getTitlePageStyles(options)
+  const parts = []
 
-  const parts = [
-    `<section class="export-title-page">`,
-    `<h1>${escapeHtml(model.title)}</h1>`,
-  ]
+  if (options.titlePage) {
+    parts.push(
+      `<h1 style='${buildCompileTextStyleAttr(styles.title)}'>${escapeHtml(model.title)}</h1>`,
+    )
+  }
 
   if (options.includeSubtitle && model.subtitle?.trim()) {
-    parts.push(`<p class="export-subtitle">${escapeHtml(model.subtitle.trim())}</p>`)
+    parts.push(
+      `<p class="export-subtitle" style='${buildCompileTextStyleAttr(styles.subtitle)}'>${escapeHtml(model.subtitle.trim())}</p>`,
+    )
   }
 
   const authorLine = formatAuthorLine(model.author)
   if (options.includeAuthor && authorLine) {
-    parts.push(`<p class="export-author">${escapeHtml(authorLine)}</p>`)
+    parts.push(
+      `<p class="export-author" style='${buildCompileTextStyleAttr(styles.author)}'>${escapeHtml(authorLine)}</p>`,
+    )
   }
 
-  parts.push('</section>')
-  return parts.join('\n')
+  if (parts.length === 0) return ''
+
+  const frontMatterClass = options.includePageNumbers ? ' export-front-matter' : ''
+  return `<section class="export-title-page${frontMatterClass}">\n${parts.join('\n')}\n</section>`
 }
 
 function buildChapterHtml(chapterIndex, chapter, options, images) {
   const breakClass =
     chapterIndex > 0 && options.chapterPageBreak ? ' export-chapter-break' : ''
+  const numberedClass = options.includePageNumbers ? ' export-numbered' : ''
 
-  const parts = [`<section class="export-chapter${breakClass}">`]
+  const parts = [`<section class="export-chapter${breakClass}${numberedClass}">`]
 
-  if (chapter.heading) {
-    parts.push(`<h2 class="export-chapter-heading">${escapeHtml(chapter.heading)}</h2>`)
+  const headingHtml = buildChapterHeadingHtml(chapter.headingParts, options, escapeHtml)
+  if (headingHtml) {
+    parts.push(headingHtml)
   }
 
   for (const scene of chapter.scenes) {
@@ -62,13 +76,15 @@ function buildChapterHtml(chapterIndex, chapter, options, images) {
 export function exportCompileHtml(model, options, images, { pageLayout } = {}) {
   const layout = normalizePageLayout(pageLayout)
   const bodyParts = [
-    buildCoverSection(images.cover),
+    buildCoverSection(images.cover, options),
     buildTitlePage(model, options),
     ...model.chapters.map((chapter, index) => buildChapterHtml(index, chapter, options, images)),
   ]
 
   const title = escapeHtml(model.title)
-  const styles = compileHtmlStyles(layout)
+  const styles = compileHtmlStyles(layout, {
+    pageNumberStyle: options.includePageNumbers ? getPageNumberStyle(options) : null,
+  })
   const chromeStyles = compilePageChromeStyles()
   const guidesAttr = layout.showPageGuides ? 'true' : 'false'
   const guidesClass = layout.showPageGuides ? ' wk-page-guides' : ''

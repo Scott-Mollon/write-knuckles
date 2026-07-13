@@ -13,12 +13,10 @@ const ConfirmDialog = ({ message, confirmLabel, cancelLabel, destructive, onConf
   return (
   <div
     className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
-    onClick={onCancel}
     role="presentation"
   >
     <div
       className="w-full max-w-md rounded border border-bronze-dark/50 bg-ink p-6 shadow-xl"
-      onClick={(e) => e.stopPropagation()}
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="confirm-dialog-message"

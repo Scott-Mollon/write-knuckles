@@ -19,13 +19,21 @@ function blockToText(block) {
 export function exportTxt(model, options) {
   const lines = []
 
+  const titlePageLines = []
+
   if (options.titlePage) {
-    lines.push(model.title)
-    if (options.includeSubtitle && model.subtitle?.trim()) {
-      lines.push(model.subtitle.trim())
-    }
-    const authorLine = formatAuthorLine(model.author)
-    if (options.includeAuthor && authorLine) lines.push(authorLine)
+    titlePageLines.push(model.title)
+  }
+  if (options.includeSubtitle && model.subtitle?.trim()) {
+    titlePageLines.push(model.subtitle.trim())
+  }
+  const authorLine = formatAuthorLine(model.author)
+  if (options.includeAuthor && authorLine) {
+    titlePageLines.push(authorLine)
+  }
+
+  if (titlePageLines.length > 0) {
+    lines.push(...titlePageLines)
     lines.push('')
     lines.push('')
   }

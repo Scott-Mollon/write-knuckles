@@ -19,12 +19,10 @@ const MarketingLightbox = ({ src, alt, title, onClose }) => {
   return (
     <div
       className="marketing-lightbox"
-      onClick={onClose}
       role="presentation"
     >
       <div
         className="marketing-lightbox__panel"
-        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label={title || alt}

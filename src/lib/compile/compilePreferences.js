@@ -3,18 +3,46 @@ import {
   DEFAULT_COMPILE_PAGE_LAYOUT,
 } from '../../constants/compile.js'
 import { normalizePageLayout } from './pageLayout.js'
+import { normalizeChapterHeadingStyles } from './chapterHeadingStyle.js'
+import { normalizePageNumberStyle } from './pageNumberStyle.js'
+import { normalizeTitlePageStyles } from './titlePageStyle.js'
 
 const legacyStorageKey = (taleId) => `write-knuckles-tale-compile-prefs:${taleId}`
 const viewerStorageKey = (taleId) => `write-knuckles-tale-compile-viewer:${taleId}`
 
-function normalizeSavedOptions(raw) {
-  if (!raw || typeof raw !== 'object') return { ...DEFAULT_COMPILE_OPTIONS }
+const NON_BOOLEAN_OPTION_KEYS = new Set([
+  'titlePageStyles',
+  'chapterHeadingStyles',
+  'pageNumberStyle',
+])
 
-  const options = { ...DEFAULT_COMPILE_OPTIONS }
+export function normalizeCompileOptions(raw) {
+  if (!raw || typeof raw !== 'object') {
+    return {
+      ...DEFAULT_COMPILE_OPTIONS,
+      titlePageStyles: normalizeTitlePageStyles(null),
+      chapterHeadingStyles: normalizeChapterHeadingStyles(null),
+      pageNumberStyle: normalizePageNumberStyle(null),
+    }
+  }
+
+  const options = {
+    ...DEFAULT_COMPILE_OPTIONS,
+    titlePageStyles: normalizeTitlePageStyles(raw.titlePageStyles),
+    chapterHeadingStyles: normalizeChapterHeadingStyles(raw.chapterHeadingStyles),
+    pageNumberStyle: normalizePageNumberStyle(raw.pageNumberStyle),
+  }
+
   for (const key of Object.keys(DEFAULT_COMPILE_OPTIONS)) {
+    if (NON_BOOLEAN_OPTION_KEYS.has(key)) continue
     if (key in raw) options[key] = Boolean(raw[key])
   }
+
   return options
+}
+
+function normalizeSavedOptions(raw) {
+  return normalizeCompileOptions(raw)
 }
 
 function isEmptyDbPreferences(raw) {
@@ -147,6 +175,12 @@ export function serializeCompilePreferencesForDb({ options, pageLayout }) {
       pageSize: layout.pageSize,
       marginPreset: layout.marginPreset,
       orientation: layout.orientation,
+      ...(layout.marginPreset === 'custom'
+        ? {
+            customMargins: layout.customMargins,
+            customMarginUnit: layout.customMarginUnit,
+          }
+        : {}),
     },
   }
 }

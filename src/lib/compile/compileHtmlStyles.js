@@ -1,10 +1,43 @@
 import { SCENE_GOOGLE_FONTS_CSS_URL } from '../../constants/sceneFonts.js'
+import {
+  buildCompileMarginBoxStyleDecls,
+  getPageNumberMarginBox,
+} from './compileTextStyle.js'
 import { buildPageMarginRule, buildPageSizeRule, normalizePageLayout } from './pageLayout.js'
 
-export function compileHtmlStyles(pageLayoutInput) {
+function buildPageNumberStyles(pageNumberStyle) {
+  if (!pageNumberStyle) return ''
+
+  const marginBox = getPageNumberMarginBox(pageNumberStyle.align)
+  const decls = buildCompileMarginBoxStyleDecls(pageNumberStyle)
+
+  return `
+.export-front-matter {
+  page: front-matter;
+}
+
+.export-numbered {
+  page: numbered;
+}
+
+.export-numbered:first-of-type {
+  counter-reset: page 1;
+}
+
+@page numbered {
+  @${marginBox} {
+    content: counter(page);
+    ${decls};
+  }
+}
+`
+}
+
+export function compileHtmlStyles(pageLayoutInput, { pageNumberStyle = null } = {}) {
   const pageLayout = normalizePageLayout(pageLayoutInput)
   const pageSizeRule = buildPageSizeRule(pageLayout)
   const pageMargin = buildPageMarginRule(pageLayout)
+  const pageNumberStyles = buildPageNumberStyles(pageNumberStyle)
 
   return `
 :root {
@@ -22,6 +55,7 @@ export function compileHtmlStyles(pageLayoutInput) {
   size: ${pageSizeRule};
   margin: ${pageMargin};
 }
+${pageNumberStyles}
 
 * {
   box-sizing: border-box;
@@ -56,7 +90,6 @@ body {
 }
 
 .export-title-page {
-  text-align: center;
   padding: 4rem 1rem 5rem;
   page-break-after: always;
   break-after: page;
@@ -64,22 +97,14 @@ body {
 }
 
 .export-title-page h1 {
-  font-family: Oswald, sans-serif;
-  font-size: 2rem;
-  font-weight: 600;
   margin: 0 0 0.75rem;
-  color: var(--export-accent);
 }
 
 .export-title-page .export-subtitle {
-  font-size: 1.1rem;
-  font-style: italic;
-  color: var(--export-text-subtle);
   margin: 0 0 0.75rem;
 }
 
 .export-title-page .export-author {
-  font-size: 1rem;
   margin: 0;
 }
 
@@ -93,11 +118,8 @@ body {
 }
 
 .export-chapter-heading {
-  font-family: Oswald, sans-serif;
-  font-size: 1.35rem;
-  font-weight: 600;
-  color: var(--export-accent);
   margin: 0 0 1.25rem;
+  width: 100%;
 }
 
 .export-chapter .scene-editor-prose + .scene-editor-prose {
