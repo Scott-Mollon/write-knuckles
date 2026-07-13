@@ -50,49 +50,75 @@ export const DEFAULT_COMPILE_OPTIONS = {
   includeChapterTitle: true,
   titlePage: true,
   includeSubtitle: true,
+  includeAuthor: true,
   chapterPageBreak: true,
   includeCover: false,
   includeImages: true,
 }
 
-export const COMPILE_OPTION_DEFS = [
+export const COMPILE_OPTION_SECTIONS = [
   {
-    key: 'includeCover',
-    label: 'Include cover image',
-    requiresCover: true,
+    id: 'cover',
+    label: 'Cover',
+    options: [
+      {
+        key: 'includeCover',
+        label: 'Cover image',
+        requiresCover: true,
+      },
+    ],
   },
   {
-    key: 'titlePage',
-    label: 'Title page (title and author)',
+    id: 'titlePage',
+    label: 'Title Page',
+    options: [
+      {
+        key: 'titlePage',
+        label: 'Include title',
+      },
+      {
+        key: 'includeSubtitle',
+        label: 'Include subtitle',
+        requiresTitlePage: true,
+      },
+      {
+        key: 'includeAuthor',
+        label: 'Include author',
+        requiresTitlePage: true,
+      },
+    ],
   },
   {
-    key: 'includeSubtitle',
-    label: 'Include subtitle on title page',
-    requiresTitlePage: true,
-  },
-  {
-    key: 'includeChapterWord',
-    label: 'Include word "Chapter"',
-  },
-  {
-    key: 'includeChapterNumber',
-    label: 'Include chapter number',
-  },
-  {
-    key: 'includeChapterTitle',
-    label: 'Include chapter title',
-  },
-  {
-    key: 'chapterPageBreak',
-    label: 'Start each chapter on a new page',
-  },
-  {
-    key: 'includeImages',
-    label: 'Include images',
+    id: 'chapters',
+    label: 'Chapters',
+    options: [
+      {
+        key: 'includeChapterWord',
+        label: 'Include word "Chapter"',
+      },
+      {
+        key: 'includeChapterNumber',
+        label: 'Include chapter number',
+      },
+      {
+        key: 'includeChapterTitle',
+        label: 'Include chapter title',
+      },
+      {
+        key: 'chapterPageBreak',
+        label: 'Start each chapter on a new page',
+      },
+      {
+        key: 'includeImages',
+        label: 'Include images',
+      },
+    ],
   },
 ]
 
-export function isCompileOptionVisible(optionKey, options = {}, context = {}) {
+export const COMPILE_OPTION_DEFS = COMPILE_OPTION_SECTIONS.flatMap((section) => section.options)
+
+export function isCompileOptionEnabled(optionKey, options = {}, context = {}) {
   const def = COMPILE_OPTION_DEFS.find((item) => item.key === optionKey)
   if (!def) return false
   if (def.requiresTitlePage && !options.titlePage) return false

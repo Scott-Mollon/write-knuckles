@@ -1,23 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
-import {
-  buildDefaultScope,
-  countScopedScenes,
-  COMPILE_OPTION_DEFS,
-  isCompileOptionVisible,
-} from '../../constants/compile.js'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { buildDefaultScope, countScopedScenes } from '../../constants/compile.js'
 import { buildManuscriptModel, manuscriptHasContent } from '../../lib/compile/buildManuscriptModel.js'
 import { validateCompileOptions } from '../../lib/compile/chapterHeading.js'
-import {
-  readTaleCompilePreferences,
-  writeTaleCompilePreferences,
-} from '../../lib/compile/compilePreferences.js'
+import { getTaleCompilePreferences } from '../../lib/compile/compilePreferences.js'
 import { exportCompileHtml } from '../../lib/compile/exportCompileHtml.js'
 import { exportTxt } from '../../lib/compile/exportTxt.js'
 import { resolveCompileImages } from '../../lib/compile/resolveCompileImages.js'
 import { normalizePageLayout } from '../../lib/compile/pageLayout.js'
+import { useTale } from '../../hooks/useTales'
 import { formatChapterLabel } from '../../lib/chapters'
-import { taleHasCover } from '../../lib/images/resolveImageUrl'
 import CompileViewer from './CompileViewer.jsx'
+import TaleSettingsModal from './TaleSettingsModal.jsx'
 
 const checkboxClass = 'size-4 shrink-0 accent-bronze'
 
@@ -132,79 +125,80 @@ const CompileScopePicker = ({ chapters, scope, onChange }) => {
 }
 
 const TaleCompileModal = ({ tale, taleId, chapters, onClose, onBeforeCompile }) => {
-  const [options, setOptions] = useState(() => readTaleCompilePreferences(taleId).options)
-  const [pageLayout, setPageLayout] = useState(() => readTaleCompilePreferences(taleId).pageLayout)
+  const { data: taleRecord } = useTale(taleId)
+  const taleForCompile = taleRecord || tale
+
   const [scope, setScope] = useState(() => buildDefaultScope(chapters))
   const [error, setError] = useState(null)
   const [isCompiling, setIsCompiling] = useState(false)
   const [compileResult, setCompileResult] = useState(null)
-
-  useEffect(() => {
-    const prefs = readTaleCompilePreferences(taleId)
-    setOptions(prefs.options)
-    setPageLayout(prefs.pageLayout)
-  }, [taleId])
-
-  useEffect(() => {
-    writeTaleCompilePreferences(taleId, { options, pageLayout })
-  }, [taleId, options, pageLayout])
+  const [compileRevision, setCompileRevision] = useState(0)
+  const [compileSettingsOpen, setCompileSettingsOpen] = useState(false)
 
   useEffect(() => {
     setScope(buildDefaultScope(chapters))
   }, [chapters])
 
-  const compileOptionContext = useMemo(
-    () => ({ taleHasCover: taleHasCover(tale) }),
-    [tale],
-  )
+  const runCompile = useCallback(
+    async ({ scope: compileScope, compilePreferences } = {}) => {
+      const prefs = compilePreferences ?? getTaleCompilePreferences(taleForCompile, taleId)
+      const options = prefs.options
+      const pageLayout = normalizePageLayout(prefs.pageLayout)
+      const activeScope = compileScope || scope
 
-  const visibleOptions = COMPILE_OPTION_DEFS.filter((def) =>
-    isCompileOptionVisible(def.key, options, compileOptionContext),
-  )
+      const optionsError = validateCompileOptions(options)
+      if (optionsError) {
+        setError(optionsError)
+        return null
+      }
 
-  const toggleOption = (key) => {
-    setOptions((prev) => ({ ...prev, [key]: !prev[key] }))
-  }
+      if (activeScope.chapterIds.length === 0 || activeScope.sceneIds.length === 0) {
+        setError('Select at least one chapter and one scene to compile.')
+        return null
+      }
 
-  const handleCompile = async () => {
-    setError(null)
-
-    const optionsError = validateCompileOptions(options)
-    if (optionsError) {
-      setError(optionsError)
-      return
-    }
-
-    if (scope.chapterIds.length === 0 || scope.sceneIds.length === 0) {
-      setError('Select at least one chapter and one scene to compile.')
-      return
-    }
-
-    setIsCompiling(true)
-
-    try {
       if (onBeforeCompile) await onBeforeCompile()
 
-      const model = buildManuscriptModel({ tale, chapters, options, scope })
+      const model = buildManuscriptModel({
+        tale: taleForCompile,
+        chapters,
+        options,
+        scope: activeScope,
+      })
 
       if (!manuscriptHasContent(model)) {
         setError('Nothing to compile in the selected scope.')
-        return
+        return null
       }
 
-      const images = await resolveCompileImages({ tale, manuscript: model, options })
-      const html = exportCompileHtml(model, options, images, { pageLayout: normalizePageLayout(pageLayout) })
+      const images = await resolveCompileImages({ tale: taleForCompile, manuscript: model, options })
+      const html = exportCompileHtml(model, options, images, { pageLayout })
       const txt = exportTxt(model, options)
 
-      setCompileResult({
-        title: tale?.title || 'Compile',
+      return {
+        title: taleForCompile?.title || 'Compile',
         html,
         txt,
-        pageLayout: normalizePageLayout(pageLayout),
+        pageLayout,
         model,
         options,
         images,
-      })
+        scope: activeScope,
+      }
+    },
+    [taleForCompile, taleId, chapters, scope, onBeforeCompile],
+  )
+
+  const handleCompile = async () => {
+    setError(null)
+    setIsCompiling(true)
+
+    try {
+      const result = await runCompile()
+      if (result) {
+        setCompileRevision((revision) => revision + 1)
+        setCompileResult(result)
+      }
     } catch (err) {
       setError(err.message || 'Compile failed.')
     } finally {
@@ -212,19 +206,59 @@ const TaleCompileModal = ({ tale, taleId, chapters, onClose, onBeforeCompile }) 
     }
   }
 
+  const handleRecompile = async (savedPrefs) => {
+    if (!compileResult) return
+
+    setError(null)
+    setIsCompiling(true)
+
+    try {
+      const result = await runCompile({
+        scope: compileResult.scope,
+        compilePreferences: savedPrefs,
+      })
+      if (result) {
+        setCompileRevision((revision) => revision + 1)
+        setCompileResult(result)
+      }
+    } catch (err) {
+      setError(err.message || 'Recompile failed.')
+    } finally {
+      setIsCompiling(false)
+    }
+  }
+
   if (compileResult) {
     return (
-      <CompileViewer
-        title={compileResult.title}
-        html={compileResult.html}
-        txt={compileResult.txt}
-        pageLayout={compileResult.pageLayout}
-        model={compileResult.model}
-        options={compileResult.options}
-        images={compileResult.images}
-        onPageLayoutChange={setPageLayout}
-        onClose={() => setCompileResult(null)}
-      />
+      <>
+        <CompileViewer
+          taleId={taleId}
+          title={compileResult.title}
+          html={compileResult.html}
+          txt={compileResult.txt}
+          pageLayout={compileResult.pageLayout}
+          model={compileResult.model}
+          options={compileResult.options}
+          images={compileResult.images}
+          contentRevision={compileRevision}
+          isRecompiling={isCompiling}
+          onOpenCompileSettings={() => setCompileSettingsOpen(true)}
+          onClose={() => setCompileResult(null)}
+        />
+
+        {compileSettingsOpen && (
+          <TaleSettingsModal
+            tale={taleForCompile}
+            taleId={taleId}
+            hasBeats={false}
+            hasBeatLinks={false}
+            variant="compile-only"
+            initialTab="compile"
+            onClose={() => setCompileSettingsOpen(false)}
+            onCompilePreferencesSaved={handleRecompile}
+          />
+        )}
+      </>
     )
   }
 
@@ -245,7 +279,7 @@ const TaleCompileModal = ({ tale, taleId, chapters, onClose, onBeforeCompile }) 
               Compile Tale
             </h2>
             <p className="mt-1 text-sm text-cream/60">
-              {tale?.title} — build a paginated manuscript preview from your selected scenes.
+              {taleForCompile?.title} — choose scenes, then build a paginated preview.
             </p>
           </div>
           <button
@@ -262,25 +296,9 @@ const TaleCompileModal = ({ tale, taleId, chapters, onClose, onBeforeCompile }) 
           <section className="space-y-4 rounded border border-bronze-dark/30 p-4">
             <CompileScopePicker chapters={chapters} scope={scope} onChange={setScope} />
 
-            <div>
-              <p className="mb-2 font-ui text-xs uppercase text-cream/80">Options</p>
-              <div className="space-y-2">
-                {visibleOptions.map((def) => (
-                  <label key={def.key} className="flex cursor-pointer items-center gap-2 text-sm text-cream/80">
-                    <input
-                      type="checkbox"
-                      checked={Boolean(options[def.key])}
-                      onChange={() => toggleOption(def.key)}
-                      className={checkboxClass}
-                    />
-                    {def.label}
-                  </label>
-                ))}
-              </div>
-            </div>
-
             <p className="text-xs text-cream/45">
-              Compile opens a paginated HTML preview. Download plain text or HTML, or print to PDF from there.
+              Content and page layout options are in Tale Settings → Compile Options (or Compile
+              settings in the preview). Download or print from the preview.
             </p>
 
             {error && <p className="text-sm text-error">{error}</p>}

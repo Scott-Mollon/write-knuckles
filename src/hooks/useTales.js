@@ -1,7 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { writeDb } from '../clients/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { deleteTaleImage } from '../lib/images/storage'
+import { serializeCompilePreferencesForDb } from '../lib/compile/compilePreferences.js'
 
 export const useTales = () => {
   const { user } = useAuth()
@@ -193,6 +194,33 @@ async function removePreviousCoverUpload(previousTale, nextStoragePath = null) {
   } catch {
     // Continue — DB update is source of truth
   }
+}
+
+export const useUpdateTaleCompilePreferences = (taleId) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ options, pageLayout }) => {
+      const compile_preferences = serializeCompilePreferencesForDb({ options, pageLayout })
+
+      const { data, error } = await writeDb
+        .from('tales')
+        .update({
+          compile_preferences,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', taleId)
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['tale', taleId], data)
+      queryClient.invalidateQueries({ queryKey: ['tales'] })
+    },
+  })
 }
 
 export const useUpdateTaleCover = (taleId) => {

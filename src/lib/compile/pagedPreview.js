@@ -8,12 +8,26 @@ import {
 } from './pageGuides.js'
 
 let messageHandler = null
+let activeTimeout = null
+let inFlightPreview = null
 
-export function destroyPagedPreview() {
+export function resetPagedPreviewSession() {
+  if (activeTimeout !== null) {
+    clearTimeout(activeTimeout)
+    activeTimeout = null
+  }
+
   if (messageHandler) {
     window.removeEventListener('message', messageHandler)
     messageHandler = null
   }
+
+  inFlightPreview = null
+}
+
+/** @deprecated use resetPagedPreviewSession */
+export function destroyPagedPreview() {
+  resetPagedPreviewSession()
 }
 
 function loadScript(doc, src) {
@@ -77,7 +91,7 @@ function injectBootScript(doc) {
   doc.body.appendChild(boot)
 }
 
-export async function runPagedPreview(iframe, { onProgress, showPageGuides } = {}) {
+async function runPagedPreviewOnce(iframe, { onProgress, showPageGuides } = {}) {
   const doc = iframe?.contentDocument
   if (!doc) {
     throw new Error('Compile viewer is not ready.')
@@ -94,19 +108,23 @@ export async function runPagedPreview(iframe, { onProgress, showPageGuides } = {
   onProgress?.('Paginating…')
 
   return new Promise((resolve, reject) => {
-    destroyPagedPreview()
+    resetPagedPreviewSession()
 
-    const timeout = setTimeout(() => {
-      destroyPagedPreview()
+    activeTimeout = setTimeout(() => {
+      activeTimeout = null
+      resetPagedPreviewSession()
       reject(new Error('Pagination timed out. Try a smaller scope.'))
-    }, 120_000)
+    }, 300_000)
 
     messageHandler = (event) => {
       if (event.source !== iframe.contentWindow) return
 
       if (event.data?.type === 'wk-paged-done') {
-        clearTimeout(timeout)
-        destroyPagedPreview()
+        if (activeTimeout !== null) {
+          clearTimeout(activeTimeout)
+          activeTimeout = null
+        }
+        resetPagedPreviewSession()
 
         const iframeDoc = iframe.contentDocument
         ensureCompilePageChromeInDocument(iframeDoc)
@@ -122,8 +140,11 @@ export async function runPagedPreview(iframe, { onProgress, showPageGuides } = {
       }
 
       if (event.data?.type === 'wk-paged-error') {
-        clearTimeout(timeout)
-        destroyPagedPreview()
+        if (activeTimeout !== null) {
+          clearTimeout(activeTimeout)
+          activeTimeout = null
+        }
+        resetPagedPreviewSession()
         reject(new Error(event.data.message || 'Pagination failed.'))
       }
     }
@@ -141,11 +162,26 @@ export async function runPagedPreview(iframe, { onProgress, showPageGuides } = {
         injectBootScript(doc)
       })
       .catch((err) => {
-        clearTimeout(timeout)
-        destroyPagedPreview()
+        if (activeTimeout !== null) {
+          clearTimeout(activeTimeout)
+          activeTimeout = null
+        }
+        resetPagedPreviewSession()
         reject(err)
       })
   })
+}
+
+export function runPagedPreview(iframe, options = {}) {
+  if (inFlightPreview) {
+    return inFlightPreview
+  }
+
+  inFlightPreview = runPagedPreviewOnce(iframe, options).finally(() => {
+    inFlightPreview = null
+  })
+
+  return inFlightPreview
 }
 
 export { applyPageGuidesInIframe }

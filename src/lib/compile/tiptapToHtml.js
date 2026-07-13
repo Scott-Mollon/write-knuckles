@@ -124,18 +124,26 @@ function renderList(node, ordered) {
   return `<${tag}>${items}</${tag}>`
 }
 
+function normalizeImageWidth(width) {
+  const n = typeof width === 'number' ? width : parseFloat(String(width ?? ''))
+  if (!Number.isFinite(n) || n <= 0) return null
+  return Math.round(n)
+}
+
 function renderSceneImage(node) {
   const attrs = node.attrs || {}
   const display = typeof attrs.display === 'string' ? attrs.display : 'block'
-  const width = attrs.width
+  const widthPct = normalizeImageWidth(attrs.width)
   const imageKey = sceneImageKey(attrs)
   const alt = typeof attrs.alt === 'string' ? escapeHtml(attrs.alt) : ''
-  const sizedClass = typeof width === 'number' && width > 0 ? ' scene-image--sized' : ''
-  const frameStyle =
-    typeof width === 'number' && width > 0 ? ` style="width: ${width}%"` : ''
+  const sizedClass = widthPct ? ' scene-image--sized' : ''
+  const isFloat = display === 'float-left' || display === 'float-right'
+  const widthStyle = widthPct ? `width: ${widthPct}%; max-width: ${widthPct}%` : ''
+  const wrapperStyle = isFloat && widthStyle ? ` style="${widthStyle}"` : ''
+  const frameStyle = !isFloat && widthPct ? ` style="width: ${widthPct}%"` : ''
 
   return (
-    `<div class="scene-image scene-image--${display}${sizedClass}">` +
+    `<div class="scene-image scene-image--${display}${sizedClass}"${wrapperStyle}>` +
     `<div class="scene-image__frame"${frameStyle}>` +
     `<img class="scene-image__img" alt="${alt}" data-image-key="${escapeHtml(imageKey || '')}" src="">` +
     `</div></div>`

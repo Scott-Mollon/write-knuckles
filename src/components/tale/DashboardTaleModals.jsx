@@ -1,10 +1,12 @@
 import { useTaleStructure } from '../../hooks/useTaleStructure'
+import { useTale } from '../../hooks/useTales'
 import TaleCompileModal from './TaleCompileModal'
 import TaleSettingsModal from './TaleSettingsModal'
 
 const DashboardTaleModals = ({ settingsTale, compileTale, onCloseSettings, onCloseCompile }) => {
   const structureTaleId = settingsTale?.id ?? compileTale?.id ?? null
   const { data: structure, isLoading: structureLoading } = useTaleStructure(structureTaleId)
+  const { data: settingsTaleRecord } = useTale(settingsTale?.id)
 
   const beats = structure?.taleBeats?.beats || []
   const beatLinks = structure?.beatLinks || []
@@ -13,7 +15,7 @@ const DashboardTaleModals = ({ settingsTale, compileTale, onCloseSettings, onClo
     <>
       {settingsTale && (
         <TaleSettingsModal
-          tale={settingsTale}
+          tale={settingsTaleRecord || settingsTale}
           taleId={settingsTale.id}
           hasBeats={beats.length > 0}
           hasBeatLinks={beatLinks.length > 0}

@@ -25,7 +25,7 @@ export function exportTxt(model, options) {
       lines.push(model.subtitle.trim())
     }
     const authorLine = formatAuthorLine(model.author)
-    if (authorLine) lines.push(authorLine)
+    if (options.includeAuthor && authorLine) lines.push(authorLine)
     lines.push('')
     lines.push('')
   }

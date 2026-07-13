@@ -29,7 +29,7 @@ function buildTitlePage(model, options) {
   }
 
   const authorLine = formatAuthorLine(model.author)
-  if (authorLine) {
+  if (options.includeAuthor && authorLine) {
     parts.push(`<p class="export-author">${escapeHtml(authorLine)}</p>`)
   }
 

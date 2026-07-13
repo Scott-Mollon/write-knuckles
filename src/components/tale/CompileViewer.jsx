@@ -1,21 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  COMPILE_PAGE_MARGIN_OPTIONS,
-  COMPILE_PAGE_ORIENTATION_OPTIONS,
-  COMPILE_PAGE_SIZE_OPTIONS,
-} from '../../constants/compile.js'
 import { downloadBlob, slugifyTitle } from '../../lib/compile/download.js'
 import { exportCompileHtml } from '../../lib/compile/exportCompileHtml.js'
+import { writeViewerCompilePreferences } from '../../lib/compile/compilePreferences.js'
+import { normalizePageLayout, pageLayoutsEqual } from '../../lib/compile/pageLayout.js'
 import {
-  normalizePageLayout,
-  pageLayoutAffectsPagination,
-  pageLayoutsEqual,
-} from '../../lib/compile/pageLayout.js'
-import { applyPageGuidesInIframe, destroyPagedPreview, runPagedPreview } from '../../lib/compile/pagedPreview.js'
+  applyPageGuidesInIframe,
+  resetPagedPreviewSession,
+  runPagedPreview,
+} from '../../lib/compile/pagedPreview.js'
 
-const selectClass = 'border border-bronze-dark/50 bg-ink px-2 py-1 text-cream'
+function waitForIframeLoad(iframe) {
+  return new Promise((resolve) => {
+    iframe.addEventListener('load', () => resolve(), { once: true })
+  })
+}
+
+/** Survives React Strict Mode remounts — component refs do not. */
+let paginateSession = null
+let lastCompiledHtml = null
 
 const CompileViewer = ({
+  taleId,
   title,
   html: initialHtml,
   txt,
@@ -23,76 +28,97 @@ const CompileViewer = ({
   model,
   options,
   images,
+  contentRevision = 0,
+  isRecompiling = false,
   onClose,
-  onPageLayoutChange,
+  onOpenCompileSettings,
 }) => {
   const iframeRef = useRef(null)
+  const downloadMenuRef = useRef(null)
   const [html, setHtml] = useState(initialHtml)
   const [pageLayout, setPageLayout] = useState(() => normalizePageLayout(initialPageLayout))
   const [progress, setProgress] = useState('Loading…')
   const [error, setError] = useState(null)
   const [isPaginating, setIsPaginating] = useState(true)
+  const [downloadMenuOpen, setDownloadMenuOpen] = useState(false)
 
   const pageLayoutRef = useRef(pageLayout)
   pageLayoutRef.current = pageLayout
 
-  const paginate = useCallback(async () => {
-    const iframe = iframeRef.current
-    if (!iframe) return
-
+  const bindPaginationPromise = useCallback((promise) => {
     setIsPaginating(true)
     setError(null)
+    setProgress('Loading…')
 
-    try {
-      await runPagedPreview(iframe, {
-        onProgress: (message) => setProgress(message || null),
-        showPageGuides: pageLayoutRef.current.showPageGuides,
+    promise
+      .then(() => {
+        setIsPaginating(false)
+        setProgress(null)
       })
-    } catch (err) {
-      setError(err.message || 'Pagination failed.')
-    } finally {
-      setIsPaginating(false)
-      setProgress(null)
-    }
+      .catch((err) => {
+        setIsPaginating(false)
+        setProgress(null)
+        setError(err.message || 'Pagination failed.')
+      })
   }, [])
 
   useEffect(() => {
     setHtml(initialHtml)
     setPageLayout(normalizePageLayout(initialPageLayout))
+    if (lastCompiledHtml !== initialHtml) {
+      lastCompiledHtml = initialHtml
+      paginateSession = null
+      resetPagedPreviewSession()
+    }
   }, [initialHtml, initialPageLayout])
 
   useEffect(() => {
     const iframe = iframeRef.current
     if (!iframe) return undefined
 
-    const handleLoad = () => {
-      paginate()
+    const sessionKey = String(contentRevision)
+
+    if (paginateSession?.key === sessionKey) {
+      bindPaginationPromise(paginateSession.promise)
+      return undefined
     }
 
-    iframe.addEventListener('load', handleLoad)
-    if (iframe.contentDocument?.readyState === 'complete') {
-      handleLoad()
+    const promise = (async () => {
+      iframe.srcdoc = html
+      await waitForIframeLoad(iframe)
+
+      return runPagedPreview(iframe, {
+        onProgress: (message) => setProgress(message || 'Paginating…'),
+        showPageGuides: pageLayoutRef.current.showPageGuides,
+      })
+    })()
+
+    paginateSession = { key: sessionKey, promise }
+    bindPaginationPromise(promise)
+
+    return undefined
+  }, [html, contentRevision, bindPaginationPromise])
+
+  useEffect(() => {
+    if (!downloadMenuOpen) return undefined
+
+    const handlePointerDown = (event) => {
+      if (!downloadMenuRef.current?.contains(event.target)) {
+        setDownloadMenuOpen(false)
+      }
     }
 
-    return () => iframe.removeEventListener('load', handleLoad)
-  }, [html, paginate])
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [downloadMenuOpen])
 
-  useEffect(() => () => destroyPagedPreview(), [])
-
-  const applyPageLayout = (nextLayout) => {
-    const normalized = normalizePageLayout(nextLayout)
+  const togglePageGuides = (enabled) => {
+    const normalized = normalizePageLayout({ ...pageLayout, showPageGuides: enabled })
     if (pageLayoutsEqual(normalized, pageLayout)) return
 
-    const guidesOnly = !pageLayoutAffectsPagination(normalized, pageLayout)
     setPageLayout(normalized)
-    onPageLayoutChange?.(normalized)
-
-    if (guidesOnly) {
-      applyPageGuidesInIframe(iframeRef.current, normalized.showPageGuides)
-      return
-    }
-
-    setHtml(exportCompileHtml(model, options, images, { pageLayout: normalized }))
+    writeViewerCompilePreferences(taleId, { showPageGuides: enabled })
+    applyPageGuidesInIframe(iframeRef.current, enabled)
   }
 
   const handlePrint = async () => {
@@ -101,8 +127,8 @@ const CompileViewer = ({
     if (!doc) return
 
     try {
-      if (isPaginating) {
-        await paginate()
+      if (paginateSession?.promise) {
+        await paginateSession.promise
       }
       await doc.fonts.ready
       iframe.contentWindow?.print()
@@ -112,15 +138,19 @@ const CompileViewer = ({
   }
 
   const handleDownloadHtml = () => {
+    setDownloadMenuOpen(false)
     const fileName = `${slugifyTitle(title)}.html`
     const currentHtml = exportCompileHtml(model, options, images, { pageLayout })
     downloadBlob(new Blob([currentHtml], { type: 'text/html;charset=utf-8' }), fileName)
   }
 
   const handleDownloadTxt = () => {
+    setDownloadMenuOpen(false)
     const fileName = `${slugifyTitle(title)}.txt`
     downloadBlob(new Blob([txt], { type: 'text/plain;charset=utf-8' }), fileName)
   }
+
+  const busy = isPaginating || isRecompiling
 
   return (
     <div
@@ -142,22 +172,52 @@ const CompileViewer = ({
           <div className="flex shrink-0 flex-wrap items-center gap-3">
             <button
               type="button"
-              onClick={handleDownloadTxt}
+              onClick={onOpenCompileSettings}
               className="font-ui text-xs uppercase text-bronze hover:underline"
             >
-              Download TXT
+              Compile settings
             </button>
-            <button
-              type="button"
-              onClick={handleDownloadHtml}
-              className="font-ui text-xs uppercase text-bronze hover:underline"
-            >
-              Download HTML
-            </button>
+            <div className="relative" ref={downloadMenuRef}>
+              <button
+                type="button"
+                onClick={() => setDownloadMenuOpen((open) => !open)}
+                className="inline-flex items-center gap-1 font-ui text-xs uppercase text-bronze hover:underline"
+                aria-expanded={downloadMenuOpen}
+                aria-haspopup="menu"
+              >
+                Download
+                <span aria-hidden className="text-[10px]">
+                  ▾
+                </span>
+              </button>
+              {downloadMenuOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-full z-50 mt-1 min-w-[8rem] border border-bronze-dark bg-ink py-1 shadow-lg"
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleDownloadHtml}
+                    className="block w-full px-3 py-2 text-left font-ui text-xs uppercase text-cream/80 hover:bg-surface/40 hover:text-bronze"
+                  >
+                    HTML
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleDownloadTxt}
+                    className="block w-full px-3 py-2 text-left font-ui text-xs uppercase text-cream/80 hover:bg-surface/40 hover:text-bronze"
+                  >
+                    TXT
+                  </button>
+                </div>
+              )}
+            </div>
             <button
               type="button"
               onClick={handlePrint}
-              disabled={isPaginating}
+              disabled={busy}
               className="font-ui text-xs uppercase text-bronze hover:underline disabled:opacity-50"
             >
               Print
@@ -172,61 +232,13 @@ const CompileViewer = ({
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-end gap-4 border-t border-bronze-dark/25 pt-3">
-          <label className="flex flex-col gap-1 font-ui text-xs uppercase text-cream/70">
-            Page size
-            <select
-              value={pageLayout.pageSize}
-              onChange={(e) => applyPageLayout({ ...pageLayout, pageSize: e.target.value })}
-              disabled={isPaginating}
-              className={selectClass}
-            >
-              {COMPILE_PAGE_SIZE_OPTIONS.map((opt) => (
-                <option key={opt.id} value={opt.id}>
-                  {opt.label} ({opt.detail})
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex flex-col gap-1 font-ui text-xs uppercase text-cream/70">
-            Margins
-            <select
-              value={pageLayout.marginPreset}
-              onChange={(e) => applyPageLayout({ ...pageLayout, marginPreset: e.target.value })}
-              disabled={isPaginating}
-              className={selectClass}
-            >
-              {COMPILE_PAGE_MARGIN_OPTIONS.map((opt) => (
-                <option key={opt.id} value={opt.id}>
-                  {opt.label} ({opt.detail})
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex flex-col gap-1 font-ui text-xs uppercase text-cream/70">
-            Orientation
-            <select
-              value={pageLayout.orientation}
-              onChange={(e) => applyPageLayout({ ...pageLayout, orientation: e.target.value })}
-              disabled={isPaginating}
-              className={selectClass}
-            >
-              {COMPILE_PAGE_ORIENTATION_OPTIONS.map((opt) => (
-                <option key={opt.id} value={opt.id}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex cursor-pointer items-center gap-2 pb-1 font-ui text-xs uppercase text-cream/70">
+        <div className="mt-3 flex flex-wrap items-center gap-4 border-t border-bronze-dark/25 pt-3">
+          <label className="flex cursor-pointer items-center gap-2 font-ui text-xs uppercase text-cream/70">
             <input
               type="checkbox"
               checked={pageLayout.showPageGuides}
-              onChange={(e) => applyPageLayout({ ...pageLayout, showPageGuides: e.target.checked })}
-              disabled={isPaginating}
+              onChange={(e) => togglePageGuides(e.target.checked)}
+              disabled={busy}
               className="size-4 shrink-0 accent-bronze"
             />
             Page guides
@@ -234,8 +246,9 @@ const CompileViewer = ({
         </div>
       </div>
 
-      {(progress || error) && (
+      {(progress || error || isRecompiling) && (
         <div className="border-b border-bronze-dark/30 px-4 py-2 text-sm">
+          {isRecompiling && <p className="text-cream/60">Recompiling…</p>}
           {progress && <p className="text-cream/60">{progress}</p>}
           {error && <p className="text-error">{error}</p>}
         </div>

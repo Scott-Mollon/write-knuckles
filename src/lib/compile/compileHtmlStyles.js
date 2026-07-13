@@ -190,13 +190,21 @@ body {
 .scene-editor-prose .scene-image--float-left {
   float: left;
   margin: 0.25em 1em 0.5em 0;
-  max-width: 45%;
 }
 
 .scene-editor-prose .scene-image--float-right {
   float: right;
   margin: 0.25em 0 0.5em 1em;
+}
+
+.scene-editor-prose .scene-image--float-left:not(.scene-image--sized),
+.scene-editor-prose .scene-image--float-right:not(.scene-image--sized) {
   max-width: 45%;
+}
+
+.scene-editor-prose .scene-image--float-left .scene-image__frame,
+.scene-editor-prose .scene-image--float-right .scene-image__frame {
+  width: 100%;
 }
 
 .scene-editor-prose .scene-image--full {
