@@ -203,7 +203,9 @@ const TaleEditorPage = () => {
         <SearchMode
           taleId={taleId}
           chapters={structure?.chapters || []}
+          scenes={structure?.scenes || []}
           onOpenScene={handleOpenScene}
+          onBeforeReplace={() => autosave.flush()}
         />
       )}
 
