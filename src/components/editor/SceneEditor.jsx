@@ -14,6 +14,8 @@ import { useTaleImageUpload } from '../../hooks/useTaleImageUpload'
 import { validateImageFile } from '../../lib/images/storage'
 import EditorToolbar from './EditorToolbar'
 import ImageBubbleMenu from './ImageBubbleMenu'
+import HarperSuggestionPopover from './HarperSuggestionPopover'
+import { useHarperProofread } from '../../hooks/useHarperProofread'
 
 const SAVE_LABELS = {
   [SAVE_STATES.IDLE]: '',
@@ -64,6 +66,7 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
     editorProps: {
       attributes: {
         class: 'scene-editor-prose focus:outline-none min-h-[60vh] font-prose leading-relaxed',
+        spellcheck: 'false',
       },
     },
     onUpdate: ({ editor: ed }) => {
@@ -76,6 +79,20 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
       onWordCountChange?.(ed.storage.characterCount.words())
     },
   }, [scene?.id, placeholder])
+
+  const {
+    enabled: proofreadEnabled,
+    loading: proofreadLoading,
+    issueCount: proofreadIssueCount,
+    activeLint,
+    actionError,
+    engineError: proofreadEngineError,
+    toggleEnabled: toggleProofread,
+    closePopover: closeProofreadPopover,
+    applySuggestion,
+    ignoreLint,
+    addToDictionary,
+  } = useHarperProofread(editor, scene?.id)
 
   useEffect(() => {
     if (!editor || !scene?.id) return
@@ -217,6 +234,10 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
         sceneId={scene.id}
         onInsertSceneImage={handleInsertSceneImage}
         onImageError={setImageError}
+        proofreadEnabled={proofreadEnabled}
+        proofreadLoading={proofreadLoading}
+        proofreadIssueCount={proofreadIssueCount}
+        onToggleProofread={toggleProofread}
       />
 
       {imageError && (
@@ -225,9 +246,24 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
         </p>
       )}
 
+      {proofreadEnabled && proofreadEngineError && (
+        <p className="border-b border-bronze-dark/30 bg-error/10 px-6 py-2 text-sm text-error" role="alert">
+          Proofreader: {proofreadEngineError}
+        </p>
+      )}
+
       <div className="relative flex-1 overflow-y-auto px-6 py-4">
         <ImageBubbleMenu editor={editor} />
         <EditorContent editor={editor} />
+        <HarperSuggestionPopover
+          key={activeLint?.item?.id || 'closed'}
+          activeLint={activeLint}
+          actionError={actionError}
+          onClose={closeProofreadPopover}
+          onApplySuggestion={applySuggestion}
+          onIgnore={ignoreLint}
+          onAddToDictionary={addToDictionary}
+        />
       </div>
     </div>
   )

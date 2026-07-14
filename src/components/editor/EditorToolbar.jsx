@@ -92,6 +92,25 @@ const RedoIcon = () => (
   </svg>
 )
 
+const ProofreadIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    <path d="m9 10 2 2 4-4" />
+  </svg>
+)
+
 const AlignLeftIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -193,6 +212,10 @@ const EditorToolbar = ({
   sceneId,
   onInsertSceneImage,
   onImageError,
+  proofreadEnabled = false,
+  proofreadLoading = false,
+  proofreadIssueCount = 0,
+  onToggleProofread,
 }) => {
   const [highlightColor, setHighlightColor] = useState(DEFAULT_HIGHLIGHT_COLOR)
 
@@ -457,13 +480,36 @@ const EditorToolbar = ({
       </ToolbarButton>
       </div>
 
-      <ToolbarButton
-        onClick={onToggleTheme}
-        title={isLight ? 'Switch to dark editor' : 'Switch to light editor'}
-        className="ml-auto shrink-0"
-      >
-        {isLight ? <MoonIcon /> : <SunIcon />}
-      </ToolbarButton>
+      <div className="ml-auto flex shrink-0 items-center gap-1">
+        <ToolbarButton
+          onClick={onToggleProofread}
+          active={proofreadEnabled}
+          disabled={proofreadLoading && !proofreadEnabled}
+          title={
+            proofreadLoading
+              ? 'Loading proofreader…'
+              : proofreadEnabled
+                ? 'Turn off proofreading'
+                : 'Proofread spelling and grammar'
+          }
+          className="relative"
+        >
+          <ProofreadIcon />
+          {proofreadEnabled && proofreadIssueCount > 0 ? (
+            <span className="harper-proofread-badge" aria-label={`${proofreadIssueCount} issues`}>
+              {proofreadIssueCount > 99 ? '99+' : proofreadIssueCount}
+            </span>
+          ) : null}
+          {proofreadLoading ? <span className="sr-only">Loading</span> : null}
+        </ToolbarButton>
+
+        <ToolbarButton
+          onClick={onToggleTheme}
+          title={isLight ? 'Switch to dark editor' : 'Switch to light editor'}
+        >
+          {isLight ? <MoonIcon /> : <SunIcon />}
+        </ToolbarButton>
+      </div>
     </div>
   )
 }

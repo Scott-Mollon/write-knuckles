@@ -8,6 +8,13 @@ export default defineConfig({
   server: {
     port: 5174,
   },
+  optimizeDeps: {
+    exclude: ['harper.js'],
+  },
+  assetsInclude: ['**/*.wasm'],
+  worker: {
+    format: 'es',
+  },
   build: {
     assetsInlineLimit: 0,
   },

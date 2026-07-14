@@ -12,6 +12,7 @@ import { DropCapParagraph } from './dropCapParagraph'
 import { SceneDivider } from './sceneDivider'
 import { Indent } from './indent'
 import { SceneImage } from './sceneImage'
+import { HarperProofread } from './harperProofread'
 import { getSceneImageUploadHandlers } from './sceneImageUploadBridge'
 import { ALLOWED_IMAGE_MIME_TYPES } from '../images/constants'
 
@@ -51,4 +52,5 @@ export const createEditorExtensions = (placeholder = '') => [
     backgroundColor: false,
     lineHeight: false,
   }),
+  HarperProofread,
 ]

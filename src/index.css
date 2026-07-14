@@ -63,6 +63,10 @@ input, select, textarea {
   --editor-btn-hover-bg: #1a1410;
   --editor-btn-hover-text: #e8dcc8;
   --editor-btn-active-bg: rgba(147, 137, 56, 0.3);
+  --harper-spelling: #e07070;
+  --harper-grammar: #7eb8e0;
+  --harper-popover-bg: #241c16;
+  --harper-popover-border: rgba(147, 137, 56, 0.45);
 }
 
 .editor-surface[data-editor-theme='light'] {
@@ -80,6 +84,10 @@ input, select, textarea {
   --editor-btn-hover-bg: rgba(26, 20, 16, 0.06);
   --editor-btn-hover-text: #1a1410;
   --editor-btn-active-bg: rgba(147, 137, 56, 0.2);
+  --harper-spelling: #b04040;
+  --harper-grammar: #2a6d9c;
+  --harper-popover-bg: #faf6ed;
+  --harper-popover-border: rgba(114, 106, 43, 0.4);
 }
 
 .editor-surface {
@@ -378,4 +386,150 @@ input, select, textarea {
   float: left;
   height: 0;
   pointer-events: none;
+}
+
+/* Harper proofreading */
+.scene-editor-prose .harper-lint {
+  cursor: pointer;
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-thickness: from-font;
+  text-underline-offset: 0.2em;
+  background-color: color-mix(in srgb, var(--harper-spelling) 12%, transparent);
+}
+
+.scene-editor-prose .harper-lint--spelling {
+  text-decoration-color: var(--harper-spelling);
+  background-color: color-mix(in srgb, var(--harper-spelling) 14%, transparent);
+}
+
+.scene-editor-prose .harper-lint--grammar {
+  text-decoration-color: var(--harper-grammar);
+  background-color: color-mix(in srgb, var(--harper-grammar) 14%, transparent);
+}
+
+.harper-proofread-badge {
+  position: absolute;
+  top: -0.2rem;
+  right: -0.15rem;
+  min-width: 1rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background-color: var(--editor-accent);
+  color: var(--editor-bg);
+  font-size: 0.625rem;
+  line-height: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.harper-suggestion-popover {
+  width: min(16.5rem, calc(100vw - 1.5rem));
+  max-width: calc(100vw - 1rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--harper-popover-border, var(--editor-border));
+  border-radius: 0.25rem;
+  background-color: var(--harper-popover-bg, var(--editor-bg));
+  color: var(--editor-text);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  padding: 0.65rem 0.75rem;
+  font-family: inherit;
+}
+
+.harper-suggestion-popover__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.harper-suggestion-popover__kind {
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--editor-accent);
+}
+
+.harper-suggestion-popover__close {
+  border: none;
+  background: transparent;
+  color: var(--editor-text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.15rem;
+}
+
+.harper-suggestion-popover__close:hover {
+  color: var(--editor-text);
+}
+
+.harper-suggestion-popover__message {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--editor-text-subtle);
+}
+
+.harper-suggestion-popover__problem {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-style: italic;
+  color: var(--editor-text-muted);
+}
+
+.harper-suggestion-popover__suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.harper-suggestion-popover__suggestion {
+  border: 1px solid var(--editor-border);
+  border-radius: 0.2rem;
+  background: transparent;
+  color: var(--editor-text);
+  font-size: 0.8rem;
+  text-align: left;
+  padding: 0.3rem 0.45rem;
+  cursor: pointer;
+}
+
+.harper-suggestion-popover__suggestion:hover,
+.harper-suggestion-popover__suggestion.is-primary {
+  background-color: var(--editor-btn-active-bg);
+  border-color: var(--editor-accent);
+  color: var(--editor-accent);
+}
+
+.harper-suggestion-popover__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.15rem;
+}
+
+.harper-suggestion-popover__actions button {
+  border: none;
+  background: transparent;
+  color: var(--editor-text-muted);
+  font-size: 0.72rem;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.harper-suggestion-popover__actions button:hover {
+  color: var(--editor-text);
+}
+
+.harper-suggestion-popover__error {
+  margin: 0.45rem 0 0;
+  font-size: 0.72rem;
+  color: #d06060;
 }
