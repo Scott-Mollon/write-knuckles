@@ -120,7 +120,7 @@ const SortableChapterColumn = ({
       </div>
 
       <SortableContext items={sceneIds} strategy={verticalListSortingStrategy}>
-        <div className="min-h-[120px] flex-1">
+        <div className="min-h-[120px]">
           {chapter.scenes.map((scene) => (
             <SortableSceneCard key={scene.id} scene={scene} chapters={chapters} onOpen={onOpen} />
           ))}
@@ -262,7 +262,7 @@ const ChapterBoardView = ({ taleId, chapters, onOpen, onAddScene, isAddingScene 
   }
 
   return (
-    <div className="flex-1 overflow-x-auto overflow-y-hidden p-6">
+    <div className="flex-1 overflow-x-auto overflow-y-auto p-6">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -270,7 +270,7 @@ const ChapterBoardView = ({ taleId, chapters, onOpen, onAddScene, isAddingScene 
         onDragEnd={handleDragEnd}
       >
         <SortableContext items={chapterIds} strategy={horizontalListSortingStrategy}>
-          <div className="flex h-full gap-4">
+          <div className="flex items-start gap-4">
             {localChapters.map((chapter, chapterIndex) => (
               <SortableChapterColumn
                 key={chapter.id}

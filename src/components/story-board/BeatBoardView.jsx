@@ -94,7 +94,7 @@ const BeatColumn = ({
         <BeatWordBar wordProgress={wordProgress} />
       </div>
 
-      <div className="min-h-[100px] flex-1">
+      <div className="min-h-[100px]">
         {linked.map((scene) => (
           <DraggableBeatScene
             key={`${beat.key}-${scene.id}`}
@@ -157,7 +157,7 @@ const BeatBoardView = ({
   <div className="flex flex-1 flex-col overflow-hidden">
     <RackPool chapters={chapters} beatLinks={beatLinks} onOpen={onOpen} />
     <div className="flex-1 overflow-x-auto overflow-y-auto p-6">
-      <div className="flex h-full gap-4">
+      <div className="flex items-start gap-4">
         {beats.map((beat, beatIndex) => (
           <BeatColumn
             key={beat.key}
