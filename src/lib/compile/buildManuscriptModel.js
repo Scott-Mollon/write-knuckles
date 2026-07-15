@@ -1,6 +1,7 @@
 import { buildChapterHeading, buildChapterHeadingParts } from './chapterHeading.js'
 import { prepareSceneContent } from './prepareSceneContent.js'
 import { blocksHaveText, plainTextToSceneBlock, tiptapToBlocks } from './tiptapToBlocks.js'
+import { getScriptStylePreferences } from '../editor/scriptStyles.js'
 import { getTaleTerminology, isComicTale } from '../taleTerminology.js'
 
 function isInScope(id, ids) {
@@ -77,6 +78,7 @@ export function buildManuscriptModel({ tale, chapters, options, scope }) {
     subtitle: tale.subtitle,
     isComic: comic,
     chapterWord: terms.chapterWord,
+    scriptStyles: comic ? getScriptStylePreferences(tale) : null,
     chapters: manuscriptChapters,
   }
 }

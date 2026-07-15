@@ -1,11 +1,14 @@
 import { spansToPlainText } from './tiptapToBlocks.js'
+import { applyScriptTextTransform } from './compileScriptStyles.js'
 import { formatAuthorLine } from './formatAuthor.js'
 import { buildIssueTitlePageLines, issueTitlePageLinesToText } from './issueTitlePage.js'
 
-function blockToText(block) {
+function blockToText(block, scriptStyles) {
   switch (block.type) {
-    case 'paragraph':
-      return spansToPlainText(block.spans)
+    case 'paragraph': {
+      const text = spansToPlainText(block.spans)
+      return applyScriptTextTransform(text, block.scriptRole, scriptStyles)
+    }
     case 'heading':
       return spansToPlainText(block.spans)
     case 'divider':
@@ -69,7 +72,7 @@ export function exportTxt(model, options) {
       }
 
       scene.blocks.forEach((block, blockIndex) => {
-        const text = blockToText(block)
+        const text = blockToText(block, model.scriptStyles)
         if (!text && block.type !== 'divider') return
 
         if (block.type === 'image') {

@@ -32,6 +32,11 @@ export const ComicScriptPanels = Extension.create({
       insertComicPanel:
         () =>
         ({ editor, chain, state }) => {
+          // Selection → restyle only (same rule as setScriptRole).
+          if (!state.selection.empty) {
+            return editor.commands.setScriptRole(SCRIPT_ROLES.PANEL)
+          }
+
           const next = countScriptPanelsInPmDoc(state.doc) + 1
           const label = panelLineLabel(next)
           const desc = SCRIPT_ROLE_PLACEHOLDERS[SCRIPT_ROLES.PANEL_DESCRIPTION]
@@ -53,7 +58,11 @@ export const ComicScriptPanels = Extension.create({
         },
       insertComicSfx:
         () =>
-        ({ chain }) => {
+        ({ editor, chain, state }) => {
+          if (!state.selection.empty) {
+            return editor.commands.setScriptRole(SCRIPT_ROLES.SFX_CONTENT)
+          }
+
           const indicator = SCRIPT_ROLE_PLACEHOLDERS[SCRIPT_ROLES.SFX]
           const boom = SCRIPT_ROLE_PLACEHOLDERS[SCRIPT_ROLES.SFX_CONTENT]
 

@@ -35,6 +35,29 @@ function paragraphWithRole(role, text) {
   }
 }
 
+/** Apply script role attrs to every paragraph the selection covers — keep text. */
+function applyScriptRoleToSelection(role) {
+  return ({ state, tr, dispatch }) => {
+    const { from, to } = state.selection
+    const attrs = attrsForScriptRole(role)
+    let found = false
+    let changed = false
+
+    state.doc.nodesBetween(from, to, (node, pos) => {
+      if (node.type.name !== 'paragraph') return
+      found = true
+      const nextAttrs = { ...node.attrs, ...attrs }
+      const same = Object.keys(attrs).every((key) => node.attrs[key] === nextAttrs[key])
+      if (same) return
+      tr.setNodeMarkup(pos, undefined, nextAttrs)
+      changed = true
+    })
+
+    if (changed && dispatch) dispatch(tr)
+    return found
+  }
+}
+
 export const DropCapParagraph = Paragraph.extend({
   name: 'paragraph',
 
@@ -77,7 +100,8 @@ export const DropCapParagraph = Paragraph.extend({
           return commands.updateAttributes('paragraph', { dropCap: !dropCap })
         },
       /**
-       * Insert (or fill an empty paragraph with) a script line + placeholder text,
+       * Selection: apply script styles to selected paragraph(s), keep their text.
+       * No selection: insert (or fill an empty paragraph with) placeholder text + styles,
        * then select the placeholder so the writer can type over it immediately.
        */
       setScriptRole:
@@ -89,6 +113,10 @@ export const DropCapParagraph = Paragraph.extend({
               .focus()
               .updateAttributes('paragraph', { scriptRole: null })
               .run()
+          }
+
+          if (!state.selection.empty) {
+            return chain().focus().command(applyScriptRoleToSelection(next)).run()
           }
 
           const placeholder = SCRIPT_ROLE_PLACEHOLDERS[next] || ''

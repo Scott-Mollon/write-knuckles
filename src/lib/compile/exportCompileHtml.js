@@ -111,7 +111,8 @@ function buildChapterHtml(chapterIndex, chapter, options, images, { isComic = fa
 
     const pageBreakClass =
       isComic && emittedComicPage ? ' export-comic-page-break' : ''
-    parts.push(`<div class="scene-editor-prose${pageBreakClass}">${sceneHtml}</div>`)
+    const comicAttr = isComic ? ' data-tale-type="comic"' : ''
+    parts.push(`<div class="scene-editor-prose${pageBreakClass}"${comicAttr}>${sceneHtml}</div>`)
     if (isComic) emittedComicPage = true
   }
 
@@ -150,6 +151,7 @@ export function exportCompileHtml(model, options, images, { pageLayout } = {}) {
     pageNumberStyle: compileOptions.includePageNumbers
       ? getPageNumberStyle(compileOptions)
       : null,
+    scriptStyles: model.scriptStyles,
   })
   const chromeStyles = compilePageChromeStyles()
   const guidesAttr = layout.showPageGuides ? 'true' : 'false'

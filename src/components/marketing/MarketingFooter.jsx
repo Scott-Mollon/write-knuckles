@@ -20,13 +20,18 @@ const MarketingFooter = () => {
               </a>
             </li>
             <li>
-              <a href="/#beat-sheets" className="hover:text-bronze">
-                Beat Sheets
+              <a href="/#comic-scripts" className="hover:text-bronze">
+                Scripts
               </a>
             </li>
             <li>
-              <a href="/#research" className="hover:text-bronze">
-                Research
+              <a href="/#compile" className="hover:text-bronze">
+                Compile
+              </a>
+            </li>
+            <li>
+              <a href="/#beat-sheets" className="hover:text-bronze">
+                Beat Sheets
               </a>
             </li>
             <li>

@@ -3,6 +3,7 @@ import {
   buildCompileMarginBoxStyleDecls,
   getPageNumberMarginBox,
 } from './compileTextStyle.js'
+import { buildCompileScriptStyles } from './compileScriptStyles.js'
 import { buildPageMarginRule, buildPageSizeRule, normalizePageLayout } from './pageLayout.js'
 
 function buildPageNumberStyles(pageNumberStyle) {
@@ -33,11 +34,12 @@ function buildPageNumberStyles(pageNumberStyle) {
 `
 }
 
-export function compileHtmlStyles(pageLayoutInput, { pageNumberStyle = null } = {}) {
+export function compileHtmlStyles(pageLayoutInput, { pageNumberStyle = null, scriptStyles = null } = {}) {
   const pageLayout = normalizePageLayout(pageLayoutInput)
   const pageSizeRule = buildPageSizeRule(pageLayout)
   const pageMargin = buildPageMarginRule(pageLayout)
   const pageNumberStyles = buildPageNumberStyles(pageNumberStyle)
+  const scriptRoleStyles = scriptStyles ? `\n${buildCompileScriptStyles(scriptStyles)}\n` : ''
 
   return `
 :root {
@@ -281,6 +283,7 @@ body {
   clear: both;
 }
 
+${scriptRoleStyles}
 @media print {
   body {
     background: #fff;

@@ -3,6 +3,7 @@ import MarketingHeader from '../components/marketing/MarketingHeader'
 import MarketingFooter from '../components/marketing/MarketingFooter'
 import MarketingScreenshot from '../components/marketing/MarketingScreenshot'
 import MarketingLightbox from '../components/marketing/MarketingLightbox'
+import MarketingHeroCrossfade from '../components/marketing/MarketingHeroCrossfade'
 import './LandingPage.scss'
 
 const SUBSTACK = 'https://bronzeknuckles.substack.com/'
@@ -11,7 +12,7 @@ const FEATURES = [
   {
     id: 'rack',
     title: 'The Rack',
-    body: 'Organize chapters and scenes in one place. Drag to reorder, rename freely, and keep draft status visible while you work.',
+    body: 'Organize chapters and scenes — or Issues and Pages for comic scripts. Drag to reorder, rename freely, and keep draft status visible while you work.',
     src: '/marketing/feature-rack.png',
     alt: 'The Rack outline with chapters and scenes',
     caption: 'feature-rack.png — Rack panel with chapters & scenes',
@@ -23,6 +24,15 @@ const FEATURES = [
     src: '/marketing/feature-editor.png',
     alt: 'TipTap scene editor with toolbar and prose',
     caption: 'feature-editor.png — Editor with toolbar & word count',
+  },
+  {
+    id: 'comic-script',
+    title: 'Comic scripts',
+    body: 'Start a Comic Script Tale and write page by page — panels with auto numbering, character cues, dialogue, and SFX. Style every script element to match how you work on the page.',
+    src: '/marketing/feature-comic-script.png',
+    alt: 'Comic script editor with panel, dialogue, and SFX formatting',
+    caption: 'feature-comic-script.png — Comic script page with script toolbar',
+    sectionId: 'comic-scripts',
   },
   {
     id: 'story-board',
@@ -58,6 +68,15 @@ const FEATURES = [
     alt: 'Scene search results with snippets',
     caption: 'feature-search.png — Search results',
   },
+  {
+    id: 'compile',
+    title: 'Compile',
+    body: 'When the draft is ready, Compile the Tale — choose which chapters or Issues to include, style the title page and text, preview the result, then download or print.',
+    src: '/marketing/feature-compile.png',
+    alt: 'Compile preview with manuscript settings',
+    caption: 'feature-compile.png — Compile modal with preview',
+    sectionId: 'compile',
+  },
 ]
 
 const LandingPage = () => {
@@ -76,7 +95,8 @@ const LandingPage = () => {
           </p>
           <h1 className="landing-hero__headline">Knock Out Your Story</h1>
           <p className="landing-hero__support">
-            The back room where the story gets written — Rack, Story Board, and Beat Sheets all in one desk.
+            The back room where the story gets written — prose novels and comic scripts, with Rack,
+            Story Board, and Beat Sheets at one desk.
           </p>
           <p className="landing-hero__note">Write Knuckles is in Beta and currently invite-only.</p>
           <p className="landing-hero__note">
@@ -92,21 +112,16 @@ const LandingPage = () => {
           </p>
         </div>
         <div className="landing-hero__visual">
-          <MarketingScreenshot
-            src="/marketing/hero-cockpit.png"
-            alt="Write Knuckles writing cockpit with Rack, editor, and Inspector"
-            caption="hero-cockpit.png — Full writing cockpit (dark theme)"
-            variant="hero"
-          />
+          <MarketingHeroCrossfade />
         </div>
       </section>
 
       <section id="features" className="landing-section landing-section--intro">
         <div className="landing-section__inner">
-          <h2 className="landing-section__title">Built for short and long-form fiction</h2>
+          <h2 className="landing-section__title">Prose tales and comic scripts under one roof</h2>
           <p className="landing-section__lede">
-            Start a Tale, pick a Beat Sheet, and draft scene by scene — with outline, story board, and
-            research under one roof.
+            Start a Tale as prose or a comic script, outline on The Rack, draft page by page or scene
+            by scene — then Compile when it&apos;s time to ship.
           </p>
         </div>
       </section>
@@ -148,8 +163,8 @@ const LandingPage = () => {
               <div>
                 <p className="landing-how__step-title">Start Your Tale</p>
                 <p className="landing-how__step-body">
-                  Set title, genre, target length, and a Beat Sheet. Chapter 1 and Scene 1 are ready
-                  when you are.
+                  Choose Prose or Comic Script, set title and genre, and for prose pick a Beat Sheet.
+                  Chapter 1 / Issue 1 and the first scene or page are ready when you are.
                 </p>
               </div>
             </li>
@@ -158,18 +173,18 @@ const LandingPage = () => {
               <div>
                 <p className="landing-how__step-title">Outline on The Rack</p>
                 <p className="landing-how__step-body">
-                  Grow chapters and scenes, drag to reorder, and keep status from Raw to Final in
-                  view.
+                  Grow chapters and scenes — or Issues and Pages — drag to reorder, and keep status
+                  from Raw to Final in view.
                 </p>
               </div>
             </li>
             <li>
               <span className="landing-how__num">3</span>
               <div>
-                <p className="landing-how__step-title">Write, board, and beat</p>
+                <p className="landing-how__step-title">Write, board, and Compile</p>
                 <p className="landing-how__step-body">
-                  Draft in the scene editor, reshuffle on the Story Board, and wire scenes to your Beat
-                  Sheet as structure locks in.
+                  Draft in the editor, reshuffle on the Story Board, wire prose scenes to your Beat
+                  Sheet, then Compile when the manuscript is ready to preview and export.
                 </p>
               </div>
             </li>

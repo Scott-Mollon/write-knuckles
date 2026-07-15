@@ -14,6 +14,7 @@ import { Indent } from './indent'
 import { SceneImage } from './sceneImage'
 import { HarperProofread } from './harperProofread'
 import { ComicScriptPanels } from './comicScriptNodes'
+import { PlainTextPaste } from './plainTextPaste'
 import { getSceneImageUploadHandlers } from './sceneImageUploadBridge'
 import { ALLOWED_IMAGE_MIME_TYPES } from '../images/constants'
 import { TALE_TYPES } from '../../constants/taleTypes'
@@ -41,9 +42,11 @@ export const createEditorExtensions = (placeholder = '', options = {}) => {
         getSceneImageUploadHandlers().onDrop?.(editor, files, pos)
       },
     }),
+    PlainTextPaste,
     Placeholder.configure({
       placeholder,
     }),
+
     CharacterCount,
     Typography,
     Highlight.configure({ multicolor: true }),

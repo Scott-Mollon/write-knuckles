@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom'
 
 const NAV_LINKS = [
   { href: '/#features', label: 'Features' },
+  { href: '/#comic-scripts', label: 'Scripts' },
+  { href: '/#compile', label: 'Compile' },
   { href: '/#beat-sheets', label: 'Beat Sheets' },
-  { href: '/#research', label: 'Research' },
   { href: '/#how-it-works', label: 'How it works' },
   { to: '/about', label: 'About' },
 ]
