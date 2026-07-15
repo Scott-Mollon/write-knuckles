@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
-const HOLD_MS = 7000
-const FADE_MS = 1800
+const HOLD_MS = 4000
+const FADE_MS = 900
 
 const SLIDES = [
   {

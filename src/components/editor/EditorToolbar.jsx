@@ -280,286 +280,305 @@ const EditorToolbar = ({
 
   const displayedFont = currentFont || proseFont
 
-  return (
-    <div className="editor-toolbar flex items-center border-b px-4 py-2">
-      <div className="flex flex-wrap items-center gap-1">
-      <select
-        aria-label="Font"
-        title="Font"
-        value={displayedFont}
-        onChange={handleFontChange}
-        className="editor-toolbar-select rounded px-2 py-1 text-sm"
+  const comicScriptButtons = (
+    <>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().insertComicPanel().run()}
+        active={editor.isActive('paragraph', { scriptRole: SCRIPT_ROLES.PANEL })}
+        title="Insert Panel N"
       >
-        {SCENE_FONT_GROUPS.map((group) => (
-          <optgroup key={group.id} label={group.label}>
-            {SCENE_FONT_OPTIONS.filter((font) => font.group === group.id).map((font) => (
-              <option
-                key={font.label}
-                value={font.value}
-                style={{ fontFamily: sceneFontPreviewFamily(font.value) }}
-              >
-                {font.label}
+        Panel
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().setScriptRole(SCRIPT_ROLES.PANEL_DESCRIPTION).run()}
+        active={editor.isActive('paragraph', { scriptRole: SCRIPT_ROLES.PANEL_DESCRIPTION })}
+        title="Panel description"
+      >
+        Desc
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().setScriptRole(SCRIPT_ROLES.CHARACTER).run()}
+        active={editor.isActive('paragraph', { scriptRole: SCRIPT_ROLES.CHARACTER })}
+        title="Character name"
+      >
+        Char
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() =>
+          editor.chain().focus().setScriptRole(SCRIPT_ROLES.CHARACTER_DESCRIPTOR).run()
+        }
+        active={editor.isActive('paragraph', {
+          scriptRole: SCRIPT_ROLES.CHARACTER_DESCRIPTOR,
+        })}
+        title="Character descriptor"
+      >
+        (desc)
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().setScriptRole(SCRIPT_ROLES.DIALOGUE).run()}
+        active={editor.isActive('paragraph', { scriptRole: SCRIPT_ROLES.DIALOGUE })}
+        title="Dialogue"
+      >
+        Dial
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().insertComicSfx().run()}
+        active={
+          editor.isActive('paragraph', { scriptRole: SCRIPT_ROLES.SFX }) ||
+          editor.isActive('paragraph', { scriptRole: SCRIPT_ROLES.SFX_CONTENT })
+        }
+        title="Insert SFX"
+      >
+        SFX
+      </ToolbarButton>
+    </>
+  )
+
+  const proseStructureButtons = (
+    <>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleDropCap().run()}
+        active={editor.isActive('paragraph', { dropCap: true })}
+        disabled={!editor.isActive('paragraph')}
+        title="Drop cap"
+      >
+        <span className="font-ui text-base leading-none">D</span>
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleBlockquote().run()}
+        active={editor.isActive('blockquote')}
+        title="Blockquote"
+      >
+        &ldquo;
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().setSceneDivider().run()}
+        title="Divider"
+      >
+        <span className="inline-block w-4 border-t border-current" />
+      </ToolbarButton>
+    </>
+  )
+
+  return (
+    <div className="editor-toolbar flex flex-col gap-1.5 border-b px-4 py-2">
+      <div className="flex items-center gap-1">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
+          <select
+            aria-label="Font"
+            title="Font"
+            value={displayedFont}
+            onChange={handleFontChange}
+            className="editor-toolbar-select rounded px-2 py-1 text-sm"
+          >
+            {SCENE_FONT_GROUPS.map((group) => (
+              <optgroup key={group.id} label={group.label}>
+                {SCENE_FONT_OPTIONS.filter((font) => font.group === group.id).map((font) => (
+                  <option
+                    key={font.label}
+                    value={font.value}
+                    style={{ fontFamily: sceneFontPreviewFamily(font.value) }}
+                  >
+                    {font.label}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+
+          <select
+            aria-label="Font size"
+            title="Font size"
+            value={currentFontSize || DEFAULT_PROSE_FONT_SIZE}
+            onChange={handleFontSizeChange}
+            className="editor-toolbar-select editor-toolbar-font-size rounded px-2 py-1 text-sm"
+          >
+            {PROSE_FONT_SIZE_OPTIONS.map((size) => (
+              <option key={size.label} value={size.value}>
+                {size.label}
               </option>
             ))}
-          </optgroup>
-        ))}
-      </select>
+          </select>
 
-      <select
-        aria-label="Font size"
-        title="Font size"
-        value={currentFontSize || DEFAULT_PROSE_FONT_SIZE}
-        onChange={handleFontSizeChange}
-        className="editor-toolbar-select editor-toolbar-font-size rounded px-2 py-1 text-sm"
-      >
-        {PROSE_FONT_SIZE_OPTIONS.map((size) => (
-          <option key={size.label} value={size.value}>
-            {size.label}
-          </option>
-        ))}
-      </select>
+          <label
+            className="editor-toolbar-color"
+            title={
+              currentColor
+                ? `Text color (${currentColor}) — right-click to clear`
+                : 'Text color — right-click to clear'
+            }
+            onMouseDown={(event) => event.preventDefault()}
+          >
+            <span className="sr-only">Text color</span>
+            <input
+              type="color"
+              aria-label="Text color"
+              value={toHexColor(currentColor, textColorFallback)}
+              onMouseDown={(event) => event.preventDefault()}
+              onInput={(event) => applyColor(event.target.value)}
+              onChange={(event) => applyColor(event.target.value)}
+              onContextMenu={(event) => {
+                event.preventDefault()
+                editor.chain().focus().unsetColor().run()
+              }}
+            />
+          </label>
 
-      <label
-        className="editor-toolbar-color"
-        title={currentColor ? `Text color (${currentColor}) — right-click to clear` : 'Text color — right-click to clear'}
-        onMouseDown={(event) => event.preventDefault()}
-      >
-        <span className="sr-only">Text color</span>
-        <input
-          type="color"
-          aria-label="Text color"
-          value={toHexColor(currentColor, textColorFallback)}
-          onMouseDown={(event) => event.preventDefault()}
-          onInput={(event) => applyColor(event.target.value)}
-          onChange={(event) => applyColor(event.target.value)}
-          onContextMenu={(event) => {
-            event.preventDefault()
-            editor.chain().focus().unsetColor().run()
-          }}
-        />
-      </label>
+          <span className="editor-toolbar-sep mx-1">|</span>
 
-      <span className="editor-toolbar-sep mx-1">|</span>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            active={editor.isActive('bold')}
+            title="Bold"
+          >
+            <strong>B</strong>
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            active={editor.isActive('italic')}
+            title="Italic"
+          >
+            <em>I</em>
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            active={editor.isActive('underline')}
+            title="Underline"
+          >
+            <span className="underline">U</span>
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleHighlight({ color: highlightColor }).run()}
+            active={editor.isActive('highlight')}
+            title="Highlight"
+          >
+            H
+          </ToolbarButton>
+          <label
+            className="editor-toolbar-color editor-toolbar-highlight-color"
+            title={`Highlight color (${activeHighlightColor}) — right-click to clear`}
+            onMouseDown={(event) => event.preventDefault()}
+          >
+            <span className="sr-only">Highlight color</span>
+            <input
+              type="color"
+              aria-label="Highlight color"
+              value={toHexColor(activeHighlightColor, DEFAULT_HIGHLIGHT_COLOR)}
+              onMouseDown={(event) => event.preventDefault()}
+              onInput={(event) => applyHighlightColor(event.target.value)}
+              onChange={(event) => applyHighlightColor(event.target.value)}
+              onContextMenu={(event) => {
+                event.preventDefault()
+                editor.chain().focus().unsetHighlight().run()
+              }}
+            />
+          </label>
 
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleBold().run()}
-        active={editor.isActive('bold')}
-        title="Bold"
-      >
-        <strong>B</strong>
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        active={editor.isActive('italic')}
-        title="Italic"
-      >
-        <em>I</em>
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleUnderline().run()}
-        active={editor.isActive('underline')}
-        title="Underline"
-      >
-        <span className="underline">U</span>
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleHighlight({ color: highlightColor }).run()}
-        active={editor.isActive('highlight')}
-        title="Highlight"
-      >
-        H
-      </ToolbarButton>
-      <label
-        className="editor-toolbar-color editor-toolbar-highlight-color"
-        title={`Highlight color (${activeHighlightColor}) — right-click to clear`}
-        onMouseDown={(event) => event.preventDefault()}
-      >
-        <span className="sr-only">Highlight color</span>
-        <input
-          type="color"
-          aria-label="Highlight color"
-          value={toHexColor(activeHighlightColor, DEFAULT_HIGHLIGHT_COLOR)}
-          onMouseDown={(event) => event.preventDefault()}
-          onInput={(event) => applyHighlightColor(event.target.value)}
-          onChange={(event) => applyHighlightColor(event.target.value)}
-          onContextMenu={(event) => {
-            event.preventDefault()
-            editor.chain().focus().unsetHighlight().run()
-          }}
-        />
-      </label>
+          <span className="editor-toolbar-sep mx-1">|</span>
 
-      <span className="editor-toolbar-sep mx-1">|</span>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().setTextAlign('left').run()}
+            active={editor.isActive({ textAlign: 'left' })}
+            title="Align left"
+          >
+            <AlignLeftIcon />
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().setTextAlign('center').run()}
+            active={editor.isActive({ textAlign: 'center' })}
+            title="Align center"
+          >
+            <AlignCenterIcon />
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().setTextAlign('right').run()}
+            active={editor.isActive({ textAlign: 'right' })}
+            title="Align right"
+          >
+            <AlignRightIcon />
+          </ToolbarButton>
 
-      <ToolbarButton
-        onClick={() => editor.chain().focus().setTextAlign('left').run()}
-        active={editor.isActive({ textAlign: 'left' })}
-        title="Align left"
-      >
-        <AlignLeftIcon />
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().setTextAlign('center').run()}
-        active={editor.isActive({ textAlign: 'center' })}
-        title="Align center"
-      >
-        <AlignCenterIcon />
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().setTextAlign('right').run()}
-        active={editor.isActive({ textAlign: 'right' })}
-        title="Align right"
-      >
-        <AlignRightIcon />
-      </ToolbarButton>
+          {!comic && (
+            <>
+              <span className="editor-toolbar-sep mx-1">|</span>
+              {proseStructureButtons}
+            </>
+          )}
 
-      <span className="editor-toolbar-sep mx-1">|</span>
+          {taleId && sceneId && onInsertSceneImage && (
+            <>
+              <span className="editor-toolbar-sep mx-1">|</span>
+              <ImageUpload
+                taleId={taleId}
+                scope="scenes"
+                entityId={sceneId}
+                compact
+                allowUrl={false}
+                onAdded={onInsertSceneImage}
+                onError={onImageError}
+              />
+            </>
+          )}
+
+          <span className="editor-toolbar-sep mx-1">|</span>
+
+          <ToolbarButton
+            onClick={() => editor.chain().focus().undo().run()}
+            disabled={!editor.can().undo()}
+            title="Undo"
+          >
+            <UndoIcon />
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().redo().run()}
+            disabled={!editor.can().redo()}
+            title="Redo"
+          >
+            <RedoIcon />
+          </ToolbarButton>
+        </div>
+
+        <div className="ml-auto flex shrink-0 items-center gap-1">
+          <ToolbarButton onClick={onOpenDefaults} title="Writing defaults">
+            <DefaultsIcon />
+          </ToolbarButton>
+
+          <ToolbarButton
+            onClick={onToggleProofread}
+            active={proofreadEnabled}
+            disabled={proofreadLoading && !proofreadEnabled}
+            title={
+              proofreadLoading
+                ? 'Loading proofreader…'
+                : proofreadEnabled
+                  ? 'Turn off proofreading'
+                  : 'Proofread spelling and grammar'
+            }
+            className="relative"
+          >
+            <ProofreadIcon />
+            {proofreadEnabled && proofreadIssueCount > 0 ? (
+              <span className="harper-proofread-badge" aria-label={`${proofreadIssueCount} issues`}>
+                {proofreadIssueCount > 99 ? '99+' : proofreadIssueCount}
+              </span>
+            ) : null}
+            {proofreadLoading ? <span className="sr-only">Loading</span> : null}
+          </ToolbarButton>
+
+          <ToolbarButton
+            onClick={onToggleTheme}
+            title={isLight ? 'Switch to dark editor' : 'Switch to light editor'}
+          >
+            {isLight ? <MoonIcon /> : <SunIcon />}
+          </ToolbarButton>
+        </div>
+      </div>
 
       {comic ? (
-        <>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().insertComicPanel().run()}
-            active={editor.isActive('paragraph', { scriptRole: SCRIPT_ROLES.PANEL })}
-            title="Insert Panel N"
-          >
-            Panel
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().setScriptRole(SCRIPT_ROLES.PANEL_DESCRIPTION).run()}
-            active={editor.isActive('paragraph', { scriptRole: SCRIPT_ROLES.PANEL_DESCRIPTION })}
-            title="Panel description"
-          >
-            Desc
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().setScriptRole(SCRIPT_ROLES.CHARACTER).run()}
-            active={editor.isActive('paragraph', { scriptRole: SCRIPT_ROLES.CHARACTER })}
-            title="Character name"
-          >
-            Char
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() =>
-              editor.chain().focus().setScriptRole(SCRIPT_ROLES.CHARACTER_DESCRIPTOR).run()
-            }
-            active={editor.isActive('paragraph', {
-              scriptRole: SCRIPT_ROLES.CHARACTER_DESCRIPTOR,
-            })}
-            title="Character descriptor"
-          >
-            (desc)
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().setScriptRole(SCRIPT_ROLES.DIALOGUE).run()}
-            active={editor.isActive('paragraph', { scriptRole: SCRIPT_ROLES.DIALOGUE })}
-            title="Dialogue"
-          >
-            Dial
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().insertComicSfx().run()}
-            active={
-              editor.isActive('paragraph', { scriptRole: SCRIPT_ROLES.SFX }) ||
-              editor.isActive('paragraph', { scriptRole: SCRIPT_ROLES.SFX_CONTENT })
-            }
-            title="Insert SFX"
-          >
-            SFX
-          </ToolbarButton>
-        </>
-      ) : (
-        <>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().toggleDropCap().run()}
-            active={editor.isActive('paragraph', { dropCap: true })}
-            disabled={!editor.isActive('paragraph')}
-            title="Drop cap"
-          >
-            <span className="font-ui text-base leading-none">D</span>
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            active={editor.isActive('blockquote')}
-            title="Blockquote"
-          >
-            &ldquo;
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().setSceneDivider().run()}
-            title="Divider"
-          >
-            <span className="inline-block w-4 border-t border-current" />
-          </ToolbarButton>
-        </>
-      )}
-
-      {taleId && sceneId && onInsertSceneImage && (
-        <ImageUpload
-          taleId={taleId}
-          scope="scenes"
-          entityId={sceneId}
-          compact
-          allowUrl={false}
-          onAdded={onInsertSceneImage}
-          onError={onImageError}
-        />
-      )}
-
-      <span className="editor-toolbar-sep mx-1">|</span>
-
-      <ToolbarButton
-        onClick={() => editor.chain().focus().undo().run()}
-        disabled={!editor.can().undo()}
-        title="Undo"
-      >
-        <UndoIcon />
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().redo().run()}
-        disabled={!editor.can().redo()}
-        title="Redo"
-      >
-        <RedoIcon />
-      </ToolbarButton>
-      </div>
-
-      <div className="ml-auto flex shrink-0 items-center gap-1">
-        <ToolbarButton
-          onClick={onOpenDefaults}
-          title="Writing defaults"
-        >
-          <DefaultsIcon />
-        </ToolbarButton>
-
-        <ToolbarButton
-          onClick={onToggleProofread}
-          active={proofreadEnabled}
-          disabled={proofreadLoading && !proofreadEnabled}
-          title={
-            proofreadLoading
-              ? 'Loading proofreader…'
-              : proofreadEnabled
-                ? 'Turn off proofreading'
-                : 'Proofread spelling and grammar'
-          }
-          className="relative"
-        >
-          <ProofreadIcon />
-          {proofreadEnabled && proofreadIssueCount > 0 ? (
-            <span className="harper-proofread-badge" aria-label={`${proofreadIssueCount} issues`}>
-              {proofreadIssueCount > 99 ? '99+' : proofreadIssueCount}
-            </span>
-          ) : null}
-          {proofreadLoading ? <span className="sr-only">Loading</span> : null}
-        </ToolbarButton>
-
-        <ToolbarButton
-          onClick={onToggleTheme}
-          title={isLight ? 'Switch to dark editor' : 'Switch to light editor'}
-        >
-          {isLight ? <MoonIcon /> : <SunIcon />}
-        </ToolbarButton>
-      </div>
+        <div className="flex flex-wrap items-center gap-1" aria-label="Comic script styles">
+          {comicScriptButtons}
+        </div>
+      ) : null}
     </div>
   )
 }
