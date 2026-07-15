@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { KOFI_SUPPORT } from '../../constants/links'
 
 const MAGAZINE = 'https://bronzeknucklesmagazine.com'
 const SUBSTACK = 'https://bronzeknuckles.substack.com/'
@@ -52,6 +53,11 @@ const MarketingFooter = () => {
             <li>
               <a href={FACEBOOK} target="_blank" rel="noreferrer" className="hover:text-bronze">
                 Facebook
+              </a>
+            </li>
+            <li>
+              <a href={KOFI_SUPPORT} target="_blank" rel="noreferrer" className="hover:text-bronze">
+                Support
               </a>
             </li>
           </ul>

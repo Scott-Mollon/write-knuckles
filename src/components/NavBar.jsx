@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { KOFI_SUPPORT } from '../constants/links'
 import { useAuth } from '../contexts/AuthContext'
 import { getUserDisplayName } from '../lib/userProfile'
 import ProfileDialog from './ProfileDialog'
@@ -96,6 +97,17 @@ const NavBar = () => {
                     }}
                   >
                     Feature Requests
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="block w-full px-3 py-2 text-left normal-case hover:bg-surface/40 hover:text-bronze"
+                    onClick={() => {
+                      setMenuOpen(false)
+                      window.open(KOFI_SUPPORT, '_blank', 'noopener,noreferrer')
+                    }}
+                  >
+                    Support
                   </button>
                   <button
                     type="button"
