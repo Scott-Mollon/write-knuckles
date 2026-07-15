@@ -319,7 +319,7 @@ const Rack = ({ taleId, chapters, activeSceneId, onSelectScene, totalScenes }) =
       ? `chapter "${chapter.title}" and all its scenes`
       : 'this chapter and all its scenes'
 
-    if (!(await confirmDelete(label, { irreversible: true }))) return
+    if (!(await confirmDelete(label))) return
 
     await deleteChapter.mutateAsync(chapter.id)
   }
@@ -328,7 +328,7 @@ const Rack = ({ taleId, chapters, activeSceneId, onSelectScene, totalScenes }) =
     if (totalScenes <= 1) return
 
     const label = scene.title?.trim() ? `"${scene.title}"` : 'this scene'
-    if (!(await confirmDelete(label, { irreversible: true }))) return
+    if (!(await confirmDelete(label))) return
 
     await deleteScene.mutateAsync(scene.id)
     if (activeSceneId === scene.id) {

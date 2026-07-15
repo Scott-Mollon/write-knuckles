@@ -25,6 +25,7 @@ export const TALE_MODES = {
   BEAT_SHEET: 'beatSheet',
   RESEARCH: 'research',
   SEARCH: 'search',
+  TRASH: 'trash',
 }
 
 export const REFERENCE_TABS = {

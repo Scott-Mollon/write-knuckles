@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 
 const invalidateStructure = (queryClient, taleId) => {
   queryClient.invalidateQueries({ queryKey: ['tale-structure', taleId] })
+  queryClient.invalidateQueries({ queryKey: ['tale-trash', taleId] })
   queryClient.invalidateQueries({ queryKey: ['tales'] })
 }
 
@@ -116,6 +117,100 @@ export const useDeleteChapter = (taleId) => {
 
   return useMutation({
     mutationFn: async (chapterId) => {
+      const deletedAt = new Date().toISOString()
+      const { error: chapterError } = await writeDb
+        .from('chapters')
+        .update({ deleted_at: deletedAt, updated_at: deletedAt })
+        .eq('id', chapterId)
+        .is('deleted_at', null)
+      if (chapterError) throw chapterError
+
+      const { error: scenesError } = await writeDb
+        .from('scenes')
+        .update({ deleted_at: deletedAt, updated_at: deletedAt })
+        .eq('chapter_id', chapterId)
+        .is('deleted_at', null)
+      if (scenesError) throw scenesError
+    },
+    onSuccess: () => invalidateStructure(queryClient, taleId),
+  })
+}
+
+export const useDeleteScene = (taleId) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (sceneId) => {
+      const deletedAt = new Date().toISOString()
+      const { error } = await writeDb
+        .from('scenes')
+        .update({ deleted_at: deletedAt, updated_at: deletedAt })
+        .eq('id', sceneId)
+        .is('deleted_at', null)
+      if (error) throw error
+    },
+    onSuccess: () => invalidateStructure(queryClient, taleId),
+  })
+}
+
+export const useRestoreChapter = (taleId) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (chapterId) => {
+      const updatedAt = new Date().toISOString()
+      const { error: chapterError } = await writeDb
+        .from('chapters')
+        .update({ deleted_at: null, updated_at: updatedAt })
+        .eq('id', chapterId)
+      if (chapterError) throw chapterError
+
+      const { error: scenesError } = await writeDb
+        .from('scenes')
+        .update({ deleted_at: null, updated_at: updatedAt })
+        .eq('chapter_id', chapterId)
+        .not('deleted_at', 'is', null)
+      if (scenesError) throw scenesError
+    },
+    onSuccess: () => invalidateStructure(queryClient, taleId),
+  })
+}
+
+export const useRestoreScene = (taleId) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (sceneId) => {
+      const updatedAt = new Date().toISOString()
+      const { data: scene, error: sceneFetchError } = await writeDb
+        .from('scenes')
+        .select('id, chapter_id')
+        .eq('id', sceneId)
+        .single()
+      if (sceneFetchError) throw sceneFetchError
+
+      const { error: sceneError } = await writeDb
+        .from('scenes')
+        .update({ deleted_at: null, updated_at: updatedAt })
+        .eq('id', sceneId)
+      if (sceneError) throw sceneError
+
+      const { error: chapterError } = await writeDb
+        .from('chapters')
+        .update({ deleted_at: null, updated_at: updatedAt })
+        .eq('id', scene.chapter_id)
+        .not('deleted_at', 'is', null)
+      if (chapterError) throw chapterError
+    },
+    onSuccess: () => invalidateStructure(queryClient, taleId),
+  })
+}
+
+export const usePermanentlyDeleteChapter = (taleId) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (chapterId) => {
       const { error } = await writeDb.from('chapters').delete().eq('id', chapterId)
       if (error) throw error
     },
@@ -123,7 +218,7 @@ export const useDeleteChapter = (taleId) => {
   })
 }
 
-export const useDeleteScene = (taleId) => {
+export const usePermanentlyDeleteScene = (taleId) => {
   const queryClient = useQueryClient()
 
   return useMutation({

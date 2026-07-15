@@ -13,9 +13,27 @@ import StoryBoard from '../components/story-board/StoryBoard'
 import BeatSheet from '../components/beats/BeatSheet'
 import ReferencePanel from '../components/research/ReferencePanel'
 import SearchMode from '../components/search/SearchMode'
+import TrashPanel from '../components/trash/TrashPanel'
 import TaleSettingsModal from '../components/tale/TaleSettingsModal'
 import TaleCompileModal from '../components/tale/TaleCompileModal'
+import {
+  BeatSheetIcon,
+  ResearchIcon,
+  SearchIcon,
+  StoryBoardIcon,
+  TrashIcon,
+  WriteIcon,
+} from '../components/tale/TaleModeIcons'
 import Loading from './Loading'
+
+const MODE_TABS = [
+  { key: TALE_MODES.WRITE, label: 'Write', Icon: WriteIcon },
+  { key: TALE_MODES.STORY_BOARD, label: 'Story Board', Icon: StoryBoardIcon },
+  { key: TALE_MODES.BEAT_SHEET, label: 'Beat Sheet', Icon: BeatSheetIcon },
+  { key: TALE_MODES.RESEARCH, label: 'Research', Icon: ResearchIcon },
+  { key: TALE_MODES.SEARCH, label: 'Search', Icon: SearchIcon },
+  { key: TALE_MODES.TRASH, label: 'Trash', Icon: TrashIcon },
+]
 
 const TaleEditorPage = () => {
   const { taleId } = useParams()
@@ -35,8 +53,11 @@ const TaleEditorPage = () => {
   const autosave = useAutosave(activeScene?.id, taleId)
 
   useEffect(() => {
-    if (!activeSceneId && structure?.scenes?.[0]) {
-      setActiveSceneId(structure.scenes[0].id)
+    const scenes = structure?.scenes
+    if (!scenes?.length) return
+    const stillActive = activeSceneId && scenes.some((s) => s.id === activeSceneId)
+    if (!stillActive) {
+      setActiveSceneId(scenes[0].id)
     }
   }, [activeSceneId, structure?.scenes])
 
@@ -112,23 +133,27 @@ const TaleEditorPage = () => {
             </span>
           )}
         </div>
-        <div className="flex gap-1 font-ui text-sm uppercase">
-          {[
-            { key: TALE_MODES.WRITE, label: 'Write' },
-            { key: TALE_MODES.STORY_BOARD, label: 'Story Board' },
-            { key: TALE_MODES.BEAT_SHEET, label: 'Beat Sheet' },
-            { key: TALE_MODES.RESEARCH, label: 'Research' },
-            { key: TALE_MODES.SEARCH, label: 'Search' },
-          ].map(({ key, label }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setMode(key)}
-              className={`px-4 py-2 ${mode === key ? 'bg-bronze/20 text-bronze border-b-2 border-bronze' : 'text-cream/60 hover:text-cream'}`}
-            >
-              {label}
-            </button>
-          ))}
+        <div className="flex gap-0.5">
+          {MODE_TABS.map((tab) => {
+            const ModeIcon = tab.Icon
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setMode(tab.key)}
+                title={tab.label}
+                aria-label={tab.label}
+                aria-current={mode === tab.key ? 'page' : undefined}
+                className={`px-3 py-2 ${
+                  mode === tab.key
+                    ? 'border-b-2 border-bronze bg-bronze/20 text-bronze'
+                    : 'text-cream/60 hover:text-cream'
+                }`}
+              >
+                <ModeIcon />
+              </button>
+            )
+          })}
         </div>
       </header>
 
@@ -208,6 +233,8 @@ const TaleEditorPage = () => {
           onBeforeReplace={() => autosave.flush()}
         />
       )}
+
+      {mode === TALE_MODES.TRASH && <TrashPanel taleId={taleId} />}
 
       {settingsOpen && (
         <TaleSettingsModal

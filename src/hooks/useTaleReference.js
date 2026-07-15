@@ -10,9 +10,24 @@ export const useTaleReference = (taleId) => {
     queryFn: async () => {
       const [charactersRes, locationsRes, researchRes, charLinksRes, locLinksRes, imagesRes] =
         await Promise.all([
-        writeDb.from('characters').select('*').eq('tale_id', taleId).order('sort_order'),
-        writeDb.from('locations').select('*').eq('tale_id', taleId).order('sort_order'),
-        writeDb.from('research_items').select('*').eq('tale_id', taleId).order('sort_order'),
+        writeDb
+          .from('characters')
+          .select('*')
+          .eq('tale_id', taleId)
+          .is('deleted_at', null)
+          .order('sort_order'),
+        writeDb
+          .from('locations')
+          .select('*')
+          .eq('tale_id', taleId)
+          .is('deleted_at', null)
+          .order('sort_order'),
+        writeDb
+          .from('research_items')
+          .select('*')
+          .eq('tale_id', taleId)
+          .is('deleted_at', null)
+          .order('sort_order'),
         writeDb.from('scene_character_links').select('*').eq('tale_id', taleId),
         writeDb.from('scene_location_links').select('*').eq('tale_id', taleId),
         writeDb.from('reference_images').select('*').eq('tale_id', taleId).order('sort_order'),

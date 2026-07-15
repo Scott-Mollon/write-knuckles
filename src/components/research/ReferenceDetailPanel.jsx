@@ -32,7 +32,7 @@ const ReferenceDetailPanel = ({
         <button
           type="button"
           onClick={async () => {
-            if (await confirmDelete(`"${title}"`, { irreversible: true })) {
+            if (await confirmDelete(`"${title}"`)) {
               onDelete()
             }
           }}

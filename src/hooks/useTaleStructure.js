@@ -9,8 +9,18 @@ export const useTaleStructure = (taleId) => {
     queryKey: ['tale-structure', taleId],
     queryFn: async () => {
       const [chaptersRes, scenesRes, beatsRes, linksRes] = await Promise.all([
-        writeDb.from('chapters').select('*').eq('tale_id', taleId).order('sort_order'),
-        writeDb.from('scenes').select('*').eq('tale_id', taleId).order('sort_order'),
+        writeDb
+          .from('chapters')
+          .select('*')
+          .eq('tale_id', taleId)
+          .is('deleted_at', null)
+          .order('sort_order'),
+        writeDb
+          .from('scenes')
+          .select('*')
+          .eq('tale_id', taleId)
+          .is('deleted_at', null)
+          .order('sort_order'),
         writeDb.from('tale_beats').select('*').eq('tale_id', taleId).maybeSingle(),
         writeDb.from('beat_links').select('*').eq('tale_id', taleId),
       ])
