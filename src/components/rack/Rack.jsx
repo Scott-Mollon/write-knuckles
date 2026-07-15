@@ -26,6 +26,8 @@ import {
 import ChapterTitleInput from '../chapters/ChapterTitleInput'
 import { confirmDelete } from '../../lib/confirmAction'
 import { getScenePovColor } from '../../lib/scenePov'
+import { nextDefaultSceneTitle } from '../../lib/scenes'
+import { getTaleTerminology } from '../../lib/taleTerminology'
 
 const SortableScene = ({ scene, isActive, onSelect, onDelete, canDelete }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -88,6 +90,8 @@ const SortableChapter = ({
   onSaveChapterTitle,
   canDeleteChapter,
   totalScenes,
+  tale,
+  terms,
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `chapter-${chapter.id}`,
@@ -119,14 +123,15 @@ const SortableChapter = ({
             chapter={chapter}
             chapterIndex={chapterIndex}
             onSave={onSaveChapterTitle}
+            tale={tale}
           />
           <button
             type="button"
             onClick={() => onAddScene(chapter.id)}
             className="px-1 text-xs text-bronze hover:text-cream"
-            title="Add scene"
+            title={`Add ${terms.scene.toLowerCase()}`}
           >
-            + Scene
+            {terms.addScene}
           </button>
         </div>
         {canDeleteChapter && (
@@ -160,8 +165,9 @@ const SortableChapter = ({
   )
 }
 
-const Rack = ({ taleId, chapters, activeSceneId, onSelectScene, totalScenes }) => {
+const Rack = ({ taleId, tale, chapters, activeSceneId, onSelectScene, totalScenes }) => {
   const [localChapters, setLocalChapters] = useState(chapters)
+  const terms = getTaleTerminology(tale)
 
   useEffect(() => {
     setLocalChapters(chapters)
@@ -296,7 +302,7 @@ const Rack = ({ taleId, chapters, activeSceneId, onSelectScene, totalScenes }) =
     })
     await createScene.mutateAsync({
       chapterId: chapter.id,
-      title: 'Scene 1',
+      title: terms.defaultSceneTitle,
       sortOrder: 0,
     })
   }
@@ -306,7 +312,7 @@ const Rack = ({ taleId, chapters, activeSceneId, onSelectScene, totalScenes }) =
     const sortOrder = chapter?.scenes?.length || 0
     const scene = await createScene.mutateAsync({
       chapterId,
-      title: `Scene ${sortOrder + 1}`,
+      title: nextDefaultSceneTitle(sortOrder, tale),
       sortOrder,
     })
     onSelectScene(scene.id)
@@ -316,8 +322,8 @@ const Rack = ({ taleId, chapters, activeSceneId, onSelectScene, totalScenes }) =
     if (localChapters.length <= 1) return
 
     const label = chapter.title?.trim()
-      ? `chapter "${chapter.title}" and all its scenes`
-      : 'this chapter and all its scenes'
+      ? `${terms.chapter.toLowerCase()} "${chapter.title}" and all its ${terms.scenePlural.toLowerCase()}`
+      : `this ${terms.chapter.toLowerCase()} and all its ${terms.scenePlural.toLowerCase()}`
 
     if (!(await confirmDelete(label))) return
 
@@ -327,7 +333,9 @@ const Rack = ({ taleId, chapters, activeSceneId, onSelectScene, totalScenes }) =
   const handleDeleteScene = async (scene) => {
     if (totalScenes <= 1) return
 
-    const label = scene.title?.trim() ? `"${scene.title}"` : 'this scene'
+    const label = scene.title?.trim()
+      ? `"${scene.title}"`
+      : `this ${terms.scene.toLowerCase()}`
     if (!(await confirmDelete(label))) return
 
     await deleteScene.mutateAsync(scene.id)
@@ -351,7 +359,7 @@ const Rack = ({ taleId, chapters, activeSceneId, onSelectScene, totalScenes }) =
           disabled={createChapter.isPending}
           className="text-xs text-bronze hover:text-cream disabled:opacity-50"
         >
-          + Chapter
+          {terms.addChapter}
         </button>
       </div>
 
@@ -376,6 +384,8 @@ const Rack = ({ taleId, chapters, activeSceneId, onSelectScene, totalScenes }) =
                 onSaveChapterTitle={handleSaveChapterTitle}
                 canDeleteChapter={localChapters.length > 1}
                 totalScenes={totalScenes}
+                tale={tale}
+                terms={terms}
               />
             ))}
           </SortableContext>

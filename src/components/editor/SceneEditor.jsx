@@ -5,6 +5,7 @@ import { normalizeContent, isSceneContentEmpty } from '../../lib/editor/plainTex
 import { buildSceneImageAttrs } from '../../lib/editor/sceneImage'
 import { defaultAltFromFile, defaultAltFromUploadResult } from '../../lib/editor/sceneImageLabel'
 import { setSceneImageUploadHandlers } from '../../lib/editor/sceneImageUploadBridge'
+import { scriptStylesToCssVars, getScriptStylePreferences } from '../../lib/editor/scriptStyles'
 import { pickRandomScenePlaceholder } from '../../constants/scenePlaceholders'
 import { SAVE_STATES } from '../../hooks/useAutosave'
 import { useEditorTheme } from '../../hooks/useEditorTheme'
@@ -13,6 +14,7 @@ import { useEditorProseDefaults, DEFAULT_PROSE_FONT_SIZE } from '../../hooks/use
 import { useUpdateSceneMeta } from '../../hooks/useSceneMutations'
 import { useTaleImageUpload } from '../../hooks/useTaleImageUpload'
 import { validateImageFile } from '../../lib/images/storage'
+import { getTaleType, isComicTale } from '../../lib/taleTerminology'
 import EditorToolbar from './EditorToolbar'
 import EditorDefaultsDialog from './EditorDefaultsDialog'
 import ImageBubbleMenu from './ImageBubbleMenu'
@@ -27,7 +29,7 @@ const SAVE_LABELS = {
   [SAVE_STATES.ERROR]: 'Save failed — retry by editing',
 }
 
-const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
+const SceneEditor = ({ scene, tale, taleId, onWordCountChange, autosave }) => {
   const { theme, toggleTheme, isLight } = useEditorTheme()
   const { tabSize, setTabSize } = useEditorTabSize()
   const { proseFont, setProseFont, proseFontSize, setProseFontSize } = useEditorProseDefaults()
@@ -36,6 +38,12 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
   const [imageError, setImageError] = useState(null)
   const [title, setTitle] = useState(scene?.title || '')
   const [defaultsOpen, setDefaultsOpen] = useState(false)
+  const comic = isComicTale(tale)
+  const taleType = getTaleType(tale)
+  const scriptCssVars = useMemo(
+    () => (comic ? scriptStylesToCssVars(getScriptStylePreferences(tale)) : {}),
+    [comic, tale?.script_style_preferences],
+  )
 
   useEffect(() => {
     setTitle(scene?.title || '')
@@ -65,12 +73,13 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
   )
 
   const editor = useEditor({
-    extensions: createEditorExtensions(placeholder),
+    extensions: createEditorExtensions(placeholder, { taleType }),
     content: normalizeContent(scene?.content),
     editorProps: {
       attributes: {
         class: 'scene-editor-prose focus:outline-none min-h-[60vh] leading-relaxed',
         spellcheck: 'false',
+        ...(comic ? { 'data-tale-type': 'comic' } : {}),
       },
     },
     onUpdate: ({ editor: ed }) => {
@@ -82,7 +91,7 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
     onCreate: ({ editor: ed }) => {
       onWordCountChange?.(ed.storage.characterCount.words())
     },
-  }, [scene?.id, placeholder])
+  }, [scene?.id, placeholder, taleType])
 
   const {
     enabled: proofreadEnabled,
@@ -200,6 +209,7 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
         '--editor-tab-size': tabSize,
         '--editor-prose-font': proseFont,
         '--editor-prose-size': proseFontSize || DEFAULT_PROSE_FONT_SIZE,
+        ...scriptCssVars,
       }}
     >
       <div className="flex items-center justify-between gap-4 border-b px-6 py-3" style={{ borderColor: 'var(--editor-border)' }}>
@@ -239,6 +249,7 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
         onOpenDefaults={() => setDefaultsOpen(true)}
         taleId={taleId}
         sceneId={scene.id}
+        taleType={taleType}
         onInsertSceneImage={handleInsertSceneImage}
         onImageError={setImageError}
         proofreadEnabled={proofreadEnabled}

@@ -390,6 +390,106 @@ input, select, textarea {
   pointer-events: none;
 }
 
+/* Comic script elements — only under data-tale-type="comic" */
+.scene-editor-prose[data-tale-type='comic'] .script-role--panel {
+  font-family: var(--script-panel-font-family);
+  font-size: var(--script-panel-font-size);
+  font-weight: var(--script-panel-font-weight);
+  font-style: var(--script-panel-font-style, normal);
+  text-align: var(--script-panel-text-align);
+  text-transform: var(--script-panel-text-transform);
+  letter-spacing: var(--script-panel-letter-spacing);
+  line-height: var(--script-panel-line-height);
+  margin-top: var(--script-panel-margin-top);
+  margin-bottom: var(--script-panel-margin-bottom);
+  padding-left: var(--script-panel-indent);
+}
+
+.scene-editor-prose[data-tale-type='comic'] .script-role--panelDescription {
+  font-family: var(--script-panelDescription-font-family);
+  font-size: var(--script-panelDescription-font-size);
+  font-weight: var(--script-panelDescription-font-weight);
+  font-style: var(--script-panelDescription-font-style);
+  text-align: var(--script-panelDescription-text-align);
+  text-transform: var(--script-panelDescription-text-transform);
+  letter-spacing: var(--script-panelDescription-letter-spacing);
+  line-height: var(--script-panelDescription-line-height);
+  margin-top: var(--script-panelDescription-margin-top);
+  margin-bottom: var(--script-panelDescription-margin-bottom);
+  padding-left: var(--script-panelDescription-indent);
+}
+
+.scene-editor-prose[data-tale-type='comic'] .script-role--character {
+  font-family: var(--script-character-font-family);
+  font-size: var(--script-character-font-size);
+  font-weight: var(--script-character-font-weight);
+  font-style: var(--script-character-font-style);
+  text-align: var(--script-character-text-align);
+  text-transform: var(--script-character-text-transform);
+  letter-spacing: var(--script-character-letter-spacing);
+  line-height: var(--script-character-line-height);
+  margin-top: var(--script-character-margin-top);
+  margin-bottom: var(--script-character-margin-bottom);
+  padding-left: var(--script-character-indent);
+}
+
+.scene-editor-prose[data-tale-type='comic'] .script-role--characterDescriptor {
+  font-family: var(--script-characterDescriptor-font-family);
+  font-size: var(--script-characterDescriptor-font-size);
+  font-weight: var(--script-characterDescriptor-font-weight);
+  font-style: var(--script-characterDescriptor-font-style);
+  text-align: var(--script-characterDescriptor-text-align);
+  text-transform: var(--script-characterDescriptor-text-transform);
+  letter-spacing: var(--script-characterDescriptor-letter-spacing);
+  line-height: var(--script-characterDescriptor-line-height);
+  margin-top: var(--script-characterDescriptor-margin-top);
+  margin-bottom: var(--script-characterDescriptor-margin-bottom);
+  padding-left: var(--script-characterDescriptor-indent);
+}
+
+.scene-editor-prose[data-tale-type='comic'] .script-role--dialogue {
+  font-family: var(--script-dialogue-font-family);
+  font-size: var(--script-dialogue-font-size);
+  font-weight: var(--script-dialogue-font-weight);
+  font-style: var(--script-dialogue-font-style);
+  text-align: var(--script-dialogue-text-align);
+  text-transform: var(--script-dialogue-text-transform);
+  letter-spacing: var(--script-dialogue-letter-spacing);
+  line-height: var(--script-dialogue-line-height);
+  margin-top: var(--script-dialogue-margin-top);
+  margin-bottom: var(--script-dialogue-margin-bottom);
+  padding-left: var(--script-dialogue-indent);
+  padding-right: var(--script-dialogue-indent);
+}
+
+.scene-editor-prose[data-tale-type='comic'] .script-role--sfx {
+  font-family: var(--script-sfx-font-family);
+  font-size: var(--script-sfx-font-size);
+  font-weight: var(--script-sfx-font-weight);
+  font-style: var(--script-sfx-font-style);
+  text-align: var(--script-sfx-text-align, center);
+  text-transform: var(--script-sfx-text-transform);
+  letter-spacing: var(--script-sfx-letter-spacing);
+  line-height: var(--script-sfx-line-height);
+  margin-top: var(--script-sfx-margin-top);
+  margin-bottom: var(--script-sfx-margin-bottom);
+  padding-left: var(--script-sfx-indent);
+}
+
+.scene-editor-prose[data-tale-type='comic'] .script-role--sfxContent {
+  font-family: var(--script-sfxContent-font-family);
+  font-size: var(--script-sfxContent-font-size);
+  font-weight: var(--script-sfxContent-font-weight);
+  font-style: var(--script-sfxContent-font-style);
+  text-align: var(--script-sfxContent-text-align, center);
+  text-transform: var(--script-sfxContent-text-transform);
+  letter-spacing: var(--script-sfxContent-letter-spacing);
+  line-height: var(--script-sfxContent-line-height);
+  margin-top: var(--script-sfxContent-margin-top);
+  margin-bottom: var(--script-sfxContent-margin-bottom);
+  padding-left: var(--script-sfxContent-indent);
+}
+
 /* Harper proofreading */
 .scene-editor-prose .harper-lint {
   cursor: pointer;

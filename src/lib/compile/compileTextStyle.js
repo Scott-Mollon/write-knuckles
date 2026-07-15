@@ -85,6 +85,20 @@ export function buildCompileTextStyleAttr(style, { flexItem = false, block = fal
   return parts.join('; ')
 }
 
+/** React style object for live settings previews. */
+export function buildCompileTextStyleReact(style) {
+  return {
+    fontFamily: style.font,
+    fontSize: `${style.fontSizePt}pt`,
+    fontWeight: style.bold ? 700 : 400,
+    fontStyle: style.italic ? 'italic' : 'normal',
+    textDecoration: style.underline ? 'underline' : 'none',
+    textAlign: style.align,
+    color: style.color,
+    margin: 0,
+  }
+}
+
 const PAGE_NUMBER_MARGIN_BOX = {
   left: 'bottom-left',
   center: 'bottom-center',

@@ -1,13 +1,24 @@
 import { useEffect, useState } from 'react'
-import { useUpdateTale, useUpdateTaleCompilePreferences } from '../../hooks/useTales'
+import {
+  useUpdateTale,
+  useUpdateTaleCompilePreferences,
+  useUpdateTaleScriptStylePreferences,
+} from '../../hooks/useTales'
 import { validateCompileOptions } from '../../lib/compile/chapterHeading.js'
 import {
   getTaleCompilePreferences,
   readViewerCompilePreferences,
 } from '../../lib/compile/compilePreferences.js'
 import { normalizePageLayout } from '../../lib/compile/pageLayout.js'
+import {
+  getScriptStylePreferences,
+  serializeScriptStylePreferences,
+} from '../../lib/editor/scriptStyles'
+import { TALE_TYPE_LABELS } from '../../constants/taleTypes'
+import { getTaleType, isComicTale } from '../../lib/taleTerminology'
 import BeatSheetPicker from '../beats/BeatSheetPicker'
 import CompileSettingsPanel from './CompileSettingsPanel'
+import ScriptStyleSettingsPanel from './ScriptStyleSettingsPanel'
 import TaleCoverEditor from './TaleCoverEditor'
 
 const fieldClass =
@@ -16,6 +27,7 @@ const fieldClass =
 const TABS = {
   tale: 'tale',
   compile: 'compile',
+  script: 'script',
 }
 
 const TaleSettingsModal = ({
@@ -29,12 +41,14 @@ const TaleSettingsModal = ({
   onCompilePreferencesSaved,
 }) => {
   const showTaleTab = variant === 'full'
+  const comic = isComicTale(tale)
   const [activeTab, setActiveTab] = useState(
     showTaleTab ? initialTab : TABS.compile,
   )
 
   const updateTale = useUpdateTale(taleId)
   const updateCompilePreferences = useUpdateTaleCompilePreferences(taleId)
+  const updateScriptStyles = useUpdateTaleScriptStylePreferences(taleId)
 
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
@@ -47,6 +61,9 @@ const TaleSettingsModal = ({
   )
   const [compilePageLayout, setCompilePageLayout] = useState(
     () => getTaleCompilePreferences(tale, taleId).pageLayout,
+  )
+  const [scriptPreferences, setScriptPreferences] = useState(() =>
+    getScriptStylePreferences(tale),
   )
 
   const [error, setError] = useState(null)
@@ -62,6 +79,7 @@ const TaleSettingsModal = ({
     const prefs = getTaleCompilePreferences(tale, taleId)
     setCompileOptions(prefs.options)
     setCompilePageLayout(prefs.pageLayout)
+    setScriptPreferences(getScriptStylePreferences(tale))
   }, [tale, taleId])
 
   const handleTaleSubmit = async (e) => {
@@ -74,7 +92,7 @@ const TaleSettingsModal = ({
     }
 
     const wordCount = Number(targetWordCount)
-    if (!Number.isFinite(wordCount) || wordCount < 1000) {
+    if (!comic && (!Number.isFinite(wordCount) || wordCount < 1000)) {
       setError('Target word count must be at least 1,000.')
       return
     }
@@ -85,7 +103,7 @@ const TaleSettingsModal = ({
         author,
         subtitle,
         genre,
-        targetWordCount: wordCount,
+        ...(comic ? {} : { targetWordCount: wordCount }),
       })
       onClose()
     } catch (err) {
@@ -124,11 +142,33 @@ const TaleSettingsModal = ({
     }
   }
 
+  const handleScriptSubmit = async (e) => {
+    e.preventDefault()
+    setError(null)
+    try {
+      await updateScriptStyles.mutateAsync(
+        serializeScriptStylePreferences(scriptPreferences),
+      )
+      onClose()
+    } catch (err) {
+      setError(err.message || 'Failed to save script styles.')
+    }
+  }
+
   const modalTitle = variant === 'compile-only' ? 'Compile Settings' : 'Tale Settings'
   const modalDescription =
     variant === 'compile-only'
       ? 'Content and page layout for compiling this tale.'
-      : 'Update your manuscript and compile settings.'
+      : comic
+        ? 'Update your script, styles, and compile settings.'
+        : 'Update your manuscript and compile settings.'
+
+  const tabBtnClass = (tab) =>
+    `border-b-2 px-3 py-2 font-ui text-xs uppercase transition ${
+      activeTab === tab
+        ? 'border-bronze text-bronze'
+        : 'border-transparent text-cream/50 hover:text-cream'
+    }`
 
   return (
     <div
@@ -159,26 +199,23 @@ const TaleSettingsModal = ({
         </div>
 
         {showTaleTab && (
-          <div className="mb-6 flex gap-2 border-b border-bronze-dark/30">
-            <button
-              type="button"
-              onClick={() => setActiveTab(TABS.tale)}
-              className={`border-b-2 px-3 py-2 font-ui text-xs uppercase transition ${
-                activeTab === TABS.tale
-                  ? 'border-bronze text-bronze'
-                  : 'border-transparent text-cream/50 hover:text-cream'
-              }`}
-            >
+          <div className="mb-6 flex flex-wrap gap-2 border-b border-bronze-dark/30">
+            <button type="button" onClick={() => setActiveTab(TABS.tale)} className={tabBtnClass(TABS.tale)}>
               Tale
             </button>
+            {comic && (
+              <button
+                type="button"
+                onClick={() => setActiveTab(TABS.script)}
+                className={tabBtnClass(TABS.script)}
+              >
+                Script
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setActiveTab(TABS.compile)}
-              className={`border-b-2 px-3 py-2 font-ui text-xs uppercase transition ${
-                activeTab === TABS.compile
-                  ? 'border-bronze text-bronze'
-                  : 'border-transparent text-cream/50 hover:text-cream'
-              }`}
+              className={tabBtnClass(TABS.compile)}
             >
               Compile Options
             </button>
@@ -190,6 +227,14 @@ const TaleSettingsModal = ({
             <TaleCoverEditor tale={tale} taleId={taleId} />
 
             <div className="border-t border-bronze-dark/30 pt-5">
+              <p className="mb-2 font-ui text-xs uppercase text-cream/80">Type</p>
+              <p className="text-sm text-cream/70">
+                {TALE_TYPE_LABELS[getTaleType(tale)]}
+                <span className="ml-2 text-cream/40">(set at creation)</span>
+              </p>
+            </div>
+
+            <div>
               <label htmlFor="tale-settings-title-input" className="mb-2 block font-ui text-xs uppercase text-cream/80">
                 Title
               </label>
@@ -243,20 +288,22 @@ const TaleSettingsModal = ({
               />
             </div>
 
-            <div>
-              <label htmlFor="tale-settings-word-count" className="mb-2 block font-ui text-xs uppercase text-cream/80">
-                Target Word Count
-              </label>
-              <input
-                id="tale-settings-word-count"
-                type="number"
-                value={targetWordCount}
-                onChange={(e) => setTargetWordCount(e.target.value)}
-                className={fieldClass}
-                min={1000}
-                step={1000}
-              />
-            </div>
+            {!comic && (
+              <div>
+                <label htmlFor="tale-settings-word-count" className="mb-2 block font-ui text-xs uppercase text-cream/80">
+                  Target Word Count
+                </label>
+                <input
+                  id="tale-settings-word-count"
+                  type="number"
+                  value={targetWordCount}
+                  onChange={(e) => setTargetWordCount(e.target.value)}
+                  className={fieldClass}
+                  min={1000}
+                  step={1000}
+                />
+              </div>
+            )}
 
             {error && <p className="text-sm text-error">{error}</p>}
 
@@ -267,6 +314,32 @@ const TaleSettingsModal = ({
                 className="border-2 border-bronze-dark px-6 py-2 font-ui text-sm uppercase text-bronze hover:border-bronze disabled:opacity-50"
               >
                 {updateTale.isPending ? 'Saving…' : 'Save Settings'}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 font-ui text-sm uppercase text-cream/50 hover:text-cream"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+
+        {activeTab === TABS.script && comic && showTaleTab && (
+          <form onSubmit={handleScriptSubmit} className="space-y-5">
+            <ScriptStyleSettingsPanel
+              preferences={scriptPreferences}
+              onChange={setScriptPreferences}
+            />
+            {error && <p className="text-sm text-error">{error}</p>}
+            <div className="flex gap-3 pt-2">
+              <button
+                type="submit"
+                disabled={updateScriptStyles.isPending}
+                className="border-2 border-bronze-dark px-6 py-2 font-ui text-sm uppercase text-bronze hover:border-bronze disabled:opacity-50"
+              >
+                {updateScriptStyles.isPending ? 'Saving…' : 'Save Script Styles'}
               </button>
               <button
                 type="button"
@@ -310,7 +383,7 @@ const TaleSettingsModal = ({
           </form>
         )}
 
-        {activeTab === TABS.tale && showTaleTab && (
+        {activeTab === TABS.tale && showTaleTab && !comic && (
           <div className="mt-8 border-t border-bronze-dark/30 pt-6">
             <BeatSheetPicker
               taleId={taleId}

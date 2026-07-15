@@ -1,7 +1,9 @@
 import { generateText } from '@tiptap/core'
 import { createEditorExtensions } from './extensions'
+import { TALE_TYPES } from '../../constants/taleTypes'
 
-const extensions = createEditorExtensions()
+/** Include comic nodes so generateText can read either tale type. */
+const extensions = createEditorExtensions('', { taleType: TALE_TYPES.COMIC })
 
 const EMPTY_DOC = { type: 'doc', content: [] }
 

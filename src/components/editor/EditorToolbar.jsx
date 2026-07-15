@@ -6,7 +6,9 @@ import {
   SCENE_FONT_OPTIONS,
   sceneFontPreviewFamily,
 } from '../../constants/sceneFonts'
-import { PROSE_FONT_SIZE_OPTIONS, DEFAULT_PROSE_FONT_SIZE } from '../../hooks/useEditorProseDefaults'
+import { DEFAULT_PROSE_FONT_SIZE, PROSE_FONT_SIZE_OPTIONS } from '../../hooks/useEditorProseDefaults'
+import { SCRIPT_ROLES } from '../../lib/editor/scriptStyles'
+import { isComicTale } from '../../lib/taleTerminology'
 
 const ToolbarButton = ({ onClick, active, disabled, title, children, className = '' }) => (
   <button
@@ -214,6 +216,7 @@ const EditorToolbar = ({
   onOpenDefaults,
   taleId,
   sceneId,
+  taleType,
   onInsertSceneImage,
   onImageError,
   proofreadEnabled = false,
@@ -222,6 +225,7 @@ const EditorToolbar = ({
   onToggleProofread,
 }) => {
   const [highlightColor, setHighlightColor] = useState(DEFAULT_HIGHLIGHT_COLOR)
+  const comic = isComicTale(taleType)
 
   const toolbarState = useEditorState({
     editor,
@@ -411,27 +415,83 @@ const EditorToolbar = ({
 
       <span className="editor-toolbar-sep mx-1">|</span>
 
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleDropCap().run()}
-        active={editor.isActive('paragraph', { dropCap: true })}
-        disabled={!editor.isActive('paragraph')}
-        title="Drop cap"
-      >
-        <span className="font-ui text-base leading-none">D</span>
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        active={editor.isActive('blockquote')}
-        title="Blockquote"
-      >
-        &ldquo;
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().setSceneDivider().run()}
-        title="Divider"
-      >
-        <span className="inline-block w-4 border-t border-current" />
-      </ToolbarButton>
+      {comic ? (
+        <>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().insertComicPanel().run()}
+            active={editor.isActive('paragraph', { scriptRole: SCRIPT_ROLES.PANEL })}
+            title="Insert Panel N"
+          >
+            Panel
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().setScriptRole(SCRIPT_ROLES.PANEL_DESCRIPTION).run()}
+            active={editor.isActive('paragraph', { scriptRole: SCRIPT_ROLES.PANEL_DESCRIPTION })}
+            title="Panel description"
+          >
+            Desc
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().setScriptRole(SCRIPT_ROLES.CHARACTER).run()}
+            active={editor.isActive('paragraph', { scriptRole: SCRIPT_ROLES.CHARACTER })}
+            title="Character name"
+          >
+            Char
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() =>
+              editor.chain().focus().setScriptRole(SCRIPT_ROLES.CHARACTER_DESCRIPTOR).run()
+            }
+            active={editor.isActive('paragraph', {
+              scriptRole: SCRIPT_ROLES.CHARACTER_DESCRIPTOR,
+            })}
+            title="Character descriptor"
+          >
+            (desc)
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().setScriptRole(SCRIPT_ROLES.DIALOGUE).run()}
+            active={editor.isActive('paragraph', { scriptRole: SCRIPT_ROLES.DIALOGUE })}
+            title="Dialogue"
+          >
+            Dial
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().insertComicSfx().run()}
+            active={
+              editor.isActive('paragraph', { scriptRole: SCRIPT_ROLES.SFX }) ||
+              editor.isActive('paragraph', { scriptRole: SCRIPT_ROLES.SFX_CONTENT })
+            }
+            title="Insert SFX"
+          >
+            SFX
+          </ToolbarButton>
+        </>
+      ) : (
+        <>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleDropCap().run()}
+            active={editor.isActive('paragraph', { dropCap: true })}
+            disabled={!editor.isActive('paragraph')}
+            title="Drop cap"
+          >
+            <span className="font-ui text-base leading-none">D</span>
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            active={editor.isActive('blockquote')}
+            title="Blockquote"
+          >
+            &ldquo;
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().setSceneDivider().run()}
+            title="Divider"
+          >
+            <span className="inline-block w-4 border-t border-current" />
+          </ToolbarButton>
+        </>
+      )}
 
       {taleId && sceneId && onInsertSceneImage && (
         <ImageUpload

@@ -104,6 +104,18 @@ body {
   margin: 0 0 0.75rem;
 }
 
+.export-title-page .export-issue-number {
+  margin: 0 0 0.75rem;
+}
+
+.export-title-page .export-issue-label {
+  margin: 0 0 0.75rem;
+}
+
+.export-title-page .export-issue-title {
+  margin: 0 0 0.75rem;
+}
+
 .export-title-page .export-author {
   margin: 0;
 }
@@ -117,6 +129,11 @@ body {
   page-break-before: always;
 }
 
+.export-title-page.export-chapter-break {
+  break-before: page;
+  page-break-before: always;
+}
+
 .export-chapter-heading {
   margin: 0 0 1.25rem;
   width: 100%;
@@ -124,6 +141,12 @@ body {
 
 .export-chapter .scene-editor-prose + .scene-editor-prose {
   margin-top: 1em;
+}
+
+.scene-editor-prose.export-comic-page-break {
+  break-before: page;
+  page-break-before: always;
+  margin-top: 0;
 }
 
 .scene-editor-prose {
@@ -290,6 +313,16 @@ body {
   }
 
   .export-chapter.export-chapter-break {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .export-title-page.export-chapter-break {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .scene-editor-prose.export-comic-page-break {
     break-before: page;
     page-break-before: always;
   }

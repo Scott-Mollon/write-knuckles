@@ -47,18 +47,29 @@ function spansFromNode(node) {
   return spans
 }
 
-function blockFromNode(node) {
+function blockFromNode(node, comicNumbers = null) {
   switch (node.type) {
     case 'paragraph':
       return {
         type: 'paragraph',
         spans: spansFromNode(node),
         textAlign: typeof node.attrs?.textAlign === 'string' ? node.attrs.textAlign : undefined,
+        scriptRole: typeof node.attrs?.scriptRole === 'string' ? node.attrs.scriptRole : undefined,
       }
     case 'heading': {
       const level = Number(node.attrs?.level) || 2
       return { type: 'heading', level, spans: spansFromNode(node) }
     }
+    case 'comicPanel': {
+      const n = comicNumbers?.nextPanel?.() ?? 1
+      return {
+        type: 'paragraph',
+        spans: [{ text: `Panel ${n}`, marks: ['bold'] }],
+        scriptRole: 'panel',
+      }
+    }
+    case 'comicPage':
+      return null
     case 'sceneDivider':
       return { type: 'divider' }
     case 'sceneImage': {
@@ -97,9 +108,17 @@ export function tiptapToBlocks(content) {
   const doc = content
   if (doc.type !== 'doc' || !Array.isArray(doc.content)) return []
 
+  let panelCount = 0
+  const comicNumbers = {
+    nextPanel: () => {
+      panelCount += 1
+      return panelCount
+    },
+  }
+
   const blocks = []
   for (const node of doc.content) {
-    const block = blockFromNode(node)
+    const block = blockFromNode(node, comicNumbers)
     if (block) blocks.push(block)
   }
   return blocks

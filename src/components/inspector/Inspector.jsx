@@ -4,10 +4,12 @@ import { useUpdateSceneMeta } from '../../hooks/useSceneMutations'
 import { useCreateBeatLink, useDeleteBeatLink } from '../../hooks/useBeatLinks'
 import { confirmUnlink } from '../../lib/confirmAction'
 import { getSceneBeatLinks } from '../../lib/beats'
+import { isComicTale } from '../../lib/taleTerminology'
 import SceneReferenceLinks from './SceneReferenceLinks'
 
 const Inspector = ({
   scene,
+  tale = null,
   taleId,
   liveWordCount,
   beats = [],
@@ -20,6 +22,7 @@ const Inspector = ({
   const updateMeta = useUpdateSceneMeta(taleId)
   const createLink = useCreateBeatLink(taleId)
   const deleteLink = useDeleteBeatLink(taleId)
+  const comic = isComicTale(tale)
   const [collapsed, setCollapsed] = useState(false)
   const [title, setTitle] = useState('')
   const [synopsis, setSynopsis] = useState('')
@@ -177,6 +180,7 @@ const Inspector = ({
               </div>
             </div>
 
+            {!comic && (
             <div>
               <span className="mb-2 block text-cream/50">Beat Link</span>
               {linkedBeat ? (
@@ -214,6 +218,7 @@ const Inspector = ({
                 </select>
               )}
             </div>
+            )}
 
             <SceneReferenceLinks
               scene={scene}

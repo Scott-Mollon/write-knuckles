@@ -22,6 +22,10 @@ function blockAttrs(attrs) {
   const styles = []
 
   if (attrs.dropCap) classes.push('dropcap')
+  if (attrs.scriptRole) {
+    classes.push('script-role', `script-role--${attrs.scriptRole}`)
+    attrParts.push(`data-script-role="${attrs.scriptRole}"`)
+  }
 
   const textAlign = attrs.textAlign
   if (typeof textAlign === 'string' && textAlign !== 'left') {
@@ -114,11 +118,11 @@ function renderInline(nodes) {
     .join('')
 }
 
-function renderList(node, ordered) {
+function renderList(node, ordered, comicNumbers = null) {
   const tag = ordered ? 'ol' : 'ul'
   const items = (node.content || [])
     .filter((child) => child.type === 'listItem')
-    .map((item) => `<li>${renderBlocks(item.content)}</li>`)
+    .map((item) => `<li>${renderBlocks(item.content, comicNumbers)}</li>`)
     .join('')
 
   return `<${tag}>${items}</${tag}>`
@@ -150,7 +154,7 @@ function renderSceneImage(node) {
   )
 }
 
-function renderBlock(node) {
+function renderBlock(node, comicNumbers = null) {
   switch (node.type) {
     case 'paragraph':
       return `<p${blockAttrs(node.attrs)}>${renderInline(node.content)}</p>`
@@ -159,17 +163,25 @@ function renderBlock(node) {
       const tag = level === 3 ? 'h3' : 'h2'
       return `<${tag}${blockAttrs(node.attrs)}>${renderInline(node.content)}</${tag}>`
     }
+    case 'comicPanel': {
+      // Legacy atom panels — render as Panel N text
+      const n = comicNumbers?.nextPanel?.() ?? 1
+      return `<p class="script-role script-role--panel" data-script-role="panel">Panel ${n}</p>`
+    }
+    case 'comicPage':
+      // Legacy in-doc page markers (Pages are structural now); skip safely.
+      return ''
     case 'sceneDivider':
     case 'horizontalRule':
       return '<hr class="scene-divider" data-scene-divider>'
     case 'sceneImage':
       return renderSceneImage(node)
     case 'blockquote':
-      return `<blockquote>${renderBlocks(node.content)}</blockquote>`
+      return `<blockquote>${renderBlocks(node.content, comicNumbers)}</blockquote>`
     case 'bulletList':
-      return renderList(node, false)
+      return renderList(node, false, comicNumbers)
     case 'orderedList':
-      return renderList(node, true)
+      return renderList(node, true, comicNumbers)
     case 'codeBlock': {
       const text = (node.content || [])
         .map((child) => child.text || '')
@@ -178,16 +190,26 @@ function renderBlock(node) {
     }
     default:
       if (node.content?.length) {
-        const inner = renderBlocks(node.content)
+        const inner = renderBlocks(node.content, comicNumbers)
         if (inner.trim()) return `<p>${inner}</p>`
       }
       return ''
   }
 }
 
-function renderBlocks(nodes) {
+function renderBlocks(nodes, comicNumbers = null) {
   if (!nodes?.length) return ''
-  return nodes.map(renderBlock).join('')
+  return nodes.map((node) => renderBlock(node, comicNumbers)).join('')
+}
+
+function createComicNumberTracker() {
+  let panelCount = 0
+  return {
+    nextPanel: () => {
+      panelCount += 1
+      return panelCount
+    },
+  }
 }
 
 export function tiptapToHtml(content) {
@@ -196,5 +218,5 @@ export function tiptapToHtml(content) {
   const doc = content
   if (doc.type !== 'doc' || !Array.isArray(doc.content)) return ''
 
-  return renderBlocks(doc.content)
+  return renderBlocks(doc.content, createComicNumberTracker())
 }

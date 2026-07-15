@@ -18,10 +18,11 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useReorderStructure, useUpdateChapterMeta } from '../../hooks/useSceneMutations'
+import { getTaleTerminology } from '../../lib/taleTerminology'
 import ChapterTitleInput from '../chapters/ChapterTitleInput'
 import SceneBoardCard from './SceneBoardCard'
 
-const SortableSceneCard = ({ scene, chapters, onOpen }) => {
+const SortableSceneCard = ({ scene, chapters, onOpen, tale }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `board-scene-${scene.id}`,
     data: { type: 'scene', scene },
@@ -38,6 +39,7 @@ const SortableSceneCard = ({ scene, chapters, onOpen }) => {
       <SceneBoardCard
         scene={scene}
         chapters={chapters}
+        tale={tale}
         onOpen={onOpen}
         dragHandleProps={{ ...attributes, ...listeners }}
       />
@@ -53,6 +55,8 @@ const SortableChapterColumn = ({
   onAddScene,
   onSaveChapterTitle,
   isAddingScene,
+  tale,
+  terms,
 }) => {
   const {
     attributes,
@@ -107,25 +111,34 @@ const SortableChapterColumn = ({
           chapterIndex={chapterIndex}
           onSave={onSaveChapterTitle}
           variant="storyboard"
+          tale={tale}
         />
         <button
           type="button"
           onClick={() => onAddScene(chapter.id)}
           disabled={isAddingScene}
           className="shrink-0 text-xs text-bronze hover:text-cream disabled:opacity-50"
-          title="Add scene"
+          title={`Add ${terms.scene.toLowerCase()}`}
         >
-          + Scene
+          {terms.addScene}
         </button>
       </div>
 
       <SortableContext items={sceneIds} strategy={verticalListSortingStrategy}>
         <div className="min-h-[120px]">
           {chapter.scenes.map((scene) => (
-            <SortableSceneCard key={scene.id} scene={scene} chapters={chapters} onOpen={onOpen} />
+            <SortableSceneCard
+              key={scene.id}
+              scene={scene}
+              chapters={chapters}
+              tale={tale}
+              onOpen={onOpen}
+            />
           ))}
           {chapter.scenes.length === 0 && (
-            <p className="py-8 text-center text-xs italic text-cream/30">Drop scenes here</p>
+            <p className="py-8 text-center text-xs italic text-cream/30">
+              Drop {terms.scenePlural.toLowerCase()} here
+            </p>
           )}
         </div>
       </SortableContext>
@@ -133,10 +146,11 @@ const SortableChapterColumn = ({
   )
 }
 
-const ChapterBoardView = ({ taleId, chapters, onOpen, onAddScene, isAddingScene }) => {
+const ChapterBoardView = ({ taleId, tale, chapters, onOpen, onAddScene, isAddingScene }) => {
   const [localChapters, setLocalChapters] = useState(chapters)
   const reorder = useReorderStructure(taleId)
   const updateChapter = useUpdateChapterMeta(taleId)
+  const terms = getTaleTerminology(tale)
 
   useEffect(() => {
     setLocalChapters(chapters)
@@ -281,6 +295,8 @@ const ChapterBoardView = ({ taleId, chapters, onOpen, onAddScene, isAddingScene 
                 onAddScene={onAddScene}
                 onSaveChapterTitle={handleSaveChapterTitle}
                 isAddingScene={isAddingScene}
+                tale={tale}
+                terms={terms}
               />
             ))}
           </div>

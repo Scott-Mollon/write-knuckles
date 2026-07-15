@@ -1,6 +1,7 @@
 import { buildChapterHeading, buildChapterHeadingParts } from './chapterHeading.js'
 import { prepareSceneContent } from './prepareSceneContent.js'
 import { blocksHaveText, plainTextToSceneBlock, tiptapToBlocks } from './tiptapToBlocks.js'
+import { getTaleTerminology, isComicTale } from '../taleTerminology.js'
 
 function isInScope(id, ids) {
   return ids.length === 0 || ids.includes(id)
@@ -11,6 +12,13 @@ function flattenScenes(chapters) {
 }
 
 export function buildManuscriptModel({ tale, chapters, options, scope }) {
+  const comic = isComicTale(tale)
+  const terms = getTaleTerminology(tale)
+  const headingOptions = {
+    ...options,
+    chapterWord: terms.chapterWord,
+  }
+
   const sortedChapters = [...chapters].sort((a, b) => a.sort_order - b.sort_order)
   const scenes = flattenScenes(chapters)
   const scenesByChapter = new Map()
@@ -52,8 +60,12 @@ export function buildManuscriptModel({ tale, chapters, options, scope }) {
 
       return {
         id: chapter.id,
-        heading: buildChapterHeading(chapter.title, chapterIndex, options),
-        headingParts: buildChapterHeadingParts(chapter.title, chapterIndex, options),
+        title: chapter.title || '',
+        issueNumber: chapterIndex + 1,
+        heading: comic ? null : buildChapterHeading(chapter.title, chapterIndex, headingOptions),
+        headingParts: comic
+          ? []
+          : buildChapterHeadingParts(chapter.title, chapterIndex, headingOptions),
         scenes: chapterScenes,
       }
     })
@@ -63,6 +75,8 @@ export function buildManuscriptModel({ tale, chapters, options, scope }) {
     title: tale.title,
     author: tale.author,
     subtitle: tale.subtitle,
+    isComic: comic,
+    chapterWord: terms.chapterWord,
     chapters: manuscriptChapters,
   }
 }

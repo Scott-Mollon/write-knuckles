@@ -1,15 +1,17 @@
 import { formatChapterLabel } from './chapters'
+import { getTaleTerminology } from './taleTerminology'
 
 export const getChapterForScene = (scene, chapters) =>
   chapters.find((ch) => ch.id === scene.chapter_id)
 
-export const formatSceneLabel = (scene, chapters) => {
+export const formatSceneLabel = (scene, chapters, taleOrType = null) => {
+  const terms = getTaleTerminology(taleOrType)
   const sorted = [...chapters].sort((a, b) => a.sort_order - b.sort_order)
   const chapterIndex = sorted.findIndex((ch) => ch.id === scene.chapter_id)
   const chapter = chapterIndex >= 0 ? sorted[chapterIndex] : null
   const chapterLabel = chapter
-    ? formatChapterLabel(chapter, chapterIndex)
-    : 'Unknown chapter'
+    ? formatChapterLabel(chapter, chapterIndex, taleOrType)
+    : terms.unknownChapter
   return `${chapterLabel} — ${scene.title}`
 }
 
@@ -30,4 +32,9 @@ export const getUnlinkedScenes = (chapters, beatLinks) => {
     beatLinks.filter((l) => l.scene_id).map((l) => l.scene_id),
   )
   return getScenesInRackOrder(chapters).filter((s) => !linkedIds.has(s.id))
+}
+
+export const nextDefaultSceneTitle = (existingCount, taleOrType = null) => {
+  const terms = getTaleTerminology(taleOrType)
+  return `${terms.scene} ${existingCount + 1}`
 }

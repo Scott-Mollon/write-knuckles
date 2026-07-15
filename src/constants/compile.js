@@ -38,7 +38,14 @@ export const COMPILE_TEXT_COLORS = {
   textSubtle: 'rgba(26, 20, 16, 0.7)',
 }
 
-export const TITLE_PAGE_STYLE_KEYS = ['title', 'subtitle', 'author']
+export const TITLE_PAGE_STYLE_KEYS = [
+  'title',
+  'subtitle',
+  'author',
+  'issueWord',
+  'issueNumber',
+  'issueTitle',
+]
 
 export const DEFAULT_COMPILE_TITLE_PAGE_STYLES = {
   title: {
@@ -68,12 +75,60 @@ export const DEFAULT_COMPILE_TITLE_PAGE_STYLES = {
     align: 'center',
     color: COMPILE_TEXT_COLORS.text,
   },
+  issueWord: {
+    font: 'Oswald, sans-serif',
+    fontSizePt: 16,
+    bold: true,
+    italic: false,
+    underline: false,
+    align: 'center',
+    color: COMPILE_TEXT_COLORS.accent,
+  },
+  issueNumber: {
+    font: 'Oswald, sans-serif',
+    fontSizePt: 16,
+    bold: true,
+    italic: false,
+    underline: false,
+    align: 'center',
+    color: COMPILE_TEXT_COLORS.accent,
+  },
+  issueTitle: {
+    font: 'Georgia, serif',
+    fontSizePt: 14,
+    bold: false,
+    italic: true,
+    underline: false,
+    align: 'center',
+    color: COMPILE_TEXT_COLORS.text,
+  },
 }
 
 export const COMPILE_TITLE_PAGE_STYLE_OPTIONS = [
   { optionKey: 'titlePage', styleKey: 'title', label: 'Title', stylesKey: 'titlePageStyles' },
   { optionKey: 'includeSubtitle', styleKey: 'subtitle', label: 'Subtitle', stylesKey: 'titlePageStyles' },
   { optionKey: 'includeAuthor', styleKey: 'author', label: 'Author', stylesKey: 'titlePageStyles' },
+  {
+    optionKey: 'includeChapterWord',
+    styleKey: 'issueWord',
+    label: 'Issue word',
+    stylesKey: 'titlePageStyles',
+    comicOnly: true,
+  },
+  {
+    optionKey: 'includeChapterNumber',
+    styleKey: 'issueNumber',
+    label: 'Issue number',
+    stylesKey: 'titlePageStyles',
+    comicOnly: true,
+  },
+  {
+    optionKey: 'includeChapterTitle',
+    styleKey: 'issueTitle',
+    label: 'Issue title',
+    stylesKey: 'titlePageStyles',
+    comicOnly: true,
+  },
 ]
 
 export const CHAPTER_HEADING_STYLE_KEYS = ['label', 'title']
@@ -220,6 +275,9 @@ export const DEFAULT_COMPILE_OPTIONS = {
     title: { ...DEFAULT_COMPILE_TITLE_PAGE_STYLES.title },
     subtitle: { ...DEFAULT_COMPILE_TITLE_PAGE_STYLES.subtitle },
     author: { ...DEFAULT_COMPILE_TITLE_PAGE_STYLES.author },
+    issueWord: { ...DEFAULT_COMPILE_TITLE_PAGE_STYLES.issueWord },
+    issueNumber: { ...DEFAULT_COMPILE_TITLE_PAGE_STYLES.issueNumber },
+    issueTitle: { ...DEFAULT_COMPILE_TITLE_PAGE_STYLES.issueTitle },
   },
   chapterHeadingStyles: {
     label: { ...DEFAULT_COMPILE_CHAPTER_HEADING_STYLES.label },

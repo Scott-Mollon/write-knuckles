@@ -11,7 +11,8 @@ import { STORY_BOARD_VIEWS } from '../../constants/taleEditor'
 import { useCreateChapter, useCreateScene } from '../../hooks/useSceneMutations'
 import { useCreateBeatLink, useDeleteBeatLink } from '../../hooks/useBeatLinks'
 import { confirmUnlink } from '../../lib/confirmAction'
-import { formatSceneLabel } from '../../lib/scenes'
+import { formatSceneLabel, nextDefaultSceneTitle } from '../../lib/scenes'
+import { getTaleTerminology, isComicTale } from '../../lib/taleTerminology'
 import BeatBoardView from './BeatBoardView'
 import ChapterBoardView from './ChapterBoardView'
 import BeatSheetPicker from '../beats/BeatSheetPicker'
@@ -25,7 +26,11 @@ const StoryBoard = ({
   beatLinks,
   onOpenScene,
 }) => {
-  const [view, setView] = useState(STORY_BOARD_VIEWS.CHAPTER)
+  const comic = isComicTale(tale)
+  const terms = getTaleTerminology(tale)
+  const [view, setView] = useState(
+    comic ? STORY_BOARD_VIEWS.CHAPTER : STORY_BOARD_VIEWS.CHAPTER,
+  )
   const createChapter = useCreateChapter(taleId)
   const createScene = useCreateScene(taleId)
   const createLink = useCreateBeatLink(taleId)
@@ -33,6 +38,7 @@ const StoryBoard = ({
 
   const isAdding = createChapter.isPending || createScene.isPending
   const taleTargetWordCount = tale?.target_word_count || 0
+  const effectiveView = comic ? STORY_BOARD_VIEWS.CHAPTER : view
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -47,7 +53,7 @@ const StoryBoard = ({
     })
     await createScene.mutateAsync({
       chapterId: chapter.id,
-      title: 'Scene 1',
+      title: terms.defaultSceneTitle,
       sortOrder: 0,
     })
   }
@@ -57,7 +63,7 @@ const StoryBoard = ({
     const sortOrder = chapter?.scenes?.length || 0
     await createScene.mutateAsync({
       chapterId,
-      title: `Scene ${sortOrder + 1}`,
+      title: nextDefaultSceneTitle(sortOrder, tale),
       sortOrder,
     })
   }
@@ -67,8 +73,10 @@ const StoryBoard = ({
     if (!link) return
 
     const scene = scenes.find((s) => s.id === sceneId)
-    const sceneLabel = scene ? formatSceneLabel(scene, chapters) : 'this scene'
-    if (!(await confirmUnlink(`scene "${sceneLabel}" from this beat`))) return
+    const sceneLabel = scene
+      ? formatSceneLabel(scene, chapters, tale)
+      : `this ${terms.scene.toLowerCase()}`
+    if (!(await confirmUnlink(`${terms.scene.toLowerCase()} "${sceneLabel}" from this beat`))) return
 
     deleteLink.mutate(link.id)
   }
@@ -101,48 +109,53 @@ const StoryBoard = ({
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex shrink-0 items-center justify-between border-b border-bronze-dark/30 px-6 py-2">
-        <div className="flex gap-1 font-ui text-xs uppercase">
-          {[
-            { key: STORY_BOARD_VIEWS.BEAT, label: 'By Beat' },
-            { key: STORY_BOARD_VIEWS.CHAPTER, label: 'By Chapter' },
-          ].map(({ key, label }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setView(key)}
-              className={`px-3 py-1 ${
-                view === key
-                  ? 'bg-bronze/20 text-bronze'
-                  : 'text-cream/50 hover:text-cream'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        {comic ? (
+          <div className="font-ui text-xs uppercase text-bronze">{terms.byChapterView}</div>
+        ) : (
+          <div className="flex gap-1 font-ui text-xs uppercase">
+            {[
+              { key: STORY_BOARD_VIEWS.BEAT, label: terms.byBeatView },
+              { key: STORY_BOARD_VIEWS.CHAPTER, label: terms.byChapterView },
+            ].map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setView(key)}
+                className={`px-3 py-1 ${
+                  effectiveView === key
+                    ? 'bg-bronze/20 text-bronze'
+                    : 'text-cream/50 hover:text-cream'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
         <button
           type="button"
           onClick={handleAddChapter}
           disabled={isAdding}
           className="font-ui text-xs uppercase text-bronze hover:text-cream disabled:opacity-50"
         >
-          + Chapter
+          {terms.addChapter}
         </button>
       </div>
 
-      {view === STORY_BOARD_VIEWS.BEAT && beats.length > 0 ? (
+      {!comic && effectiveView === STORY_BOARD_VIEWS.BEAT && beats.length > 0 ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleBeatDragEnd}>
           <BeatBoardView
             beats={beats}
             beatLinks={beatLinks}
             scenes={scenes}
             chapters={chapters}
+            tale={tale}
             taleTargetWordCount={taleTargetWordCount}
             onOpen={onOpenScene}
             onUnlink={handleUnlink}
           />
         </DndContext>
-      ) : view === STORY_BOARD_VIEWS.BEAT && beats.length === 0 ? (
+      ) : !comic && effectiveView === STORY_BOARD_VIEWS.BEAT && beats.length === 0 ? (
         <div className="flex flex-1 items-center justify-center p-6">
           <BeatSheetPicker
             taleId={taleId}
@@ -155,6 +168,7 @@ const StoryBoard = ({
       ) : (
         <ChapterBoardView
           taleId={taleId}
+          tale={tale}
           chapters={chapters}
           onOpen={onOpenScene}
           onAddScene={handleAddScene}

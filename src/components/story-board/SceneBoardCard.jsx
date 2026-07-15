@@ -2,9 +2,11 @@ import { SCENE_STATUS_COLORS } from '../../constants/taleEditor'
 import { formatChapterLabel } from '../../lib/chapters'
 import { formatSceneLabel, getChapterForScene } from '../../lib/scenes'
 import ScenePovDot from '../scenes/ScenePovDot'
+
 const SceneBoardCard = ({
   scene,
   chapters,
+  tale = null,
   onOpen,
   dragHandleProps,
   compact = false,
@@ -14,9 +16,10 @@ const SceneBoardCard = ({
   const chapter = getChapterForScene(scene, chapters)
   const sortedChapters = [...chapters].sort((a, b) => a.sort_order - b.sort_order)
   const chapterIndex = sortedChapters.findIndex((ch) => ch.id === scene.chapter_id)
-  const chapterLabel = chapter && chapterIndex >= 0
-    ? formatChapterLabel(chapter, chapterIndex)
-    : ''
+  const chapterLabel =
+    chapter && chapterIndex >= 0
+      ? formatChapterLabel(chapter, chapterIndex, tale)
+      : ''
 
   const borderStyle = {
     borderColor: SCENE_STATUS_COLORS[scene.scene_status],
@@ -47,7 +50,7 @@ const SceneBoardCard = ({
             <div className="min-w-0 flex-1">
               {compact ? (
                 <h3 className="break-words font-ui text-xs font-semibold text-cream">
-                  {formatSceneLabel(scene, chapters)}
+                  {formatSceneLabel(scene, chapters, tale)}
                 </h3>
               ) : (
                 <>

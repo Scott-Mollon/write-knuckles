@@ -5,15 +5,19 @@ import {
   COMPILE_TEXT_FONT_OPTIONS,
   COMPILE_TEXT_FONT_SIZE_OPTIONS,
 } from '../../constants/compile.js'
-import { toHexColorForInput } from '../../lib/compile/compileTextStyle.js'
+import {
+  buildCompileTextStyleReact,
+  toHexColorForInput,
+} from '../../lib/compile/compileTextStyle.js'
 import { sceneFontPreviewFamily } from '../../constants/sceneFonts.js'
 
 const selectClass = 'w-full border border-bronze-dark/50 bg-ink px-2 py-1 text-cream'
 const checkboxClass = 'size-4 shrink-0 accent-bronze'
 
-const CompileTextStyleFields = ({ label, style, onChange }) => {
+const CompileTextStyleFields = ({ label, style, onChange, previewText }) => {
   const update = (patch) => onChange({ ...style, ...patch })
   const colorPickerValue = toHexColorForInput(style.color, COMPILE_TEXT_COLORS.text)
+  const sample = previewText || label
 
   return (
     <div className="ml-6 space-y-3 rounded border border-bronze-dark/20 bg-ink/40 p-3">
@@ -111,6 +115,13 @@ const CompileTextStyleFields = ({ label, style, onChange }) => {
           />
           Underline
         </label>
+      </div>
+
+      <div className="rounded border border-bronze-dark/30 bg-cream px-3 py-3">
+        <p className="mb-1.5 font-ui text-[10px] uppercase tracking-wide text-ink/45">Preview</p>
+        <p className="break-words" style={buildCompileTextStyleReact(style)}>
+          {sample}
+        </p>
       </div>
     </div>
   )

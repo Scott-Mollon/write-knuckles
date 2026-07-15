@@ -1,4 +1,4 @@
-const DEFAULT_CHAPTER_TITLE_RE = /^Chapter \d+$/
+const DEFAULT_CHAPTER_TITLE_RE = /^(Chapter|Issue) \d+$/
 
 export function getChapterCustomTitle(title) {
   const trimmed = title?.trim() || ''
@@ -9,11 +9,15 @@ export function getChapterCustomTitle(title) {
 export function buildChapterHeadingParts(chapterTitle, chapterIndex, options) {
   const customTitle = getChapterCustomTitle(chapterTitle)
   const parts = []
+  const chapterWord =
+    typeof options.chapterWord === 'string' && options.chapterWord.trim()
+      ? options.chapterWord.trim()
+      : 'Chapter'
 
   if (options.includeChapterWord && options.includeChapterNumber) {
-    parts.push({ type: 'prefix', text: `Chapter ${chapterIndex + 1}` })
+    parts.push({ type: 'prefix', text: `${chapterWord} ${chapterIndex + 1}` })
   } else if (options.includeChapterWord) {
-    parts.push({ type: 'word', text: 'Chapter' })
+    parts.push({ type: 'word', text: chapterWord })
   } else if (options.includeChapterNumber) {
     parts.push({ type: 'number', text: String(chapterIndex + 1) })
   }

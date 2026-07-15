@@ -1,5 +1,6 @@
 import { spansToPlainText } from './tiptapToBlocks.js'
 import { formatAuthorLine } from './formatAuthor.js'
+import { buildIssueTitlePageLines, issueTitlePageLinesToText } from './issueTitlePage.js'
 
 function blockToText(block) {
   switch (block.type) {
@@ -18,28 +19,43 @@ function blockToText(block) {
 
 export function exportTxt(model, options) {
   const lines = []
+  const comic = Boolean(model.isComic)
 
-  const titlePageLines = []
+  if (!comic) {
+    const titlePageLines = []
 
-  if (options.titlePage) {
-    titlePageLines.push(model.title)
-  }
-  if (options.includeSubtitle && model.subtitle?.trim()) {
-    titlePageLines.push(model.subtitle.trim())
-  }
-  const authorLine = formatAuthorLine(model.author)
-  if (options.includeAuthor && authorLine) {
-    titlePageLines.push(authorLine)
-  }
+    if (options.titlePage) {
+      titlePageLines.push(model.title)
+    }
+    if (options.includeSubtitle && model.subtitle?.trim()) {
+      titlePageLines.push(model.subtitle.trim())
+    }
+    const authorLine = formatAuthorLine(model.author)
+    if (options.includeAuthor && authorLine) {
+      titlePageLines.push(authorLine)
+    }
 
-  if (titlePageLines.length > 0) {
-    lines.push(...titlePageLines)
-    lines.push('')
-    lines.push('')
+    if (titlePageLines.length > 0) {
+      lines.push(...titlePageLines)
+      lines.push('')
+      lines.push('')
+    }
   }
 
   model.chapters.forEach((chapter) => {
-    if (chapter.heading) {
+    if (comic) {
+      const issueLines = issueTitlePageLinesToText(
+        buildIssueTitlePageLines(model, chapter, options),
+      )
+      if (issueLines.length > 0) {
+        if (lines.length > 0 && lines[lines.length - 1] !== '') {
+          lines.push('')
+        }
+        lines.push(...issueLines)
+        lines.push('')
+        lines.push('')
+      }
+    } else if (chapter.heading) {
       if (lines.length > 0 && lines[lines.length - 1] !== '') {
         lines.push('')
       }

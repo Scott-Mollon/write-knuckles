@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import {
   COMPILE_OPTION_SECTIONS,
   COMPILE_MARGIN_UNITS,
@@ -8,9 +8,11 @@ import {
   COMPILE_PAGE_SIZE_OPTIONS,
   COMPILE_STYLED_OPTION_CONFIGS,
   DEFAULT_COMPILE_CUSTOM_MARGIN_UNIT,
+  DEFAULT_COMPILE_OPTIONS,
   isCompileOptionEnabled,
 } from '../../constants/compile.js'
 import { taleHasCover } from '../../lib/images/resolveImageUrl'
+import { getTaleTerminology, isComicTale } from '../../lib/taleTerminology'
 import { getChapterHeadingStyles } from '../../lib/compile/chapterHeadingStyle.js'
 import { getPageNumberStyle } from '../../lib/compile/pageNumberStyle.js'
 import {
@@ -40,19 +42,87 @@ const STYLE_BY_OPTION = Object.fromEntries(
   COMPILE_STYLED_OPTION_CONFIGS.map((item) => [item.optionKey, item]),
 )
 
-function getChapterLabelFormattingLabel(options) {
+const COMPILE_STYLE_PREVIEW_TEXT = {
+  titlePage: 'The Maltese Falcon',
+  includeSubtitle: 'A Detective Story',
+  includeAuthor: 'Dashiell Hammett',
+  includePageNumbers: '12',
+  includeChapterWord: 'Issue',
+  includeChapterNumber: '1',
+  includeChapterTitle: 'The Opening Gambit',
+}
+
+const COMIC_TITLE_PAGE_EXTRA_OPTIONS = [
+  { key: 'includeChapterWord', label: 'Include word "Issue"' },
+  { key: 'includeChapterNumber', label: 'Include issue number' },
+  { key: 'includeChapterTitle', label: 'Include issue title' },
+]
+
+function getCompileOptionLabel(def, terms) {
+  const chapter = terms.chapterWord
+  const chapterLower = chapter.toLowerCase()
+  switch (def.key) {
+    case 'chapterPageBreak':
+      return `Start each ${chapterLower} on a new page`
+    case 'includeChapterWord':
+      return `Include word "${chapter}"`
+    case 'includeChapterNumber':
+      return `Include ${chapterLower} number`
+    case 'includeChapterTitle':
+      return `Include ${chapterLower} title`
+    case 'chapterTitleOnOwnLine':
+      return `${chapter} title on own line`
+    default:
+      return def.label
+  }
+}
+
+function getCompileSectionLabel(section, terms) {
+  if (section.id === 'chapters') return terms.chapterPlural
+  return section.label
+}
+
+function getChapterLabelFormattingLabel(options, chapterWord = 'Chapter') {
   const parts = []
   if (options.includeChapterWord) parts.push('Word')
   if (options.includeChapterNumber) parts.push('Number')
   if (options.includeChapterTitle && !options.chapterTitleOnOwnLine) parts.push('Title')
 
-  if (parts.length === 0) return 'Chapter'
-  if (parts.length === 1) return `Chapter ${parts[0]}`
-  if (parts.length === 2) return `Chapter ${parts[0]} & ${parts[1]}`
-  return `Chapter ${parts[0]}, ${parts[1]} & ${parts[2]}`
+  if (parts.length === 0) return chapterWord
+  if (parts.length === 1) return `${chapterWord} ${parts[0]}`
+  if (parts.length === 2) return `${chapterWord} ${parts[0]} & ${parts[1]}`
+  return `${chapterWord} ${parts[0]}, ${parts[1]} & ${parts[2]}`
+}
+
+function getVisibleCompileSections(comic) {
+  return COMPILE_OPTION_SECTIONS.flatMap((section) => {
+    if (comic && section.id === 'chapters') return []
+
+    if (comic && section.id === 'document') {
+      return [
+        {
+          ...section,
+          options: section.options.filter((def) => def.key !== 'includePageNumbers'),
+        },
+      ]
+    }
+
+    if (comic && section.id === 'titlePage') {
+      return [
+        {
+          ...section,
+          options: [...section.options, ...COMIC_TITLE_PAGE_EXTRA_OPTIONS],
+        },
+      ]
+    }
+
+    return [section]
+  })
 }
 
 const CompileSettingsPanel = ({ tale, options, pageLayout, onOptionsChange, onPageLayoutChange }) => {
+  const comic = isComicTale(tale)
+  const terms = getTaleTerminology(tale)
   const compileOptionContext = useMemo(
     () => ({ taleHasCover: taleHasCover(tale) }),
     [tale],
@@ -60,8 +130,22 @@ const CompileSettingsPanel = ({ tale, options, pageLayout, onOptionsChange, onPa
   const titlePageStyles = useMemo(() => getTitlePageStyles(options), [options])
   const chapterHeadingStyles = useMemo(() => getChapterHeadingStyles(options), [options])
   const pageNumberStyle = useMemo(() => getPageNumberStyle(options), [options])
+  const visibleSections = useMemo(() => getVisibleCompileSections(comic), [comic])
+
+  useEffect(() => {
+    if (!comic) return
+    onOptionsChange((prev) => {
+      if (prev.chapterPageBreak && !prev.includePageNumbers) return prev
+      return {
+        ...prev,
+        chapterPageBreak: true,
+        includePageNumbers: false,
+      }
+    })
+  }, [comic, onOptionsChange])
 
   const toggleOption = (key) => {
+    if (comic && key === 'chapterPageBreak') return
     onOptionsChange({ ...options, [key]: !options[key] })
   }
 
@@ -128,29 +212,52 @@ const CompileSettingsPanel = ({ tale, options, pageLayout, onOptionsChange, onPa
     })
   }
 
+  const handleResetFormattingDefaults = () => {
+    onOptionsChange({
+      ...options,
+      titlePageStyles: {
+        title: { ...DEFAULT_COMPILE_OPTIONS.titlePageStyles.title },
+        subtitle: { ...DEFAULT_COMPILE_OPTIONS.titlePageStyles.subtitle },
+        author: { ...DEFAULT_COMPILE_OPTIONS.titlePageStyles.author },
+        issueWord: { ...DEFAULT_COMPILE_OPTIONS.titlePageStyles.issueWord },
+        issueNumber: { ...DEFAULT_COMPILE_OPTIONS.titlePageStyles.issueNumber },
+        issueTitle: { ...DEFAULT_COMPILE_OPTIONS.titlePageStyles.issueTitle },
+      },
+      chapterHeadingStyles: {
+        label: { ...DEFAULT_COMPILE_OPTIONS.chapterHeadingStyles.label },
+        title: { ...DEFAULT_COMPILE_OPTIONS.chapterHeadingStyles.title },
+      },
+      pageNumberStyle: { ...DEFAULT_COMPILE_OPTIONS.pageNumberStyle },
+    })
+  }
+
   const showChapterLabelFormatting =
     options.includeChapterWord ||
     options.includeChapterNumber ||
     (options.includeChapterTitle && !options.chapterTitleOnOwnLine)
 
   const renderPlainCompileOption = (def) => {
-    const enabled = isCompileOptionEnabled(def.key, options, compileOptionContext)
+    const forcedPageBreak = comic && def.key === 'chapterPageBreak'
+    const enabled =
+      forcedPageBreak ? false : isCompileOptionEnabled(def.key, options, compileOptionContext)
 
     return (
       <label
         key={def.key}
         className={`flex items-center gap-2 text-sm ${
-          enabled ? 'cursor-pointer text-cream/80' : 'cursor-not-allowed text-cream/40'
+          enabled && !forcedPageBreak
+            ? 'cursor-pointer text-cream/80'
+            : 'cursor-not-allowed text-cream/40'
         }`}
       >
         <input
           type="checkbox"
-          checked={Boolean(options[def.key])}
+          checked={forcedPageBreak ? true : Boolean(options[def.key])}
           onChange={() => toggleOption(def.key)}
-          disabled={!enabled}
+          disabled={!enabled || forcedPageBreak}
           className={checkboxClass}
         />
-        {def.label}
+        {getCompileOptionLabel(def, terms)}
       </label>
     )
   }
@@ -161,7 +268,8 @@ const CompileSettingsPanel = ({ tale, options, pageLayout, onOptionsChange, onPa
 
       {showChapterLabelFormatting && (
         <CompileTextStyleFields
-          label={getChapterLabelFormattingLabel(options)}
+          label={getChapterLabelFormattingLabel(options, terms.chapterWord)}
+          previewText={`${terms.chapterWord} 1`}
           style={chapterHeadingStyles.label}
           onChange={(nextStyle) => updateStyledOption('chapterHeadingStyles', 'label', nextStyle)}
         />
@@ -169,7 +277,8 @@ const CompileSettingsPanel = ({ tale, options, pageLayout, onOptionsChange, onPa
 
       {options.includeChapterTitle && options.chapterTitleOnOwnLine && (
         <CompileTextStyleFields
-          label="Chapter title"
+          label={`${terms.chapterWord} title`}
+          previewText="The Opening Gambit"
           style={chapterHeadingStyles.title}
           onChange={(nextStyle) => updateStyledOption('chapterHeadingStyles', 'title', nextStyle)}
         />
@@ -178,29 +287,34 @@ const CompileSettingsPanel = ({ tale, options, pageLayout, onOptionsChange, onPa
   )
 
   const renderCompileOption = (def) => {
-    const enabled = isCompileOptionEnabled(def.key, options, compileOptionContext)
+    const forcedPageBreak = comic && def.key === 'chapterPageBreak'
+    const enabled =
+      forcedPageBreak ? false : isCompileOptionEnabled(def.key, options, compileOptionContext)
     const styleMeta = STYLE_BY_OPTION[def.key]
 
     return (
       <div key={def.key} className="space-y-2">
         <label
           className={`flex items-center gap-2 text-sm ${
-            enabled ? 'cursor-pointer text-cream/80' : 'cursor-not-allowed text-cream/40'
+            enabled && !forcedPageBreak
+              ? 'cursor-pointer text-cream/80'
+              : 'cursor-not-allowed text-cream/40'
           }`}
         >
           <input
             type="checkbox"
-            checked={Boolean(options[def.key])}
+            checked={forcedPageBreak ? true : Boolean(options[def.key])}
             onChange={() => toggleOption(def.key)}
-            disabled={!enabled}
+            disabled={!enabled || forcedPageBreak}
             className={checkboxClass}
           />
-          {def.label}
+          {getCompileOptionLabel(def, terms)}
         </label>
 
-        {styleMeta && options[def.key] && (
+        {styleMeta && !forcedPageBreak && options[def.key] && (
           <CompileTextStyleFields
             label={styleMeta.label}
+            previewText={COMPILE_STYLE_PREVIEW_TEXT[def.key] || styleMeta.label}
             style={
               styleMeta.flatStyle
                 ? getStylesForKey(styleMeta.stylesKey)
@@ -221,6 +335,20 @@ const CompileSettingsPanel = ({ tale, options, pageLayout, onOptionsChange, onPa
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <p className="text-sm text-cream/60">
+          Content options and page layout for compiling this tale.
+        </p>
+        <button
+          type="button"
+          onClick={handleResetFormattingDefaults}
+          className="shrink-0 border border-bronze-dark/50 px-3 py-1.5 font-ui text-xs uppercase tracking-wide text-cream/70 transition hover:border-bronze hover:text-bronze"
+          title="Restore title, heading, and page-number text styles to defaults"
+        >
+          Reset formatting
+        </button>
+      </div>
+
       <section className={sectionClass}>
         <p className={sectionTitleClass}>Page Layout</p>
         <div className="grid gap-4 sm:grid-cols-3">
@@ -315,9 +443,9 @@ const CompileSettingsPanel = ({ tale, options, pageLayout, onOptionsChange, onPa
         )}
       </section>
 
-      {COMPILE_OPTION_SECTIONS.map((section) => (
+      {visibleSections.map((section) => (
         <section key={section.id} className={sectionClass}>
-          <p className={sectionTitleClass}>{section.label}</p>
+          <p className={sectionTitleClass}>{getCompileSectionLabel(section, terms)}</p>
           <div className="space-y-2">
             {section.id === 'chapters'
               ? renderChapterSection(section)

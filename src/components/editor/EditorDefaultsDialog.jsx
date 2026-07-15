@@ -138,6 +138,33 @@ const EditorDefaultsDialog = ({
           </label>
         </div>
 
+        <div
+          className="mt-5 rounded border px-3 py-4"
+          style={{
+            borderColor: 'var(--editor-border)',
+            backgroundColor: 'var(--editor-bg)',
+          }}
+        >
+          <p
+            className="mb-2 font-ui text-[10px] uppercase tracking-wide"
+            style={{ color: 'var(--editor-text-muted)' }}
+          >
+            Preview
+          </p>
+          <p
+            style={{
+              margin: 0,
+              color: 'var(--editor-text)',
+              fontFamily: sceneFontPreviewFamily(proseFont),
+              fontSize: proseFontSize,
+              textIndent: tabSize,
+              lineHeight: 1.6,
+            }}
+          >
+            The rain fell hard on the alley bricks as Spade pushed through the door.
+          </p>
+        </div>
+
         <div className="mt-6 flex justify-end">
           <button
             type="button"

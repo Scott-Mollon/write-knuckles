@@ -4,7 +4,7 @@ import { getUnlinkedScenes, sortScenesByRackOrder } from '../../lib/scenes'
 import BeatWordBar from '../beats/BeatWordBar'
 import SceneBoardCard from './SceneBoardCard'
 
-const DraggablePoolScene = ({ scene, chapters, onOpen }) => {
+const DraggablePoolScene = ({ scene, chapters, tale, onOpen }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `pool-scene-${scene.id}`,
     data: { type: 'pool-scene', sceneId: scene.id },
@@ -19,6 +19,7 @@ const DraggablePoolScene = ({ scene, chapters, onOpen }) => {
       <SceneBoardCard
         scene={scene}
         chapters={chapters}
+        tale={tale}
         onOpen={onOpen}
         dragHandleProps={{ ...attributes, ...listeners }}
         compact
@@ -27,7 +28,7 @@ const DraggablePoolScene = ({ scene, chapters, onOpen }) => {
   )
 }
 
-const DraggableBeatScene = ({ scene, beatKey, chapters, onOpen, onUnlink }) => {
+const DraggableBeatScene = ({ scene, beatKey, chapters, tale, onOpen, onUnlink }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `beat-${beatKey}-scene-${scene.id}`,
     data: { type: 'beat-scene', sceneId: scene.id, beatKey },
@@ -42,6 +43,7 @@ const DraggableBeatScene = ({ scene, beatKey, chapters, onOpen, onUnlink }) => {
       <SceneBoardCard
         scene={scene}
         chapters={chapters}
+        tale={tale}
         onOpen={onOpen}
         dragHandleProps={{ ...attributes, ...listeners }}
         showChapterLabel
@@ -58,6 +60,7 @@ const BeatColumn = ({
   beatLinks,
   scenes,
   chapters,
+  tale,
   taleTargetWordCount,
   onOpen,
   onUnlink,
@@ -101,6 +104,7 @@ const BeatColumn = ({
             scene={scene}
             beatKey={beat.key}
             chapters={chapters}
+            tale={tale}
             onOpen={onOpen}
             onUnlink={() => onUnlink(beat.key, scene.id)}
           />
@@ -113,7 +117,7 @@ const BeatColumn = ({
   )
 }
 
-const RackPool = ({ chapters, beatLinks, onOpen }) => {
+const RackPool = ({ chapters, beatLinks, tale, onOpen }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: 'board-pool',
     data: { type: 'pool' },
@@ -137,7 +141,13 @@ const RackPool = ({ chapters, beatLinks, onOpen }) => {
       ) : (
         <div className="flex gap-3 overflow-x-auto pb-1">
           {unlinked.map((scene) => (
-            <DraggablePoolScene key={scene.id} scene={scene} chapters={chapters} onOpen={onOpen} />
+            <DraggablePoolScene
+              key={scene.id}
+              scene={scene}
+              chapters={chapters}
+              tale={tale}
+              onOpen={onOpen}
+            />
           ))}
         </div>
       )}
@@ -150,12 +160,13 @@ const BeatBoardView = ({
   beatLinks,
   scenes,
   chapters,
+  tale,
   taleTargetWordCount,
   onOpen,
   onUnlink,
 }) => (
   <div className="flex flex-1 flex-col overflow-hidden">
-    <RackPool chapters={chapters} beatLinks={beatLinks} onOpen={onOpen} />
+    <RackPool chapters={chapters} beatLinks={beatLinks} tale={tale} onOpen={onOpen} />
     <div className="flex-1 overflow-x-auto overflow-y-auto p-6">
       <div className="flex items-start gap-4">
         {beats.map((beat, beatIndex) => (
@@ -167,6 +178,7 @@ const BeatBoardView = ({
             beatLinks={beatLinks}
             scenes={scenes}
             chapters={chapters}
+            tale={tale}
             taleTargetWordCount={taleTargetWordCount}
             onOpen={onOpen}
             onUnlink={onUnlink}

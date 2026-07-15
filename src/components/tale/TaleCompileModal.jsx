@@ -9,12 +9,14 @@ import { resolveCompileImages } from '../../lib/compile/resolveCompileImages.js'
 import { normalizePageLayout } from '../../lib/compile/pageLayout.js'
 import { useTale } from '../../hooks/useTales'
 import { formatChapterLabel } from '../../lib/chapters'
+import { getTaleTerminology } from '../../lib/taleTerminology'
 import CompileViewer from './CompileViewer.jsx'
 import TaleSettingsModal from './TaleSettingsModal.jsx'
 
 const checkboxClass = 'size-4 shrink-0 accent-bronze'
 
-const CompileScopePicker = ({ chapters, scope, onChange }) => {
+const CompileScopePicker = ({ chapters, scope, onChange, tale }) => {
+  const terms = getTaleTerminology(tale)
   const sortedChapters = useMemo(
     () => [...chapters].sort((a, b) => a.sort_order - b.sort_order),
     [chapters],
@@ -69,11 +71,16 @@ const CompileScopePicker = ({ chapters, scope, onChange }) => {
 
   const selectAll = () => onChange(buildDefaultScope(chapters))
   const clearAll = () => onChange({ chapterIds: [], sceneIds: [] })
+  const selectedCount = countScopedScenes(scope, chapters)
+  const selectedUnit =
+    selectedCount === 1 ? terms.scene.toLowerCase() : terms.scenePlural.toLowerCase()
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <p className="font-ui text-xs uppercase text-cream/80">Chapters &amp; scenes</p>
+        <p className="font-ui text-xs uppercase text-cream/80">
+          {terms.chapterPlural} &amp; {terms.scenePlural.toLowerCase()}
+        </p>
         <div className="flex gap-2 text-xs">
           <button type="button" onClick={selectAll} className="text-bronze hover:underline">
             Select all
@@ -97,7 +104,7 @@ const CompileScopePicker = ({ chapters, scope, onChange }) => {
                 onChange={() => toggleChapter(chapter)}
                 className={checkboxClass}
               />
-              <span>{formatChapterLabel(chapter, chapterIndex)}</span>
+              <span>{formatChapterLabel(chapter, chapterIndex, tale)}</span>
             </label>
             <div className="ml-6 space-y-1">
               {(chapter.scenes || [])
@@ -118,7 +125,7 @@ const CompileScopePicker = ({ chapters, scope, onChange }) => {
         ))}
       </div>
       <p className="text-xs text-cream/50">
-        {countScopedScenes(scope, chapters)} scene{countScopedScenes(scope, chapters) === 1 ? '' : 's'} selected
+        {selectedCount} {selectedUnit} selected
       </p>
     </div>
   )
@@ -127,6 +134,7 @@ const CompileScopePicker = ({ chapters, scope, onChange }) => {
 const TaleCompileModal = ({ tale, taleId, chapters, onClose, onBeforeCompile }) => {
   const { data: taleRecord } = useTale(taleId)
   const taleForCompile = taleRecord || tale
+  const terms = getTaleTerminology(taleForCompile)
 
   const [scope, setScope] = useState(() => buildDefaultScope(chapters))
   const [error, setError] = useState(null)
@@ -153,7 +161,9 @@ const TaleCompileModal = ({ tale, taleId, chapters, onClose, onBeforeCompile }) 
       }
 
       if (activeScope.chapterIds.length === 0 || activeScope.sceneIds.length === 0) {
-        setError('Select at least one chapter and one scene to compile.')
+        setError(
+          `Select at least one ${terms.chapter.toLowerCase()} and one ${terms.scene.toLowerCase()} to compile.`,
+        )
         return null
       }
 
@@ -186,7 +196,7 @@ const TaleCompileModal = ({ tale, taleId, chapters, onClose, onBeforeCompile }) 
         scope: activeScope,
       }
     },
-    [taleForCompile, taleId, chapters, scope, onBeforeCompile],
+    [taleForCompile, taleId, chapters, scope, onBeforeCompile, terms.chapter, terms.scene],
   )
 
   const handleCompile = async () => {
@@ -279,7 +289,8 @@ const TaleCompileModal = ({ tale, taleId, chapters, onClose, onBeforeCompile }) 
               Compile Tale
             </h2>
             <p className="mt-1 text-sm text-cream/60">
-              {taleForCompile?.title} — choose scenes, then build a paginated preview.
+              {taleForCompile?.title} — choose {terms.scenePlural.toLowerCase()}, then build a
+              paginated preview.
             </p>
           </div>
           <button
@@ -294,7 +305,12 @@ const TaleCompileModal = ({ tale, taleId, chapters, onClose, onBeforeCompile }) 
 
         <div className="space-y-6">
           <section className="space-y-4 rounded border border-bronze-dark/30 p-4">
-            <CompileScopePicker chapters={chapters} scope={scope} onChange={setScope} />
+            <CompileScopePicker
+              chapters={chapters}
+              scope={scope}
+              onChange={setScope}
+              tale={taleForCompile}
+            />
 
             <p className="text-xs text-cream/45">
               Content and page layout options are in Tale Settings → Compile Options (or Compile

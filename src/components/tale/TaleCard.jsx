@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom'
 import { useDeleteTale } from '../../hooks/useTales'
 import { confirmDelete } from '../../lib/confirmAction'
+import { isComicTale } from '../../lib/taleTerminology'
 import TaleCoverThumbnail from './TaleCoverThumbnail'
 
 const TaleCard = ({ tale, onOpenSettings, onOpenCompile }) => {
   const deleteTale = useDeleteTale()
+  const comic = isComicTale(tale)
 
   const progress = tale.target_word_count
     ? Math.min(100, Math.round((tale.word_count / tale.target_word_count) * 100))
@@ -30,14 +32,16 @@ const TaleCard = ({ tale, onOpenSettings, onOpenCompile }) => {
         <Link to={`/tale/${tale.id}`} className="min-w-0 flex-1">
           <h2 className="font-ui text-xl text-cream hover:text-bronze">{tale.title}</h2>
           {tale.genre && <p className="text-sm text-cream/50">{tale.genre}</p>}
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <div className="h-2 min-w-[8rem] max-w-xs flex-1 bg-ink">
-              <div className="h-full bg-bronze transition-all" style={{ width: `${progress}%` }} />
+          {!comic && (
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <div className="h-2 min-w-[8rem] max-w-xs flex-1 bg-ink">
+                <div className="h-full bg-bronze transition-all" style={{ width: `${progress}%` }} />
+              </div>
+              <span className="text-sm text-cream/60">
+                {tale.word_count.toLocaleString()} / {tale.target_word_count?.toLocaleString()} words
+              </span>
             </div>
-            <span className="text-sm text-cream/60">
-              {tale.word_count.toLocaleString()} / {tale.target_word_count?.toLocaleString()} words
-            </span>
-          </div>
+          )}
         </Link>
 
         <div className="flex shrink-0 flex-col items-end gap-2 self-start">

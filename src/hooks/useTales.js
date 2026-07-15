@@ -4,6 +4,8 @@ import { canCreateTale, FREE_TALE_LIMIT_MESSAGE } from '../constants/account'
 import { useAuth } from '../contexts/AuthContext'
 import { deleteTaleImage } from '../lib/images/storage'
 import { serializeCompilePreferencesForDb } from '../lib/compile/compilePreferences.js'
+import { TALE_TYPES } from '../constants/taleTypes'
+import { getTaleTerminology, isComicTale } from '../lib/taleTerminology'
 
 export const useTales = () => {
   const { user } = useAuth()
@@ -74,7 +76,15 @@ export const useCreateTale = () => {
   const { user, plan } = useAuth()
 
   return useMutation({
-    mutationFn: async ({ title, author, genre, targetWordCount, beatTemplateId, beatStructure }) => {
+    mutationFn: async ({
+      title,
+      author,
+      genre,
+      targetWordCount,
+      beatTemplateId,
+      beatStructure,
+      taleType = TALE_TYPES.PROSE,
+    }) => {
       const { count, error: countError } = await writeDb
         .from('tales')
         .select('id', { count: 'exact', head: true })
@@ -87,28 +97,39 @@ export const useCreateTale = () => {
         throw new Error(FREE_TALE_LIMIT_MESSAGE)
       }
 
+      const comic = isComicTale(taleType)
+      const terms = getTaleTerminology(taleType)
+
+      const taleInsert = {
+        user_id: user.id,
+        title,
+        author: author?.trim() || null,
+        genre,
+        tale_type: comic ? TALE_TYPES.COMIC : TALE_TYPES.PROSE,
+        beat_template_id: comic ? null : beatTemplateId,
+      }
+
+      if (!comic && targetWordCount != null) {
+        taleInsert.target_word_count = targetWordCount
+      }
+
       const { data: tale, error: taleError } = await writeDb
         .from('tales')
-        .insert({
-          user_id: user.id,
-          title,
-          author: author?.trim() || null,
-          genre,
-          target_word_count: targetWordCount,
-          beat_template_id: beatTemplateId,
-        })
+        .insert(taleInsert)
         .select()
         .single()
 
       if (taleError) throw taleError
 
-      const { error: beatsError } = await writeDb.from('tale_beats').insert({
-        tale_id: tale.id,
-        beat_template_id: beatTemplateId,
-        beats: beatStructure,
-      })
+      if (!comic) {
+        const { error: beatsError } = await writeDb.from('tale_beats').insert({
+          tale_id: tale.id,
+          beat_template_id: beatTemplateId,
+          beats: beatStructure,
+        })
 
-      if (beatsError) throw beatsError
+        if (beatsError) throw beatsError
+      }
 
       const { data: chapter, error: chapterError } = await writeDb
         .from('chapters')
@@ -127,7 +148,7 @@ export const useCreateTale = () => {
         chapter_id: chapter.id,
         tale_id: tale.id,
         user_id: user.id,
-        title: 'Scene 1',
+        title: terms.defaultSceneTitle,
         sort_order: 0,
         scene_status: 'Raw',
       })
@@ -175,16 +196,20 @@ export const useUpdateTale = (taleId) => {
 
   return useMutation({
     mutationFn: async ({ title, author, subtitle, genre, targetWordCount }) => {
+      const patch = {
+        title: title.trim(),
+        author: author?.trim() || null,
+        subtitle: subtitle?.trim() || null,
+        genre: genre?.trim() || null,
+        updated_at: new Date().toISOString(),
+      }
+      if (targetWordCount != null) {
+        patch.target_word_count = Number(targetWordCount)
+      }
+
       const { data, error } = await writeDb
         .from('tales')
-        .update({
-          title: title.trim(),
-          author: author?.trim() || null,
-          subtitle: subtitle?.trim() || null,
-          genre: genre?.trim() || null,
-          target_word_count: Number(targetWordCount),
-          updated_at: new Date().toISOString(),
-        })
+        .update(patch)
         .eq('id', taleId)
         .select()
         .single()
@@ -224,6 +249,31 @@ export const useUpdateTaleCompilePreferences = (taleId) => {
         .from('tales')
         .update({
           compile_preferences,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', taleId)
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['tale', taleId], data)
+      queryClient.invalidateQueries({ queryKey: ['tales'] })
+    },
+  })
+}
+
+export const useUpdateTaleScriptStylePreferences = (taleId) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (script_style_preferences) => {
+      const { data, error } = await writeDb
+        .from('tales')
+        .update({
+          script_style_preferences,
           updated_at: new Date().toISOString(),
         })
         .eq('id', taleId)

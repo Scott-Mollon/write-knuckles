@@ -6,6 +6,7 @@ import { useTaleReference } from '../hooks/useTaleReference'
 import { useAutosave } from '../hooks/useAutosave'
 import { countLinkedBeats } from '../lib/beats'
 import { TALE_MODES } from '../constants/taleEditor'
+import { isComicTale } from '../lib/taleTerminology'
 import Rack from '../components/rack/Rack'
 import SceneEditor from '../components/editor/SceneEditor'
 import Inspector from '../components/inspector/Inspector'
@@ -65,6 +66,12 @@ const TaleEditorPage = () => {
     setLiveWordCount(activeScene?.word_count ?? 0)
   }, [activeScene?.id, activeScene?.word_count])
 
+  useEffect(() => {
+    if (isComicTale(tale) && mode === TALE_MODES.BEAT_SHEET) {
+      setMode(TALE_MODES.WRITE)
+    }
+  }, [tale, mode])
+
   const handleSelectScene = useCallback(
     async (sceneId) => {
       if (sceneId === activeSceneId) return
@@ -104,6 +111,11 @@ const TaleEditorPage = () => {
   const referenceImages = reference?.referenceImages || []
   const characterLinks = reference?.characterLinks || []
   const locationLinks = reference?.locationLinks || []
+  const comic = isComicTale(tale)
+
+  const modeTabs = comic
+    ? MODE_TABS.filter((tab) => tab.key !== TALE_MODES.BEAT_SHEET)
+    : MODE_TABS
 
   return (
     <div className="flex h-[calc(100vh-57px)] flex-col">
@@ -127,14 +139,14 @@ const TaleEditorPage = () => {
           >
             Compile
           </button>
-          {beatProgress.total > 0 && (
+          {beatProgress.total > 0 && !comic && (
             <span className="hidden text-xs text-cream/40 sm:inline">
               Beats: {beatProgress.linked}/{beatProgress.total} linked
             </span>
           )}
         </div>
         <div className="flex gap-0.5">
-          {MODE_TABS.map((tab) => {
+          {modeTabs.map((tab) => {
             const ModeIcon = tab.Icon
             return (
               <button
@@ -161,6 +173,7 @@ const TaleEditorPage = () => {
         <div className="flex flex-1 overflow-hidden">
           <Rack
             taleId={taleId}
+            tale={tale}
             chapters={structure?.chapters || []}
             activeSceneId={activeScene?.id}
             onSelectScene={handleSelectScene}
@@ -171,6 +184,7 @@ const TaleEditorPage = () => {
             <SceneEditor
               key={activeScene?.id}
               scene={activeScene}
+              tale={tale}
               taleId={taleId}
               onWordCountChange={setLiveWordCount}
               autosave={autosave}
@@ -179,6 +193,7 @@ const TaleEditorPage = () => {
 
           <Inspector
             scene={activeScene}
+            tale={tale}
             taleId={taleId}
             liveWordCount={liveWordCount}
             beats={beats}
@@ -203,7 +218,7 @@ const TaleEditorPage = () => {
         />
       )}
 
-      {mode === TALE_MODES.BEAT_SHEET && (
+      {mode === TALE_MODES.BEAT_SHEET && !comic && (
         <BeatSheet
           beats={beats}
           beatLinks={beatLinks}
