@@ -208,6 +208,8 @@ input, select, textarea {
 
 .scene-editor-prose {
   color: var(--editor-text);
+  font-family: var(--editor-prose-font, "Times New Roman", Times, serif);
+  font-size: var(--editor-prose-size, 16px);
 }
 
 .scene-editor-prose p {
@@ -220,7 +222,7 @@ input, select, textarea {
 
 .scene-editor-prose p.dropcap::first-letter {
   float: left;
-  font-family: Oswald, sans-serif;
+  font-family: var(--editor-prose-font, "Times New Roman", Times, serif);
   font-size: 3.5em;
   font-weight: 600;
   line-height: 0.75;

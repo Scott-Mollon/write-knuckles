@@ -9,10 +9,12 @@ import { pickRandomScenePlaceholder } from '../../constants/scenePlaceholders'
 import { SAVE_STATES } from '../../hooks/useAutosave'
 import { useEditorTheme } from '../../hooks/useEditorTheme'
 import { useEditorTabSize } from '../../hooks/useEditorTabSize'
+import { useEditorProseDefaults, DEFAULT_PROSE_FONT_SIZE } from '../../hooks/useEditorProseDefaults'
 import { useUpdateSceneMeta } from '../../hooks/useSceneMutations'
 import { useTaleImageUpload } from '../../hooks/useTaleImageUpload'
 import { validateImageFile } from '../../lib/images/storage'
 import EditorToolbar from './EditorToolbar'
+import EditorDefaultsDialog from './EditorDefaultsDialog'
 import ImageBubbleMenu from './ImageBubbleMenu'
 import HarperSuggestionPopover from './HarperSuggestionPopover'
 import { useHarperProofread } from '../../hooks/useHarperProofread'
@@ -27,11 +29,13 @@ const SAVE_LABELS = {
 
 const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
   const { theme, toggleTheme, isLight } = useEditorTheme()
-  const { tabSize, setTabSize, options: tabSizeOptions } = useEditorTabSize()
+  const { tabSize, setTabSize } = useEditorTabSize()
+  const { proseFont, setProseFont, proseFontSize, setProseFontSize } = useEditorProseDefaults()
   const updateMeta = useUpdateSceneMeta(taleId)
   const uploadImage = useTaleImageUpload()
   const [imageError, setImageError] = useState(null)
   const [title, setTitle] = useState(scene?.title || '')
+  const [defaultsOpen, setDefaultsOpen] = useState(false)
 
   useEffect(() => {
     setTitle(scene?.title || '')
@@ -65,7 +69,7 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
     content: normalizeContent(scene?.content),
     editorProps: {
       attributes: {
-        class: 'scene-editor-prose focus:outline-none min-h-[60vh] font-prose leading-relaxed',
+        class: 'scene-editor-prose focus:outline-none min-h-[60vh] leading-relaxed',
         spellcheck: 'false',
       },
     },
@@ -192,7 +196,11 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
     <div
       className="editor-surface flex flex-1 flex-col overflow-hidden"
       data-editor-theme={theme}
-      style={{ '--editor-tab-size': tabSize }}
+      style={{
+        '--editor-tab-size': tabSize,
+        '--editor-prose-font': proseFont,
+        '--editor-prose-size': proseFontSize || DEFAULT_PROSE_FONT_SIZE,
+      }}
     >
       <div className="flex items-center justify-between gap-4 border-b px-6 py-3" style={{ borderColor: 'var(--editor-border)' }}>
         <input
@@ -227,9 +235,8 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
         editor={editor}
         isLight={isLight}
         onToggleTheme={toggleTheme}
-        tabSize={tabSize}
-        tabSizeOptions={tabSizeOptions}
-        onTabSizeChange={setTabSize}
+        proseFont={proseFont}
+        onOpenDefaults={() => setDefaultsOpen(true)}
         taleId={taleId}
         sceneId={scene.id}
         onInsertSceneImage={handleInsertSceneImage}
@@ -239,6 +246,18 @@ const SceneEditor = ({ scene, taleId, onWordCountChange, autosave }) => {
         proofreadIssueCount={proofreadIssueCount}
         onToggleProofread={toggleProofread}
       />
+
+      {defaultsOpen && (
+        <EditorDefaultsDialog
+          onClose={() => setDefaultsOpen(false)}
+          proseFont={proseFont}
+          onProseFontChange={setProseFont}
+          proseFontSize={proseFontSize}
+          onProseFontSizeChange={setProseFontSize}
+          tabSize={tabSize}
+          onTabSizeChange={setTabSize}
+        />
+      )}
 
       {imageError && (
         <p className="border-b border-bronze-dark/30 bg-error/10 px-6 py-2 text-sm text-error" role="alert">

@@ -6,6 +6,7 @@ import {
   SCENE_FONT_OPTIONS,
   sceneFontPreviewFamily,
 } from '../../constants/sceneFonts'
+import { PROSE_FONT_SIZE_OPTIONS, DEFAULT_PROSE_FONT_SIZE } from '../../hooks/useEditorProseDefaults'
 
 const ToolbarButton = ({ onClick, active, disabled, title, children, className = '' }) => (
   <button
@@ -162,19 +163,23 @@ const AlignRightIcon = () => (
   </svg>
 )
 
-const FONT_SIZE_OPTIONS = [
-  { label: 'Default', value: '' },
-  { label: '10', value: '10px' },
-  { label: '11', value: '11px' },
-  { label: '12', value: '12px' },
-  { label: '14', value: '14px' },
-  { label: '16', value: '16px' },
-  { label: '18', value: '18px' },
-  { label: '20', value: '20px' },
-  { label: '24', value: '24px' },
-  { label: '28', value: '28px' },
-  { label: '32', value: '32px' },
-]
+const DefaultsIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+    <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
+  </svg>
+)
 
 const DEFAULT_TEXT_COLOR = {
   dark: '#e8dcc8',
@@ -205,9 +210,8 @@ const EditorToolbar = ({
   editor,
   isLight,
   onToggleTheme,
-  tabSize,
-  tabSizeOptions = [],
-  onTabSizeChange,
+  proseFont,
+  onOpenDefaults,
   taleId,
   sceneId,
   onInsertSceneImage,
@@ -249,7 +253,7 @@ const EditorToolbar = ({
 
   const handleFontChange = (event) => {
     const { value } = event.target
-    if (!value) {
+    if (!value || value === proseFont) {
       editor.chain().focus().unsetFontFamily().run()
       return
     }
@@ -258,10 +262,6 @@ const EditorToolbar = ({
 
   const handleFontSizeChange = (event) => {
     const { value } = event.target
-    if (!value) {
-      editor.chain().focus().unsetFontSize().run()
-      return
-    }
     editor.chain().focus().setFontSize(value).run()
   }
 
@@ -274,10 +274,7 @@ const EditorToolbar = ({
     editor.chain().focus().setHighlight({ color }).run()
   }
 
-  const handleTabSizeChange = (event) => {
-    onTabSizeChange?.(event.target.value)
-    editor.chain().focus().run()
-  }
+  const displayedFont = currentFont || proseFont
 
   return (
     <div className="editor-toolbar flex items-center border-b px-4 py-2">
@@ -285,7 +282,7 @@ const EditorToolbar = ({
       <select
         aria-label="Font"
         title="Font"
-        value={currentFont}
+        value={displayedFont}
         onChange={handleFontChange}
         className="editor-toolbar-select rounded px-2 py-1 text-sm"
       >
@@ -307,11 +304,11 @@ const EditorToolbar = ({
       <select
         aria-label="Font size"
         title="Font size"
-        value={currentFontSize}
+        value={currentFontSize || DEFAULT_PROSE_FONT_SIZE}
         onChange={handleFontSizeChange}
         className="editor-toolbar-select editor-toolbar-font-size rounded px-2 py-1 text-sm"
       >
-        {FONT_SIZE_OPTIONS.map((size) => (
+        {PROSE_FONT_SIZE_OPTIONS.map((size) => (
           <option key={size.label} value={size.value}>
             {size.label}
           </option>
@@ -412,20 +409,6 @@ const EditorToolbar = ({
         <AlignRightIcon />
       </ToolbarButton>
 
-      <select
-        aria-label="Tab size"
-        title="Tab size"
-        value={tabSize}
-        onChange={handleTabSizeChange}
-        className="editor-toolbar-select editor-toolbar-tab-size rounded px-2 py-1 text-sm"
-      >
-        {tabSizeOptions.map((option) => (
-          <option key={option.value} value={option.value}>
-            Tab {option.label}
-          </option>
-        ))}
-      </select>
-
       <span className="editor-toolbar-sep mx-1">|</span>
 
       <ToolbarButton
@@ -481,6 +464,13 @@ const EditorToolbar = ({
       </div>
 
       <div className="ml-auto flex shrink-0 items-center gap-1">
+        <ToolbarButton
+          onClick={onOpenDefaults}
+          title="Writing defaults"
+        >
+          <DefaultsIcon />
+        </ToolbarButton>
+
         <ToolbarButton
           onClick={onToggleProofread}
           active={proofreadEnabled}

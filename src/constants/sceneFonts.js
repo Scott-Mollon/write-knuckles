@@ -15,6 +15,8 @@ export const SCENE_GOOGLE_FONTS_CSS_URL =
   '&family=Oswald:wght@400;500;600' +
   '&display=swap'
 
+export const DEFAULT_SCENE_PROSE_FONT = '"Times New Roman", Times, serif'
+
 export const SCENE_FONT_GROUPS = [
   { id: 'web', label: 'Web fonts' },
   { id: 'serif', label: 'System serif' },
@@ -23,7 +25,7 @@ export const SCENE_FONT_GROUPS = [
 ]
 
 export const SCENE_FONT_OPTIONS = [
-  { label: 'Courier Prime', value: '', group: 'web' },
+  { label: 'Courier Prime', value: '"Courier Prime", monospace', group: 'web' },
   { label: 'Cormorant Garamond', value: '"Cormorant Garamond", Garamond, serif', group: 'web' },
   { label: 'Crimson Pro', value: '"Crimson Pro", Georgia, serif', group: 'web' },
   { label: 'EB Garamond', value: '"EB Garamond", Garamond, serif', group: 'web' },
@@ -40,7 +42,7 @@ export const SCENE_FONT_OPTIONS = [
   { label: 'Garamond', value: 'Garamond, "Palatino Linotype", Palatino, serif', group: 'serif' },
   { label: 'Georgia', value: 'Georgia, serif', group: 'serif' },
   { label: 'Palatino', value: 'Palatino, "Palatino Linotype", "Book Antiqua", serif', group: 'serif' },
-  { label: 'Times New Roman', value: '"Times New Roman", Times, serif', group: 'serif' },
+  { label: 'Times New Roman', value: DEFAULT_SCENE_PROSE_FONT, group: 'serif' },
   { label: 'Arial', value: 'Arial, Helvetica, sans-serif', group: 'sans' },
   { label: 'Segoe UI', value: '"Segoe UI", Tahoma, Geneva, sans-serif', group: 'sans' },
   { label: 'Tahoma', value: 'Tahoma, Geneva, sans-serif', group: 'sans' },
@@ -50,6 +52,10 @@ export const SCENE_FONT_OPTIONS = [
   { label: 'Courier New', value: '"Courier New", Courier, monospace', group: 'mono' },
 ]
 
-export function sceneFontPreviewFamily(value) {
-  return value || '"Courier Prime", monospace'
+export function sceneFontPreviewFamily(value, fallback = DEFAULT_SCENE_PROSE_FONT) {
+  return value || fallback
+}
+
+export function isValidSceneFontFamily(value) {
+  return SCENE_FONT_OPTIONS.some((font) => font.value === value)
 }
