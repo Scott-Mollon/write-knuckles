@@ -160,9 +160,11 @@ const PrivacyPage = () => {
           <div className="privacy-page__prose">
             <p>
               Write Knuckles uses cookies and browser storage to keep you signed in and to remember your
-              session. In production, authentication cookies may be set for our parent domain so sign-in works
-              across Write Knuckles and Bronze Knuckles Magazine. You can clear cookies and site data in your
-              browser settings, though you will need to sign in again afterward.
+              session. In production, authentication cookies may be set for our parent domain so sign-in
+              works across Write Knuckles and Bronze Knuckles Magazine. We do not use analytics or advertising
+              cookies. Clicking OK on the cookie notice stores your acknowledgement of this policy. You can
+              clear cookies and site data in your browser settings, though you will need to sign in again
+              afterward.
             </p>
           </div>
         </section>

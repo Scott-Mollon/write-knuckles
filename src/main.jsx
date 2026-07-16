@@ -111,12 +111,16 @@ const App = () => (
     </Router>
     <CookieConsent
       location="bottom"
-      buttonText="I Accept"
+      buttonText="OK"
       expires={365}
       buttonStyle={{ backgroundColor: 'var(--main-color)', marginRight: '100px' }}
     >
-      Write Knuckles only uses essential cookies for the website. Non-essential cookies are not used for
-      analytics or any other purpose.
+      We use essential cookies to keep you signed in. In production, session cookies may be shared across
+      Write Knuckles and Bronze Knuckles Magazine on our parent domain. We do not use analytics or
+      advertising cookies.{' '}
+      <a href="/privacy" className="cookie-consent__link">
+        Privacy policy
+      </a>
     </CookieConsent>
   </QueryClientProvider>
 )

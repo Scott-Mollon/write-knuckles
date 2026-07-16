@@ -635,3 +635,12 @@ input, select, textarea {
   font-size: 0.72rem;
   color: #d06060;
 }
+
+.cookie-consent__link {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.cookie-consent__link:hover {
+  opacity: 0.85;
+}
