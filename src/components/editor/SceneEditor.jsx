@@ -105,7 +105,7 @@ const SceneEditor = ({ scene, tale, taleId, onWordCountChange, autosave }) => {
     applySuggestion,
     ignoreLint,
     addToDictionary,
-  } = useHarperProofread(editor, scene?.id)
+  } = useHarperProofread(editor, scene?.id, taleId)
 
   useEffect(() => {
     if (!editor || !scene?.id) return

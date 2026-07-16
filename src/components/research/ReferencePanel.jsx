@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { REFERENCE_TABS } from '../../constants/taleEditor'
 import { buildReferenceImageMeta } from '../../lib/images/referenceImages'
 import CharacterList from './CharacterList'
+import DictionaryList from './DictionaryList'
 import LocationList from './LocationList'
 import ResearchList from './ResearchList'
 
@@ -9,6 +10,7 @@ const TABS = [
   { key: REFERENCE_TABS.CHARACTERS, label: 'Characters' },
   { key: REFERENCE_TABS.LOCATIONS, label: 'Locations' },
   { key: REFERENCE_TABS.RESEARCH, label: 'Research' },
+  { key: REFERENCE_TABS.DICTIONARY, label: 'Dictionary' },
 ]
 
 const ReferencePanel = ({
@@ -50,6 +52,9 @@ const ReferencePanel = ({
         )}
         {tab === REFERENCE_TABS.RESEARCH && (
           <ResearchList taleId={taleId} researchItems={researchItems} imageMeta={imageMeta} />
+        )}
+        {tab === REFERENCE_TABS.DICTIONARY && (
+          <DictionaryList taleId={taleId} />
         )}
       </div>
     </div>

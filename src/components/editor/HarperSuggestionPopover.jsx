@@ -149,7 +149,7 @@ const HarperSuggestionPopover = ({
         </button>
         {item.isSpelling ? (
           <button type="button" onClick={onAddToDictionary}>
-            Add to dictionary
+            Add to tale dictionary
           </button>
         ) : null}
       </div>

@@ -1,18 +1,15 @@
-import { supabase, writeDb } from '../../clients/supabase'
+import { writeDb } from '../../clients/supabase'
 import { normalizeHarperWord } from './normalizeWord'
 
 export { normalizeHarperWord, harperWordsEqual, isWordInHarperDictionary } from './normalizeWord'
 
-export async function fetchHarperDictionary() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user?.id) return []
+export async function fetchHarperDictionary(taleId) {
+  if (!taleId) return []
 
   const { data, error } = await writeDb
     .from('harper_dictionaries')
     .select('words')
-    .eq('user_id', user.id)
+    .eq('tale_id', taleId)
     .maybeSingle()
 
   if (error) throw error
@@ -21,7 +18,11 @@ export async function fetchHarperDictionary() {
     : []
 }
 
-export async function saveHarperDictionary(words) {
+export async function saveHarperDictionary(taleId, words) {
+  if (!taleId) {
+    throw new Error('taleId is required to save dictionary')
+  }
+
   const unique = [
     ...new Set(
       (words || [])
@@ -31,6 +32,7 @@ export async function saveHarperDictionary(words) {
   ].sort((a, b) => a.localeCompare(b))
 
   const { data, error } = await writeDb.rpc('set_harper_dictionary', {
+    p_tale_id: taleId,
     words: unique,
   })
 

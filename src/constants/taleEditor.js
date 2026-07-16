@@ -32,6 +32,7 @@ export const REFERENCE_TABS = {
   CHARACTERS: 'characters',
   LOCATIONS: 'locations',
   RESEARCH: 'research',
+  DICTIONARY: 'dictionary',
 }
 
 export const STORY_BOARD_VIEWS = {

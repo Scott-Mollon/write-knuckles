@@ -17,7 +17,10 @@ export async function getHarperLinter() {
       await linter.setup()
       // Materialize defaults into the active rule set, then apply them.
       const defaults = await linter.getDefaultLintConfig()
-      await linter.setLintConfig(defaults)
+      await linter.setLintConfig({
+        ...defaults,
+        AvoidCurses: false,
+      })
       return linter
     })().catch((err) => {
       linterPromise = null

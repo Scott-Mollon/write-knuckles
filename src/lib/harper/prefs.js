@@ -25,6 +25,30 @@ export function readIgnoredLintsJson() {
   }
 }
 
+export function countIgnoredLintsJson(json) {
+  const source = typeof json === 'string' ? json.trim() : ''
+  if (!source) return 0
+
+  let contents = null
+  if (source.startsWith('[') && source.endsWith(']')) {
+    contents = source.slice(1, -1)
+  } else {
+    const match = source.match(/"context_hashes"\s*:\s*\[([\s\S]*?)\]/)
+    contents = match?.[1] ?? null
+  }
+
+  if (contents == null || !contents.trim()) return 0
+  return contents
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter((entry) => /^"?\d+"?$/.test(entry))
+    .length
+}
+
+export function countIgnoredLints() {
+  return countIgnoredLintsJson(readIgnoredLintsJson())
+}
+
 export function writeIgnoredLintsJson(json) {
   try {
     localStorage.setItem(IGNORED_KEY, json || '[]')

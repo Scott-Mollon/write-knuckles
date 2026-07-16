@@ -13,7 +13,7 @@ import { setHarperLints, clearHarperLints } from '../lib/editor/harperProofread'
 
 const DEBOUNCE_MS = 500
 
-export function useHarperProofread(editor, sceneId) {
+export function useHarperProofread(editor, sceneId, taleId) {
   const [enabled, setEnabledState] = useState(readProofreadEnabled)
   const [loading, setLoading] = useState(false)
   const [issueCount, setIssueCount] = useState(0)
@@ -22,12 +22,15 @@ export function useHarperProofread(editor, sceneId) {
   const [engineError, setEngineError] = useState(null)
 
   const dictionaryRef = useRef([])
-  const preparedRef = useRef(false)
+  const loadedTaleIdRef = useRef(null)
+  const ignoredLintsReadyRef = useRef(false)
   const requestIdRef = useRef(0)
   const debounceRef = useRef(null)
   const enabledRef = useRef(enabled)
+  const taleIdRef = useRef(taleId)
 
   enabledRef.current = enabled
+  taleIdRef.current = taleId
 
   const setEnabled = useCallback((next) => {
     const value = Boolean(next)
@@ -46,19 +49,26 @@ export function useHarperProofread(editor, sceneId) {
 
   const prepareSession = useCallback(async () => {
     const linter = await getHarperLinter()
-    if (!preparedRef.current) {
-      const [words, ignoredJson] = await Promise.all([
-        fetchHarperDictionary().catch(() => []),
-        Promise.resolve(readIgnoredLintsJson()),
-      ])
-      dictionaryRef.current = words
-      await linter.clearWords()
-      if (words.length) await linter.importWords(words)
+    const currentTaleId = taleIdRef.current
+
+    if (!ignoredLintsReadyRef.current) {
+      const ignoredJson = readIgnoredLintsJson()
       if (ignoredJson && ignoredJson !== '[]') {
         await linter.importIgnoredLints(ignoredJson)
       }
-      preparedRef.current = true
+      ignoredLintsReadyRef.current = true
     }
+
+    if (loadedTaleIdRef.current !== currentTaleId) {
+      const words = currentTaleId
+        ? await fetchHarperDictionary(currentTaleId).catch(() => [])
+        : []
+      dictionaryRef.current = words
+      await linter.clearWords()
+      if (words.length) await linter.importWords(words)
+      loadedTaleIdRef.current = currentTaleId
+    }
+
     return linter
   }, [])
 
@@ -176,7 +186,7 @@ export function useHarperProofread(editor, sceneId) {
     }
   }, [editor])
 
-  // Enable / disable / scene switch.
+  // Enable / disable / scene or tale switch.
   useEffect(() => {
     if (!editor) return undefined
 
@@ -204,7 +214,7 @@ export function useHarperProofread(editor, sceneId) {
       editor.off('update', onUpdate)
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [editor, sceneId, enabled, runLint, scheduleLint, closePopover])
+  }, [editor, sceneId, taleId, enabled, runLint, scheduleLint, closePopover])
 
   // Pause new runs when tab is hidden.
   useEffect(() => {
@@ -252,6 +262,12 @@ export function useHarperProofread(editor, sceneId) {
 
   const addToDictionary = useCallback(async () => {
     if (!editor || !activeLint?.item) return
+    const currentTaleId = taleIdRef.current
+    if (!currentTaleId) {
+      setActionError('Could not save dictionary word.')
+      return
+    }
+
     const word = normalizeHarperWord(activeLint.item.problemText || '')
     if (!word) return
 
@@ -261,7 +277,7 @@ export function useHarperProofread(editor, sceneId) {
     try {
       const linter = await prepareSession()
       dictionaryRef.current = nextWords
-      const saved = await saveHarperDictionary(nextWords)
+      const saved = await saveHarperDictionary(currentTaleId, nextWords)
       dictionaryRef.current = saved
 
       // importWords is a significant op — resync the full dictionary so the
