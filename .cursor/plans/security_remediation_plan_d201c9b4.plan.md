@@ -7,7 +7,7 @@ todos:
     status: completed
   - id: phase2-rpc-grants
     content: "Migration: revoke anon EXECUTE on write RPCs; re-grant intentionally; harden list_feature_requests (auth required, not approved_users); pin set_updated_at search_path"
-    status: pending
+    status: completed
   - id: phase3-delete-admin
     content: Step-up auth for delete_my_account; narrow profiles plan UPDATE; note Admins RLS audit in bronze-knuckles
     status: pending

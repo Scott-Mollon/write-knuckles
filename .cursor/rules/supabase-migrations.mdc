@@ -30,6 +30,7 @@ Shared Bronze Knuckles project (`public` = magazine). This repo owns only the `w
 - Add matching policies; remember UPDATE requires a SELECT policy
 - RLS may reference `public."Admins"` for magazine-admin checks — do not create that table here
 - Run `supabase db advisors` or MCP `get_advisors` before deploy
+- Do **not** `GRANT … TO anon` on `write` routines; clients use `authenticated` only. Prefer explicit `grant execute … to authenticated` for new RPCs (default privileges no longer auto-grant routines to anon after `20260716100000_revoke_anon_write_rpc_grants`)
 
 ## Seeds vs migrations
 
