@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { getHarperLinter, prefetchHarperLinter, freeLint } from '../lib/harper/linter'
 import { buildPlainTextMap, spanToPositions, splitInlineRanges } from '../lib/harper/textMap'
 import { serializeHarperLint, applySerializedSuggestion } from '../lib/harper/serialize'
-import { fetchHarperDictionary, saveHarperDictionary } from '../lib/harper/dictionary'
+import { fetchHarperDictionary, saveHarperDictionary, isWordInHarperDictionary, normalizeHarperWord } from '../lib/harper/dictionary'
 import {
   readProofreadEnabled,
   writeProofreadEnabled,
@@ -94,6 +94,14 @@ export function useHarperProofread(editor, sceneId) {
         for (const lint of lints) {
           try {
             const serialized = serializeHarperLint(lint)
+            // Harper may keep flagging dictionary words when apostrophes differ
+            // (e.g. O’Shaughnessy vs O'Shaughnessy). Suppress those in the UI.
+            if (
+              serialized.isSpelling &&
+              isWordInHarperDictionary(serialized.problemText, dictionaryRef.current)
+            ) {
+              continue
+            }
             const ignoreHash = (await linter.contextHash(text, lint)).toString()
             const positions = spanToPositions(
               { start: serialized.spanStart, end: serialized.spanEnd },
@@ -244,19 +252,33 @@ export function useHarperProofread(editor, sceneId) {
 
   const addToDictionary = useCallback(async () => {
     if (!editor || !activeLint?.item) return
-    const word = (activeLint.item.problemText || '').trim()
+    const word = normalizeHarperWord(activeLint.item.problemText || '')
     if (!word) return
 
     const previous = [...dictionaryRef.current]
-    const nextWords = [...new Set([...previous, word])]
+    const nextWords = [...new Set([...previous.map(normalizeHarperWord).filter(Boolean), word])]
 
     try {
       const linter = await prepareSession()
-      await linter.importWords([word])
       dictionaryRef.current = nextWords
       const saved = await saveHarperDictionary(nextWords)
       dictionaryRef.current = saved
+
+      // importWords is a significant op — resync the full dictionary so the
+      // in-memory engine matches what we just persisted (append-only single-word
+      // import is unreliable for clearing existing underlines).
+      await linter.clearWords()
+      if (saved.length) await linter.importWords(saved)
+
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current)
+        debounceRef.current = null
+      }
+      // Drop any in-flight lint results that were computed with the old dictionary.
+      requestIdRef.current += 1
+
       closePopover()
+      clearHarperLints(editor)
       await runLint(editor)
     } catch (err) {
       dictionaryRef.current = previous

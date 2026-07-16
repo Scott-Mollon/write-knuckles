@@ -9,8 +9,8 @@ todos:
     content: "Migration: revoke anon EXECUTE on write RPCs; re-grant intentionally; harden list_feature_requests (auth required, not approved_users); pin set_updated_at search_path"
     status: completed
   - id: phase3-delete-admin
-    content: Step-up auth for delete_my_account; narrow profiles plan UPDATE; note Admins RLS audit in bronze-knuckles
-    status: pending
+    content: "Account delete: password + DELETE MY ACCOUNT; profiles admin-only + plan via RPC; move Harper dict to separate table"
+    status: completed
   - id: phase4-auth-abuse
     content: Auth dashboard (leaked passwords, Postgres upgrade); password UX; feature-request auth guard only (no approved_users coupling). Email confirm already required — do not re-verify as work.
     status: pending
@@ -137,16 +137,68 @@ Also stop future bleed: document that new migrations must not `GRANT … TO anon
 
 Unaffected by temporary `approved_users` (`delete_my_account` already clears approval rows as part of wipe; that cleanup simply disappears with the table at launch).
 
-**Account deletion** — [write.delete_my_account](c:\Users\scott\Documents\code\write-knuckles\supabase\migrations\20250712190000_drop_tale_exports.sql), [src/lib/deleteAccount.js](c:\Users\scott\Documents\code\write-knuckles\src\lib\deleteAccount.js), [ProfileDialog.jsx](c:\Users\scott\Documents\code\write-knuckles\src\components\ProfileDialog.jsx):
+### Account deletion (locked UX)
 
-- Require step-up: re-enter password (or recent auth) before calling RPC
-- Add server-side check that caller has a valid session (already) plus optional confirmation token / recent `aal`
-- Keep cross-product wipe documented; consider soft-delete + grace period later (not required for first pass)
+Replace the current one-click `confirmAction` in [`ProfileDialog.jsx`](c:\Users\scott\Documents\code\write-knuckles\src\components\ProfileDialog.jsx) with a dedicated delete-account dialog (modal rules: no backdrop dismiss; explicit Cancel / confirm only).
 
-**Admin / plans:**
+**Required before calling `delete_my_account`:**
 
-- Confirm `public."Admins"` RLS in bronze-knuckles (out of this repo but root of trust for `list_registered_users` / `set_user_plan`)
-- Narrow [profiles UPDATE policy](c:\Users\scott\Documents\code\write-knuckles\supabase\migrations\20260713203811_add_user_profiles_plans.sql): admins must not UPDATE `plan` via table DML; only via `set_user_plan` (drop broad update or replace with column-safe path; Harper already uses RPC)
+1. **Password** — user re-enters their account password. Verify with `supabase.auth.signInWithPassword({ email: user.email, password })` using the signed-in user’s email. On failure, show an error and do **not** call the RPC.
+2. **Exact phrase** — user must type `DELETE MY ACCOUNT` into a text field (exact match, case-sensitive). Confirm button stays disabled until the phrase matches. This is intentional friction / mis-click protection.
+
+```mermaid
+flowchart TD
+  Open[Open delete dialog] --> Phrase[Type DELETE MY ACCOUNT]
+  Phrase --> Password[Enter password]
+  Password --> Verify[signInWithPassword]
+  Verify -->|fail| Error[Show error stay on dialog]
+  Verify -->|ok| Rpc[write.delete_my_account]
+  Rpc --> Done[Close navigate home]
+```
+
+**Implementation notes:**
+
+- Wire through [`AuthContext.deleteAccount`](c:\Users\scott\Documents\code\write-knuckles\src\contexts\AuthContext.jsx) / [`deleteAccount.js`](c:\Users\scott\Documents\code\write-knuckles\src\lib\deleteAccount.js): accept password, verify first, then RPC.
+- Keep warning copy about permanent wipe of Tales, images, and magazine submissions.
+- Soft-delete / grace period: **out of scope** for this pass.
+- Phrase check is client-side only (cannot be enforced meaningfully in SQL without a useless param). **Password re-auth is the security control** against a stolen session without the password.
+
+### Admin / plans + Harper split (locked)
+
+**`public."Admins"` RLS:** Confirmed live — RLS on; clients only have SELECT where `auth.uid() = user_id`; no client INSERT/UPDATE/DELETE policies. No Write-repo change needed.
+
+**`write.profiles` = admin plan store only (no end-user table access):**
+
+- Drop policy `"Users read own profile"`.
+- Keep admin SELECT on `profiles`.
+- Drop broad `"Magazine admins update profiles"` — plan changes **only** via `write.set_user_plan` (SECURITY DEFINER).
+- Client plan load in [`AuthContext.checkPlan`](c:\Users\scott\Documents\code\write-knuckles\src\contexts\AuthContext.jsx) switches from `.from('profiles').select('plan')` to `writeDb.rpc('current_user_plan')` (already exists; grant already present).
+
+**Harper dictionary → separate table** (users never touch `profiles`):
+
+New table `write.harper_dictionaries`:
+
+- `user_id uuid primary key references auth.users(id) on delete cascade`
+- `words text[] not null default '{}'`
+- `updated_at timestamptz not null default now()`
+- RLS: owner SELECT / INSERT / UPDATE / DELETE (`auth.uid() = user_id`) only
+- Migrate existing `profiles.harper_dictionary` rows into this table, then `alter table write.profiles drop column harper_dictionary`
+
+Update [`write.set_harper_dictionary`](c:\Users\scott\Documents\code\write-knuckles\supabase\migrations\20260714121000_add_harper_dictionary.sql) to upsert `write.harper_dictionaries` only.
+
+Update [`src/lib/harper/dictionary.js`](c:\Users\scott\Documents\code\write-knuckles\src\lib\harper\dictionary.js): `fetchHarperDictionary` reads from `harper_dictionaries` (not `profiles`).
+
+Grant EXECUTE on `set_harper_dictionary` remains for `authenticated` (already in Phase 2 migration).
+
+```mermaid
+flowchart LR
+  User[Signed-in user] -->|rpc current_user_plan| PlanRpc[read plan]
+  User -->|rpc set_harper_dictionary| HarperRpc[write words]
+  User -->|from harper_dictionaries| HarperTable[own row RLS]
+  Admin[Magazine admin] -->|from profiles SELECT| Profiles[write.profiles]
+  Admin -->|rpc set_user_plan| SetPlan[update plan]
+  User -.->|no table access| Profiles
+```
 
 ## Phase 4 — Auth platform and abuse (Medium)
 
@@ -196,4 +248,4 @@ When opening the product:
 
 ## Clarifications next
 
-Further questions can still change priority (SSO cookie strategy, account-deletion step-up aggressiveness). Email confirmation + temporary `approved_users` are settled.
+Further questions can still change priority (SSO cookie strategy). Email confirmation, temporary `approved_users`, and account-delete step-up (password + `DELETE MY ACCOUNT`) are settled.

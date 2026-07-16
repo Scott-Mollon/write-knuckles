@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --test src/lib/editor/findReplace.test.js src/lib/taleTerminology.test.js src/lib/editor/comicScriptNumbering.test.js src/lib/compile/compileScriptStyles.test.js src/lib/compile/tiptapToHtml.test.js"
+    "test": "node --test src/lib/editor/findReplace.test.js src/lib/taleTerminology.test.js src/lib/editor/comicScriptNumbering.test.js src/lib/compile/compileScriptStyles.test.js src/lib/compile/tiptapToHtml.test.js src/lib/harper/dictionary.test.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

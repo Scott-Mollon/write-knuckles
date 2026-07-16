@@ -1,4 +1,7 @@
 import { supabase, writeDb } from '../../clients/supabase'
+import { normalizeHarperWord } from './normalizeWord'
+
+export { normalizeHarperWord, harperWordsEqual, isWordInHarperDictionary } from './normalizeWord'
 
 export async function fetchHarperDictionary() {
   const {
@@ -7,20 +10,22 @@ export async function fetchHarperDictionary() {
   if (!user?.id) return []
 
   const { data, error } = await writeDb
-    .from('profiles')
-    .select('harper_dictionary')
+    .from('harper_dictionaries')
+    .select('words')
     .eq('user_id', user.id)
     .maybeSingle()
 
   if (error) throw error
-  return Array.isArray(data?.harper_dictionary) ? data.harper_dictionary : []
+  return Array.isArray(data?.words)
+    ? data.words.map(normalizeHarperWord).filter(Boolean)
+    : []
 }
 
 export async function saveHarperDictionary(words) {
   const unique = [
     ...new Set(
       (words || [])
-        .map((w) => (typeof w === 'string' ? w.trim() : ''))
+        .map((w) => normalizeHarperWord(w))
         .filter(Boolean)
     ),
   ].sort((a, b) => a.localeCompare(b))
@@ -30,5 +35,7 @@ export async function saveHarperDictionary(words) {
   })
 
   if (error) throw error
-  return Array.isArray(data) ? data : unique
+
+  const saved = Array.isArray(data) ? data : unique
+  return saved.map(normalizeHarperWord).filter(Boolean)
 }

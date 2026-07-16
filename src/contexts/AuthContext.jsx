@@ -67,11 +67,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const { data, error } = await writeDb
-        .from('profiles')
-        .select('plan')
-        .eq('user_id', userId)
-        .maybeSingle()
+      const { data, error } = await writeDb.rpc('current_user_plan')
 
       if (error) {
         if (import.meta.env.DEV) {
@@ -81,7 +77,7 @@ export const AuthProvider = ({ children }) => {
         return
       }
 
-      setPlan(normalizePlan(data?.plan))
+      setPlan(normalizePlan(data))
     } catch (err) {
       if (import.meta.env.DEV) {
         console.error('Plan check error:', err)
@@ -183,9 +179,9 @@ export const AuthProvider = ({ children }) => {
     return supabase.auth.signOut()
   }
 
-  const deleteAccount = async () => {
+  const deleteAccount = async (password) => {
     try {
-      await deleteMyAccountRequest()
+      await deleteMyAccountRequest(password)
       setUser(null)
       setSession(null)
       setAdmin(false)
