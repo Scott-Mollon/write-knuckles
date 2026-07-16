@@ -50,7 +50,10 @@ export const createEditorExtensions = (placeholder = '', options = {}) => {
     CharacterCount,
     Typography,
     Highlight.configure({ multicolor: true }),
-    Link.configure({ openOnClick: false }),
+    Link.configure({
+      openOnClick: false,
+      protocols: ['http', 'https'],
+    }),
     Underline,
     TextAlign.configure({
       types: ['heading', 'paragraph'],

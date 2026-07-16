@@ -91,7 +91,12 @@ export function ensureCompilePageChromeInDocument(doc) {
 }
 
 export function postPageGuidesToIframe(iframe, enabled) {
-  iframe?.contentWindow?.postMessage({ type: WK_SET_PAGE_GUIDES, enabled: Boolean(enabled) }, '*')
+  // Sandboxed srcdoc may be opaque origin ("null"); '*' is required for delivery.
+  // The iframe listener still requires event.origin === parent origin.
+  iframe?.contentWindow?.postMessage(
+    { type: WK_SET_PAGE_GUIDES, enabled: Boolean(enabled) },
+    '*',
+  )
 }
 
 export function applyPageGuidesInIframe(iframe, enabled) {
@@ -102,11 +107,13 @@ export function applyPageGuidesInIframe(iframe, enabled) {
   }
 }
 
-export function buildPageGuidesBootScript(chromeCss) {
+export function buildPageGuidesBootScript(chromeCss, parentOrigin = '') {
   const chromeCssJson = JSON.stringify(chromeCss)
+  const parentOriginJson = JSON.stringify(parentOrigin)
 
   return `
 (function () {
+  const PARENT_ORIGIN = ${parentOriginJson};
   const GUIDE_PAGE_OUTLINE = ${JSON.stringify(GUIDE_PAGE_OUTLINE)};
   const GUIDE_PAGE_OUTLINE_OFFSET = ${JSON.stringify(GUIDE_PAGE_OUTLINE_OFFSET)};
   const GUIDE_SHEET_SHADOW = ${JSON.stringify(GUIDE_SHEET_SHADOW)};
@@ -170,6 +177,7 @@ export function buildPageGuidesBootScript(chromeCss) {
   if (!window.__wkGuidesListener) {
     window.__wkGuidesListener = true;
     window.addEventListener('message', (event) => {
+      if (PARENT_ORIGIN && event.origin !== PARENT_ORIGIN) return;
       if (event.data && event.data.type === ${JSON.stringify(WK_SET_PAGE_GUIDES)}) {
         wkApplyPageGuides(Boolean(event.data.enabled));
       }

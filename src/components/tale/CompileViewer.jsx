@@ -258,6 +258,7 @@ const CompileViewer = ({
         ref={iframeRef}
         title={title}
         srcDoc={html}
+        sandbox="allow-scripts allow-same-origin allow-modals"
         className="h-full w-full flex-1 border-0 bg-[#e5dfd3]"
       />
     </div>

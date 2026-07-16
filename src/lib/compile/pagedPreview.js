@@ -41,15 +41,17 @@ function loadScript(doc, src) {
 }
 
 function injectBootScript(doc) {
+  const parentOrigin = window.location.origin
   const helpers = doc.createElement('script')
   helpers.dataset.wkPagedHelpers = 'true'
-  helpers.textContent = buildPageGuidesBootScript(compilePageChromeStyles())
+  helpers.textContent = buildPageGuidesBootScript(compilePageChromeStyles(), parentOrigin)
   doc.head.appendChild(helpers)
 
   const boot = doc.createElement('script')
   boot.dataset.wkPagedBoot = 'true'
   boot.textContent = `
 (async function () {
+  const PARENT_ORIGIN = ${JSON.stringify(parentOrigin)};
   try {
     await document.fonts.ready;
     const Previewer = window.Paged && window.Paged.Previewer;
@@ -79,11 +81,11 @@ function injectBootScript(doc) {
       window.__wkApplyPageGuides(showGuides);
     }
 
-    window.parent.postMessage({ type: 'wk-paged-done' }, '*');
+    window.parent.postMessage({ type: 'wk-paged-done' }, PARENT_ORIGIN);
   } catch (err) {
     window.parent.postMessage(
       { type: 'wk-paged-error', message: err && err.message ? err.message : 'Pagination failed.' },
-      '*',
+      PARENT_ORIGIN,
     );
   }
 })();
@@ -117,7 +119,9 @@ async function runPagedPreviewOnce(iframe, { onProgress, showPageGuides } = {}) 
     }, 300_000)
 
     messageHandler = (event) => {
+      // Sandboxed srcdoc iframes may report origin as the literal string "null".
       if (event.source !== iframe.contentWindow) return
+      if (event.origin !== window.location.origin && event.origin !== 'null') return
 
       if (event.data?.type === 'wk-paged-done') {
         if (activeTimeout !== null) {

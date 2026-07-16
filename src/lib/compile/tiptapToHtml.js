@@ -1,4 +1,9 @@
+import { SCRIPT_ROLES } from '../editor/scriptStyles.js'
 import { sceneImageKey } from './sceneImageKey.js'
+
+const SCRIPT_ROLE_VALUES = new Set(Object.values(SCRIPT_ROLES))
+const TEXT_ALIGNS = new Set(['left', 'center', 'right'])
+const HEX_COLOR_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/
 
 function escapeHtml(value) {
   return value
@@ -14,6 +19,36 @@ function clampIndent(value) {
   return Math.max(0, Math.min(8, n))
 }
 
+function sanitizeScriptRole(value) {
+  if (typeof value !== 'string') return null
+  return SCRIPT_ROLE_VALUES.has(value) ? value : null
+}
+
+function sanitizeTextAlign(value) {
+  if (typeof value !== 'string') return null
+  return TEXT_ALIGNS.has(value) ? value : null
+}
+
+function sanitizeHexColor(value) {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return HEX_COLOR_RE.test(trimmed) ? trimmed : null
+}
+
+/** Only absolute http(s) URLs; rejects javascript:, mailto:, relative, protocol-relative. */
+function safeHttpHref(href) {
+  if (typeof href !== 'string') return null
+  const trimmed = href.trim()
+  if (!trimmed) return null
+  try {
+    const parsed = new URL(trimmed)
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null
+    return parsed.href
+  } catch {
+    return null
+  }
+}
+
 function blockAttrs(attrs) {
   if (!attrs) return ''
 
@@ -22,13 +57,15 @@ function blockAttrs(attrs) {
   const styles = []
 
   if (attrs.dropCap) classes.push('dropcap')
-  if (attrs.scriptRole) {
-    classes.push('script-role', `script-role--${attrs.scriptRole}`)
-    attrParts.push(`data-script-role="${attrs.scriptRole}"`)
+
+  const scriptRole = sanitizeScriptRole(attrs.scriptRole)
+  if (scriptRole) {
+    classes.push('script-role', `script-role--${scriptRole}`)
+    attrParts.push(`data-script-role="${escapeHtml(scriptRole)}"`)
   }
 
-  const textAlign = attrs.textAlign
-  if (typeof textAlign === 'string' && textAlign !== 'left') {
+  const textAlign = sanitizeTextAlign(attrs.textAlign)
+  if (textAlign && textAlign !== 'left') {
     styles.push(`text-align: ${textAlign}`)
   }
 
@@ -39,7 +76,7 @@ function blockAttrs(attrs) {
   }
 
   if (classes.length) attrParts.push(`class="${classes.join(' ')}"`)
-  if (styles.length) attrParts.push(`style="${styles.join('; ')}"`)
+  if (styles.length) attrParts.push(`style="${escapeHtml(styles.join('; '))}"`)
 
   return attrParts.length ? ` ${attrParts.join(' ')}` : ''
 }
@@ -47,7 +84,7 @@ function blockAttrs(attrs) {
 function sanitizeCssValue(value) {
   if (typeof value !== 'string') return null
   const trimmed = value.trim()
-  if (!trimmed || /[<>"']|javascript:/i.test(trimmed)) return null
+  if (!trimmed || /[<>"';]|javascript:|expression\s*\(|url\s*\(/i.test(trimmed)) return null
   return trimmed
 }
 
@@ -84,13 +121,13 @@ function wrapMark(html, mark) {
     case 'code':
       return `<code>${html}</code>`
     case 'link': {
-      const href = mark.attrs?.href
-      if (typeof href !== 'string' || !href) return html
+      const href = safeHttpHref(mark.attrs?.href)
+      if (!href) return html
       return `<a href="${escapeHtml(href)}">${html}</a>`
     }
     case 'highlight': {
-      const color = mark.attrs?.color
-      if (typeof color === 'string' && color) {
+      const color = sanitizeHexColor(mark.attrs?.color)
+      if (color) {
         return `<mark style="background-color: ${escapeHtml(color)}">${html}</mark>`
       }
       return `<mark>${html}</mark>`
