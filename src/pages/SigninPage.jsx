@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { evaluatePassword } from '../lib/auth/passwordPolicy'
 import Input from '../components/Input'
 import Button from '../components/Button'
 import Divider from '../components/Divider'
@@ -21,6 +22,7 @@ const SigninPage = () => {
   const [pageWorking, setPageWorking] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const passwordOk = evaluatePassword(password).ok
 
   const signUp = async () => {
     setErrorMessage(null)
@@ -73,9 +75,15 @@ const SigninPage = () => {
               placeholder="Email"
               disabled={pageWorking}
             />
-            <Password value={password} onChange={(e) => setPassword(e.target.value)} disabled={pageWorking} />
+            <Password
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={pageWorking}
+              showRequirements
+              autoComplete="new-password"
+            />
             <div className="signin-btns">
-              <Button type="button" onClick={signUp} disabled={pageWorking}>
+              <Button type="button" onClick={signUp} disabled={pageWorking || !passwordOk}>
                 Sign Up
               </Button>
               <Button type="submit" disabled={pageWorking}>

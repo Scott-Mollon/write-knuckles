@@ -12,8 +12,8 @@ todos:
     content: "Account delete: password + DELETE MY ACCOUNT; profiles admin-only + plan via RPC; move Harper dict to separate table"
     status: completed
   - id: phase4-auth-abuse
-    content: Auth dashboard (leaked passwords, Postgres upgrade); password UX; feature-request auth guard only (no approved_users coupling). Email confirm already required — do not re-verify as work.
-    status: pending
+    content: "Auth dashboard HIBP + strength rules (manual — enable in Supabase). passwordPolicy + signup/reset UI shipped in write-knuckles and bronze-knuckles. Postgres upgrade done."
+    status: completed
   - id: phase5-later
     content: Defer HttpOnly SSO BFF, MFA, soft-delete RLS; skip invite-token work (approved_users is temporary)
     status: pending
@@ -202,16 +202,69 @@ flowchart LR
 
 ## Phase 4 — Auth platform and abuse (Medium)
 
-Dashboard / platform (not all in git):
+### Password strength + HaveIBeenPwned (locked)
 
-- Enable HaveIBeenPwned leaked-password protection (advisor WARN)
-- Upgrade Postgres for outstanding patches (advisor WARN)
-- **Email confirmation:** already required (existing control). Do not add “verify confirm email” work; keep it enabled at launch when `approved_users` goes away
-- Client password min-length UX on Signin/Reset ([SigninPage.jsx](c:\Users\scott\Documents\code\write-knuckles\src\pages\SigninPage.jsx), [ResetPage.jsx](c:\Users\scott\Documents\code\write-knuckles\src\pages\ResetPage.jsx))
+**Dashboard (manual, not in git):**
 
-Product abuse:
+1. Enable HaveIBeenPwned leaked-password protection (advisor WARN; Pro+) — **manual dashboard step**
+2. Set Auth password rules to match the client policy below (same min length + character classes) — **manual dashboard step**
 
-- Feature requests: require authenticated user only (`auth.uid()`). During beta, unapproved users can still hit this surface if they have an account — acceptable given the allowlist is temporary; at launch add rate limits / length caps instead of approval coupling
+These settings apply to **both Write Knuckles and Bronze Knuckles** — they share one Supabase Auth project and `auth.users`. A signup or reset on either domain hits the same server-side checks.
+
+3. **Done** — Upgrade Postgres for outstanding patches (advisor WARN); platform upgrade completed
+
+**Email confirmation:** already required (existing control). Do not add “verify confirm email” work; keep it enabled at launch when `approved_users` goes away.
+
+**Locked client policy:**
+
+| Rule | Value |
+|------|--------|
+| Min length | 8 |
+| Required classes | lowercase, uppercase, digit, symbol |
+| Symbol set | Supabase allowlist: `!@#$%^&*()_+-=[]{};'\:"|<>?,./`~` |
+| Existing passwords | Unchanged — Sign In does **not** enforce the new policy; strength/HIBP apply only on Sign Up and password Reset |
+
+**App work (both repos — shared account UX):** **Done**
+
+Implement the same client policy in **write-knuckles** and **bronze-knuckles**. No shared npm package today; duplicate the small `passwordPolicy` module in each repo (keep logic identical).
+
+| Repo | Files |
+|------|--------|
+| write-knuckles | [`src/lib/auth/passwordPolicy.js`](c:\Users\scott\Documents\code\write-knuckles\src\lib\auth\passwordPolicy.js), [`AuthContext.signup`](c:\Users\scott\Documents\code\write-knuckles\src\contexts\AuthContext.jsx), [`ResetPage.jsx`](c:\Users\scott\Documents\code\write-knuckles\src\pages\ResetPage.jsx), [`SigninPage.jsx`](c:\Users\scott\Documents\code\write-knuckles\src\pages\SigninPage.jsx), [`Password.jsx`](c:\Users\scott\Documents\code\write-knuckles\src\components\Password.jsx) |
+| bronze-knuckles | `src/lib/auth/passwordPolicy.js`, [`AuthContext.signup`](c:\Users\scott\Documents\code\bronze-knuckles\src\contexts\AuthContext.jsx), [`ResetPage.jsx`](c:\Users\scott\Documents\code\bronze-knuckles\src\pages\ResetPage.jsx), [`SigninPage.jsx`](c:\Users\scott\Documents\code\bronze-knuckles\src\pages\SigninPage.jsx), [`Password.jsx`](c:\Users\scott\Documents\code\bronze-knuckles\src\components\Password.jsx) |
+
+Bronze Knuckles auth pages mirror Write Knuckles today (same `signUp` / `signIn` / `updateUser({ password })` flow, same [`crossSubdomainAuthStorage`](c:\Users\scott\Documents\code\bronze-knuckles\src\lib\authStorage.js)). Users who sign up or reset on either site must see the same requirements and error messages.
+
+1. Add `passwordPolicy.js` in each repo:
+   - `evaluatePassword(password)` → `{ ok, checks: { length, lower, upper, digit, symbol } }`
+   - `formatAuthPasswordError(error)` maps `AuthWeakPasswordError` / `weak_password` `reasons` (`length`, `characters`, `pwned`) plus message fallbacks to clear copy (breach → choose another password; length/characters → point at published requirements)
+   - Unit tests in write-knuckles (`passwordPolicy.test.js` + `package.json` test script). Bronze Knuckles has no test runner today — copy module only or add minimal `node --test` if desired.
+2. Wire error mapping in each repo's `AuthContext.signup` and `ResetPage` (`updateUser({ password })`). Leave Sign In error path as-is in both apps (no weak-password blocking for existing credentials).
+3. Extend each repo's `Password.jsx` with `showRequirements` + `autoComplete` (`new-password` on signup/reset). Live checklist under the field; disable **Sign Up** / **Reset** until `evaluatePassword` is `ok`. Show checklist only on Sign Up and Reset new-password — not on Sign In.
+4. Styles: compact checklist in existing signin/reset/password SCSS in each repo.
+
+```mermaid
+flowchart TD
+  Dashboard[Dashboard HIBP + strength rules]
+  Policy[passwordPolicy.js]
+  Signup[SigninPage Sign Up]
+  Reset[ResetPage new password]
+  AuthCtx[AuthContext.signup]
+  Format[formatAuthPasswordError]
+  Dashboard --> AuthAPI[Supabase Auth]
+  Policy --> Signup
+  Policy --> Reset
+  Signup --> AuthCtx
+  AuthCtx --> AuthAPI
+  Reset --> AuthAPI
+  AuthAPI -->|weak_password or pwned| Format
+  Format --> Signup
+  Format --> Reset
+```
+
+### Product abuse
+
+- **Feature requests:** auth guard is **not Phase 4 work** — already shipped in Phase 2 ([`20260716100000_revoke_anon_write_rpc_grants.sql`](c:\Users\scott\Documents\code\write-knuckles\supabase\migrations\20260716100000_revoke_anon_write_rpc_grants.sql): `list_feature_requests` requires `auth.uid()`, anon EXECUTE revoked). Launch follow-up for rate limits / length caps stays in **Launch follow-up**, not Phase 4.
 - Keep storage server MIME/size; leave external image HTTPS validation as-is unless clarifying wants re-hosting
 
 ## Phase 5 — Defense in depth (Low / later)
@@ -233,9 +286,10 @@ When opening the product:
 ## Verification
 
 - Manual: compile preview with `javascript:` link and CSS-injection highlight; confirm no execution / no session theft path
-- Manual: unauthenticated `POST /rest/v1/rpc/list_feature_requests` returns 401/403
+- Manual (Phase 2 regression): unauthenticated `POST /rest/v1/rpc/list_feature_requests` returns 401/403 — verified via Phase 2 migration
 - Manual: anon cannot call admin RPCs; authenticated non-admin still denied
-- `supabase db advisors` security clean (or only intentional authenticated-definer warnings)
+- Manual (Phase 4 passwords): Sign Up / Reset on **write-knuckles and bronze-knuckles** reject short or missing-class passwords via checklist; known-leaked password (after HIBP on) shows clear breach message on both sites; strong unique password succeeds; existing weak passwords still Sign In on either domain
+- `supabase db advisors` security clean (or only intentional authenticated-definer warnings); Postgres patch WARN cleared after upgrade
 - Regression: Paged.js pagination, page guides, SSO on production cookie domain, account delete still works for signed-in user
 
 ## Out of scope until you say otherwise
@@ -248,4 +302,4 @@ When opening the product:
 
 ## Clarifications next
 
-Further questions can still change priority (SSO cookie strategy). Email confirmation, temporary `approved_users`, and account-delete step-up (password + `DELETE MY ACCOUNT`) are settled.
+Further questions can still change priority (SSO cookie strategy). Email confirmation, temporary `approved_users`, account-delete step-up (password + `DELETE MY ACCOUNT`), Phase 4 password policy (8 chars + classes + HIBP handling on signup/reset in **both** write-knuckles and bronze-knuckles), Postgres upgrade (done), and feature-request auth scope (Phase 2 only) are settled.

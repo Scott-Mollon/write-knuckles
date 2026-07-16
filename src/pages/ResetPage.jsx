@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase, appUrl } from '../clients/supabase'
+import { evaluatePassword, formatAuthPasswordError } from '../lib/auth/passwordPolicy'
 import Input from '../components/Input'
 import Button from '../components/Button'
 import Divider from '../components/Divider'
@@ -26,6 +27,7 @@ const ResetPage = () => {
   const [pageWorking, setPageWorking] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const passwordOk = evaluatePassword(password).ok
 
   useEffect(() => {
     const mode = searchParams.get('mode')
@@ -61,7 +63,7 @@ const ResetPage = () => {
       const { error } = await supabase.auth.updateUser({ password })
 
       if (error) {
-        setErrorMessage(error.message)
+        setErrorMessage(formatAuthPasswordError(error))
       } else {
         setPageMode(PAGE_STATES.SUCCESS)
       }
@@ -85,7 +87,13 @@ const ResetPage = () => {
         />
       )}
       {pageMode === PAGE_STATES.RESET && (
-        <Password value={password} onChange={(e) => setPassword(e.target.value)} disabled={pageWorking} />
+        <Password
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          disabled={pageWorking}
+          showRequirements
+          autoComplete="new-password"
+        />
       )}
 
       {pageMode === PAGE_STATES.FORGOT && (
@@ -94,7 +102,7 @@ const ResetPage = () => {
         </Button>
       )}
       {pageMode === PAGE_STATES.RESET && (
-        <Button onClick={reset} disabled={pageWorking}>
+        <Button onClick={reset} disabled={pageWorking || !passwordOk}>
           Reset
         </Button>
       )}

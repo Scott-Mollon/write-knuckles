@@ -1,8 +1,15 @@
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { planLabel } from '../constants/account'
 
 const AccessPendingPage = () => {
+  const navigate = useNavigate()
   const { user, plan, signout } = useAuth()
+
+  const handleSignOut = async () => {
+    await signout()
+    navigate('/')
+  }
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-57px)] max-w-lg flex-col items-center justify-center p-8 text-center">
@@ -21,7 +28,7 @@ const AccessPendingPage = () => {
       <div className="mt-8 flex gap-4">
         <button
           type="button"
-          onClick={() => signout()}
+          onClick={handleSignOut}
           className="border border-bronze-dark px-4 py-2 font-ui text-sm uppercase text-cream/80 hover:border-bronze hover:text-bronze"
         >
           Sign Out

@@ -38,9 +38,10 @@ const NavBar = () => {
     }
   }, [menuOpen])
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     setMenuOpen(false)
-    signout()
+    await signout()
+    navigate('/')
   }
 
   const openProfile = () => {

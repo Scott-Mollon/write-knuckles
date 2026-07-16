@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase, writeDb } from '../clients/supabase'
 import { PLAN_FREE, normalizePlan } from '../constants/account'
 import { deleteMyAccount as deleteMyAccountRequest } from '../lib/deleteAccount'
+import { formatAuthPasswordError } from '../lib/auth/passwordPolicy'
 
 const AuthContext = createContext()
 
@@ -141,7 +142,7 @@ export const AuthProvider = ({ children }) => {
       })
 
       if (error) {
-        return { success: false, message: error.message }
+        return { success: false, message: formatAuthPasswordError(error) }
       }
       return { success: true, message: 'User signed up' }
     } catch {
