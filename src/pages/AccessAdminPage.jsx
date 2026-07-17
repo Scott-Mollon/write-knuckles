@@ -7,6 +7,7 @@ import {
   useSetUserAccess,
   useSetUserPlan,
 } from '../hooks/useApprovedUsers'
+import { useAdminUsageStats } from '../hooks/useAdminUsageStats'
 import {
   PLAN_COMPLIMENTARY,
   PLAN_FREE,
@@ -17,6 +18,91 @@ import {
 } from '../constants/account'
 import { confirmAction } from '../lib/confirmAction'
 import Loading from './Loading'
+
+const formatCount = (value) => Number(value || 0).toLocaleString()
+
+const formatAverage = (value) => {
+  const n = Number(value || 0)
+  return Number.isInteger(n) ? n.toLocaleString() : n.toLocaleString(undefined, { maximumFractionDigits: 1 })
+}
+
+const StatBlock = ({ label, value }) => (
+  <div>
+    <div className="text-xs uppercase tracking-wide text-cream/40">{label}</div>
+    <div className="mt-1 font-prose text-lg text-cream">{value}</div>
+  </div>
+)
+
+const UsageSummary = ({ stats, isLoading, error }) => {
+  if (isLoading) {
+    return (
+      <section className="mb-10 rounded border border-bronze-dark/50 bg-surface/30 p-4">
+        <h2 className="mb-2 font-ui text-sm uppercase text-bronze">Usage</h2>
+        <p className="text-sm text-cream/40">Loading usage stats…</p>
+      </section>
+    )
+  }
+
+  if (error || !stats) {
+    return (
+      <section className="mb-10 rounded border border-bronze-dark/50 bg-surface/30 p-4">
+        <h2 className="mb-2 font-ui text-sm uppercase text-bronze">Usage</h2>
+        <p className="text-sm text-error">
+          Could not load usage stats. Ensure the admin_usage_stats migration is applied.
+        </p>
+      </section>
+    )
+  }
+
+  return (
+    <section className="mb-10 rounded border border-bronze-dark/50 bg-surface/30 p-4">
+      <h2 className="mb-4 font-ui text-sm uppercase text-bronze">Usage</h2>
+
+      <div className="mb-6">
+        <h3 className="mb-3 text-xs uppercase tracking-wide text-cream/50">
+          Accounts with tales
+        </h3>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <StatBlock label="Total" value={formatCount(stats.accounts)} />
+          <StatBlock label="Free" value={formatCount(stats.accounts_free)} />
+          <StatBlock label="Paid" value={formatCount(stats.accounts_paid)} />
+          <StatBlock label="Complimentary" value={formatCount(stats.accounts_complimentary)} />
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <h3 className="mb-3 text-xs uppercase tracking-wide text-cream/50">Content</h3>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <StatBlock label="Tales" value={formatCount(stats.tales)} />
+          <StatBlock label="Scenes" value={formatCount(stats.scenes)} />
+          <StatBlock label="Total words" value={formatCount(stats.total_words)} />
+          <StatBlock
+            label="Words / tale"
+            value={`${formatAverage(stats.avg_words_per_tale)} avg · ${formatCount(stats.max_words_per_tale)} max`}
+          />
+          <StatBlock
+            label="Scenes / tale"
+            value={`${formatAverage(stats.avg_scenes_per_tale)} avg · ${formatCount(stats.max_scenes_per_tale)} max`}
+          />
+          <StatBlock
+            label="Words / scene"
+            value={`${formatAverage(stats.avg_words_per_scene)} avg · ${formatCount(stats.max_words_per_scene)} max`}
+          />
+        </div>
+      </div>
+
+      <div>
+        <h3 className="mb-3 text-xs uppercase tracking-wide text-cream/50">Storage</h3>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <StatBlock
+            label="Images / tale"
+            value={`${formatAverage(stats.avg_images_per_tale)} avg · ${formatCount(stats.max_images_per_tale)} max`}
+          />
+        </div>
+      </div>
+    </section>
+  )
+}
 
 const getApprovalForEmail = (approvals, email) => {
   const key = email?.toLowerCase()
@@ -37,6 +123,11 @@ const PLAN_ACTIONS = [
 const AccessAdminPage = () => {
   const { data: approvals, isLoading: approvalsLoading, error: approvalsError } = useApprovedUsers()
   const { data: registered, isLoading: registeredLoading, error: registeredError } = useRegisteredUsers()
+  const {
+    data: usageStats,
+    isLoading: usageLoading,
+    error: usageError,
+  } = useAdminUsageStats()
   const approveUser = useApproveUser()
   const setUserAccess = useSetUserAccess()
   const setUserPlan = useSetUserPlan()
@@ -132,15 +223,17 @@ const AccessAdminPage = () => {
     <div className="mx-auto max-w-3xl p-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="font-ui text-2xl uppercase tracking-wide text-bronze">Write Access</h1>
+          <h1 className="font-ui text-2xl uppercase tracking-wide text-bronze">Admin</h1>
           <p className="mt-1 text-sm text-cream/60">
-            Manage beta access and Free / Paid / Complimentary plans.
+            Usage overview, beta access, and Free / Paid / Complimentary plans.
           </p>
         </div>
         <Link to="/" className="text-sm text-cream/50 hover:text-bronze">
           &larr; Tales
         </Link>
       </div>
+
+      <UsageSummary stats={usageStats} isLoading={usageLoading} error={usageError} />
 
       <form onSubmit={handleApproveByEmail} className="mb-10 rounded border border-bronze-dark/50 bg-surface/30 p-4">
         <h2 className="mb-4 font-ui text-sm uppercase text-bronze">Approve by email</h2>

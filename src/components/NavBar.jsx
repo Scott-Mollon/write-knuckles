@@ -59,7 +59,7 @@ const NavBar = () => {
           <>
             {admin && (
               <Link to="/admin/access" className="hover:text-bronze">
-                Access
+                Admin
               </Link>
             )}
             <div className="relative" ref={menuRef}>
