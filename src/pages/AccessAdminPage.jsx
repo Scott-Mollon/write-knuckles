@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   useApprovedUsers,
@@ -8,11 +8,13 @@ import {
   useSetUserPlan,
 } from '../hooks/useApprovedUsers'
 import { useAdminUsageStats } from '../hooks/useAdminUsageStats'
+import { usePlanLimits, useSetFreeTaleLimit } from '../hooks/usePlanLimits'
 import {
   PLAN_COMPLIMENTARY,
   PLAN_FREE,
   PLAN_PAID,
   hasPaidEntitlements,
+  maxActiveTalesForPlan,
   normalizePlan,
   planLabel,
 } from '../constants/account'
@@ -104,6 +106,106 @@ const UsageSummary = ({ stats, isLoading, error }) => {
   )
 }
 
+const PlanLimitsCard = ({ limits, isLoading, error }) => {
+  const setFreeTaleLimit = useSetFreeTaleLimit()
+  const freeLimit = maxActiveTalesForPlan(limits, PLAN_FREE)
+  const [value, setValue] = useState('')
+  const [formError, setFormError] = useState(null)
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    if (typeof freeLimit === 'number') {
+      setValue(String(freeLimit))
+    }
+  }, [freeLimit])
+
+  const handleSave = async (e) => {
+    e.preventDefault()
+    setFormError(null)
+    setSaved(false)
+
+    const parsed = Number(value)
+    if (!Number.isInteger(parsed) || parsed < 0) {
+      setFormError('Enter a whole number of 0 or greater.')
+      return
+    }
+
+    if (
+      !(await confirmAction(
+        `Set the Free plan active-tale limit to ${parsed}? Archived tales do not count.`,
+      ))
+    ) {
+      return
+    }
+
+    try {
+      await setFreeTaleLimit.mutateAsync(parsed)
+      setSaved(true)
+    } catch (err) {
+      setFormError(err.message || 'Failed to update plan limits.')
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <section className="mb-10 rounded border border-bronze-dark/50 bg-surface/30 p-4">
+        <h2 className="mb-2 font-ui text-sm uppercase text-bronze">Plan limits</h2>
+        <p className="text-sm text-cream/40">Loading plan limits…</p>
+      </section>
+    )
+  }
+
+  if (error || !limits) {
+    return (
+      <section className="mb-10 rounded border border-bronze-dark/50 bg-surface/30 p-4">
+        <h2 className="mb-2 font-ui text-sm uppercase text-bronze">Plan limits</h2>
+        <p className="text-sm text-error">
+          Could not load plan limits. Ensure the plan_limits migration is applied.
+        </p>
+      </section>
+    )
+  }
+
+  return (
+    <section className="mb-10 rounded border border-bronze-dark/50 bg-surface/30 p-4">
+      <h2 className="mb-4 font-ui text-sm uppercase text-bronze">Plan limits</h2>
+      <form onSubmit={handleSave} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <label className="flex flex-1 flex-col gap-1">
+          <span className="text-xs uppercase tracking-wide text-cream/50">
+            Free · max active tales
+          </span>
+          <input
+            type="number"
+            min={0}
+            step={1}
+            value={value}
+            onChange={(e) => {
+              setSaved(false)
+              setValue(e.target.value)
+            }}
+            className="rounded border border-bronze-dark/50 bg-ink px-3 py-2 text-cream focus:border-bronze focus:outline-none"
+          />
+        </label>
+        <button
+          type="submit"
+          disabled={setFreeTaleLimit.isPending}
+          className="shrink-0 border border-bronze bg-bronze/20 px-4 py-2 font-ui text-sm uppercase text-bronze hover:bg-bronze/30 disabled:opacity-50"
+        >
+          {setFreeTaleLimit.isPending ? 'Saving…' : 'Save'}
+        </button>
+      </form>
+      {formError && <p className="mt-2 text-sm text-error">{formError}</p>}
+      {saved && !formError && (
+        <p className="mt-2 text-sm text-bronze">Free plan limit updated.</p>
+      )}
+      <p className="mt-2 text-xs text-cream/40">
+        Paid and Complimentary remain unlimited. Only non-archived tales count toward the Free
+        cap.
+      </p>
+    </section>
+  )
+}
+
 const getApprovalForEmail = (approvals, email) => {
   const key = email?.toLowerCase()
   if (!key) return null
@@ -128,6 +230,11 @@ const AccessAdminPage = () => {
     isLoading: usageLoading,
     error: usageError,
   } = useAdminUsageStats()
+  const {
+    data: planLimits,
+    isLoading: planLimitsLoading,
+    error: planLimitsError,
+  } = usePlanLimits()
   const approveUser = useApproveUser()
   const setUserAccess = useSetUserAccess()
   const setUserPlan = useSetUserPlan()
@@ -234,6 +341,12 @@ const AccessAdminPage = () => {
       </div>
 
       <UsageSummary stats={usageStats} isLoading={usageLoading} error={usageError} />
+
+      <PlanLimitsCard
+        limits={planLimits}
+        isLoading={planLimitsLoading}
+        error={planLimitsError}
+      />
 
       <form onSubmit={handleApproveByEmail} className="mb-10 rounded border border-bronze-dark/50 bg-surface/30 p-4">
         <h2 className="mb-4 font-ui text-sm uppercase text-bronze">Approve by email</h2>

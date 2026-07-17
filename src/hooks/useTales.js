@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { writeDb } from '../clients/supabase'
-import { canCreateTale, FREE_TALE_LIMIT_MESSAGE } from '../constants/account'
+import { canCreateTale, freeTaleLimitMessage, maxActiveTalesForPlan } from '../constants/account'
 import { useAuth } from '../contexts/AuthContext'
+import { PLAN_LIMITS_QUERY_KEY } from './usePlanLimits'
 import { deleteTaleImage } from '../lib/images/storage'
 import { serializeCompilePreferencesForDb } from '../lib/compile/compilePreferences.js'
 import { TALE_TYPES } from '../constants/taleTypes'
@@ -93,8 +94,20 @@ export const useCreateTale = () => {
 
       if (countError) throw countError
 
-      if (!canCreateTale({ plan, taleCount: count ?? 0 })) {
-        throw new Error(FREE_TALE_LIMIT_MESSAGE)
+      let limits = queryClient.getQueryData(PLAN_LIMITS_QUERY_KEY)
+      if (!limits) {
+        const { data, error: limitsError } = await writeDb
+          .from('plan_limits')
+          .select('plan, max_active_tales, updated_at')
+          .order('plan')
+        if (limitsError) throw limitsError
+        limits = data ?? []
+        queryClient.setQueryData(PLAN_LIMITS_QUERY_KEY, limits)
+      }
+
+      const maxActiveTales = maxActiveTalesForPlan(limits, plan)
+      if (!canCreateTale({ plan, taleCount: count ?? 0, maxActiveTales })) {
+        throw new Error(freeTaleLimitMessage(maxActiveTales))
       }
 
       const comic = isComicTale(taleType)

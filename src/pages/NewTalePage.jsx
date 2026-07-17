@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { canCreateTale, FREE_TALE_LIMIT_MESSAGE } from '../constants/account'
+import { canCreateTale, freeTaleLimitMessage } from '../constants/account'
 import { TALE_TYPE_LABELS, TALE_TYPES } from '../constants/taleTypes'
 import { useAuth } from '../contexts/AuthContext'
+import { useCurrentPlanTaleLimit } from '../hooks/usePlanLimits'
 import { useBeatTemplates, useCreateTale, useTales } from '../hooks/useTales'
 import { isComicTale } from '../lib/taleTerminology'
 import Loading from './Loading'
@@ -11,6 +12,11 @@ const NewTalePage = () => {
   const navigate = useNavigate()
   const { plan } = useAuth()
   const { data: tales, isLoading: talesLoading } = useTales()
+  const {
+    maxActiveTales,
+    isLoading: limitsLoading,
+    error: limitsError,
+  } = useCurrentPlanTaleLimit()
   const { data: templates, isLoading: templatesLoading } = useBeatTemplates()
   const createTale = useCreateTale()
 
@@ -22,17 +28,25 @@ const NewTalePage = () => {
   const [beatTemplateId, setBeatTemplateId] = useState('')
   const [error, setError] = useState(null)
 
-  if (talesLoading || templatesLoading) return <Loading />
+  if (talesLoading || templatesLoading || limitsLoading) return <Loading />
+
+  if (limitsError) {
+    return (
+      <div className="mx-auto max-w-xl p-8 text-error">
+        Could not load plan limits. Make sure the database migration has been run.
+      </div>
+    )
+  }
 
   const taleCount = tales?.length ?? 0
-  const allowNewTale = canCreateTale({ plan, taleCount })
+  const allowNewTale = canCreateTale({ plan, taleCount, maxActiveTales })
   const comic = isComicTale(taleType)
 
   if (!allowNewTale) {
     return (
       <div className="mx-auto max-w-xl p-8">
         <h1 className="font-ui text-3xl uppercase tracking-wide text-bronze">New Tale</h1>
-        <p className="mt-4 text-cream/70">{FREE_TALE_LIMIT_MESSAGE}</p>
+        <p className="mt-4 text-cream/70">{freeTaleLimitMessage(maxActiveTales)}</p>
         <Link to="/" className="mt-8 inline-block text-bronze underline hover:text-cream">
           &larr; Back to your tales
         </Link>
