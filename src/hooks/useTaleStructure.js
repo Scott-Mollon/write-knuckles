@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { writeDb } from '../clients/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { SCENE_STRUCTURE_COLUMNS } from '../lib/scenes/structureColumns'
 
 export const useTaleStructure = (taleId) => {
   const { user } = useAuth()
@@ -17,7 +18,7 @@ export const useTaleStructure = (taleId) => {
           .order('sort_order'),
         writeDb
           .from('scenes')
-          .select('*')
+          .select(SCENE_STRUCTURE_COLUMNS)
           .eq('tale_id', taleId)
           .is('deleted_at', null)
           .order('sort_order'),

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useReplaceInScenes } from '../../hooks/useReplaceInScenes'
+import { useTaleSceneBodies } from '../../hooks/useTaleSceneBodies'
 import {
   buildReplacedScenes,
   countScenesInHits,
   findInScenes,
 } from '../../lib/editor/findReplace'
-import { formatSceneLabel } from '../../lib/scenes'
+import { mergeSceneBodies } from '../../lib/scenes/fetchTaleSceneBodies'
+import { formatSceneLabel, sortScenesByRackOrder } from '../../lib/scenes'
 import { fieldClass, labelClass } from './referenceStyles'
 
 const checkboxClass = 'size-4 shrink-0 accent-bronze'
@@ -64,10 +66,25 @@ const SceneSearchPanel = ({ taleId, chapters, scenes = [], onOpenScene, onBefore
   const trimmed = query.trim()
   const showResults = trimmed.length >= 2
 
+  const {
+    data: bodies,
+    isPending: bodiesPending,
+    isError: bodiesError,
+    error: bodiesErrorObj,
+  } = useTaleSceneBodies(taleId, { enabled: showResults })
+
+  const scenesWithBodies = useMemo(
+    () => mergeSceneBodies(scenes, bodies),
+    [scenes, bodies],
+  )
+
+  const bodiesReady = showResults && !!bodies && !bodiesPending
+
   const hits = useMemo(() => {
-    if (!showResults) return []
-    return findInScenes(scenes, trimmed, { matchCase, partialMatch })
-  }, [scenes, trimmed, matchCase, partialMatch, showResults])
+    if (!bodiesReady) return []
+    const orderedScenes = sortScenesByRackOrder(scenesWithBodies, chapters)
+    return findInScenes(orderedScenes, trimmed, { matchCase, partialMatch })
+  }, [bodiesReady, scenesWithBodies, chapters, trimmed, matchCase, partialMatch])
 
   useEffect(() => {
     setQuery(readStoredQuery(taleId))
@@ -116,7 +133,7 @@ const SceneSearchPanel = ({ taleId, chapters, scenes = [], onOpenScene, onBefore
     setError(null)
     try {
       await onBeforeReplace?.()
-      const scenesById = new Map(scenes.map((s) => [s.id, s]))
+      const scenesById = new Map(scenesWithBodies.map((s) => [s.id, s]))
       const updates = buildReplacedScenes(scenesById, hitsToReplace, replaceWith)
       if (updates.length === 0) return
       await replaceMutation.mutateAsync(updates)
@@ -133,7 +150,7 @@ const SceneSearchPanel = ({ taleId, chapters, scenes = [], onOpenScene, onBefore
   const sceneCount = countScenesInHits(hits)
   const selectedHits = hits.filter((h) => selectedIds.has(h.id))
   const replacing = replaceMutation.isPending
-  const canReplace = replaceOpen && showResults && hits.length > 0 && !replacing
+  const canReplace = replaceOpen && showResults && hits.length > 0 && !replacing && bodiesReady
 
   return (
     <div className="space-y-4">
@@ -249,7 +266,17 @@ const SceneSearchPanel = ({ taleId, chapters, scenes = [], onOpenScene, onBefore
       {error && <p className="text-sm text-red-400/90">{error}</p>}
       {replacing && <p className="text-sm text-cream/40">Replacing…</p>}
 
-      {showResults && (
+      {showResults && bodiesPending && (
+        <p className="text-sm text-cream/40">Loading scene text for search…</p>
+      )}
+
+      {showResults && bodiesError && (
+        <p className="text-sm text-red-400/90">
+          {bodiesErrorObj?.message || 'Could not load scene text for search.'}
+        </p>
+      )}
+
+      {showResults && bodiesReady && (
         <div className="space-y-2">
           {hits.length === 0 ? (
             <p className="text-sm italic text-cream/30">No matches for that query.</p>
@@ -260,7 +287,7 @@ const SceneSearchPanel = ({ taleId, chapters, scenes = [], onOpenScene, onBefore
             </p>
           )}
           {hits.map((hit) => {
-            const scene = sceneLookup(scenes, hit.sceneId)
+            const scene = sceneLookup(scenesWithBodies, hit.sceneId)
             const label = scene ? formatSceneLabel(scene, chapters) : 'Unknown scene'
             return (
               <div

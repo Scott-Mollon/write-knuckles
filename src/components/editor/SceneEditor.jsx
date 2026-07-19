@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import { createEditorExtensions } from '../../lib/editor/extensions'
 import { normalizeContent, isSceneContentEmpty } from '../../lib/editor/plainText'
@@ -38,12 +38,17 @@ const SceneEditor = ({ scene, tale, taleId, onWordCountChange, autosave }) => {
   const [imageError, setImageError] = useState(null)
   const [title, setTitle] = useState(scene?.title || '')
   const [defaultsOpen, setDefaultsOpen] = useState(false)
+  const allowSaveRef = useRef(false)
   const comic = isComicTale(tale)
   const taleType = getTaleType(tale)
   const scriptCssVars = useMemo(
     () => (comic ? scriptStylesToCssVars(getScriptStylePreferences(tale)) : {}),
     [comic, tale?.script_style_preferences],
   )
+
+  useEffect(() => {
+    allowSaveRef.current = false
+  }, [scene?.id])
 
   useEffect(() => {
     setTitle(scene?.title || '')
@@ -75,6 +80,7 @@ const SceneEditor = ({ scene, tale, taleId, onWordCountChange, autosave }) => {
   const editor = useEditor({
     extensions: createEditorExtensions(placeholder, { taleType }),
     content: normalizeContent(scene?.content),
+    immediatelyRender: true,
     editorProps: {
       attributes: {
         class: 'scene-editor-prose focus:outline-none min-h-[60vh] leading-relaxed',
@@ -82,7 +88,9 @@ const SceneEditor = ({ scene, tale, taleId, onWordCountChange, autosave }) => {
         ...(comic ? { 'data-tale-type': 'comic' } : {}),
       },
     },
-    onUpdate: ({ editor: ed }) => {
+    onUpdate: ({ editor: ed, transaction }) => {
+      // Wait until initial content is applied; mount/extension txs must not autosave.
+      if (!transaction.docChanged || !allowSaveRef.current) return
       const json = ed.getJSON()
       const words = ed.storage.characterCount.words()
       onWordCountChange?.(words)
@@ -90,6 +98,9 @@ const SceneEditor = ({ scene, tale, taleId, onWordCountChange, autosave }) => {
     },
     onCreate: ({ editor: ed }) => {
       onWordCountChange?.(ed.storage.characterCount.words())
+      queueMicrotask(() => {
+        allowSaveRef.current = true
+      })
     },
   }, [scene?.id, placeholder, taleType])
 

@@ -7,6 +7,10 @@ import { exportCompileHtml } from '../../lib/compile/exportCompileHtml.js'
 import { exportTxt } from '../../lib/compile/exportTxt.js'
 import { resolveCompileImages } from '../../lib/compile/resolveCompileImages.js'
 import { normalizePageLayout } from '../../lib/compile/pageLayout.js'
+import {
+  fetchTaleSceneBodies,
+  mergeSceneBodiesIntoChapters,
+} from '../../lib/scenes/fetchTaleSceneBodies.js'
 import { useTale } from '../../hooks/useTales'
 import { formatChapterLabel } from '../../lib/chapters'
 import { getTaleTerminology } from '../../lib/taleTerminology'
@@ -169,9 +173,14 @@ const TaleCompileModal = ({ tale, taleId, chapters, onClose, onBeforeCompile }) 
 
       if (onBeforeCompile) await onBeforeCompile()
 
+      const bodies = await fetchTaleSceneBodies(taleId, {
+        sceneIds: activeScope.sceneIds,
+      })
+      const chaptersWithBodies = mergeSceneBodiesIntoChapters(chapters, bodies)
+
       const model = buildManuscriptModel({
         tale: taleForCompile,
-        chapters,
+        chapters: chaptersWithBodies,
         options,
         scope: activeScope,
       })

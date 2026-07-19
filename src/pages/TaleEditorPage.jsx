@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useTale } from '../hooks/useTales'
 import { useTaleStructure } from '../hooks/useTaleStructure'
 import { useTaleReference } from '../hooks/useTaleReference'
+import { useSceneContent } from '../hooks/useSceneContent'
 import { useAutosave } from '../hooks/useAutosave'
 import { countLinkedBeats } from '../lib/beats'
 import { TALE_MODES } from '../constants/taleEditor'
@@ -48,10 +49,30 @@ const TaleEditorPage = () => {
   const { data: structure, isLoading: structureLoading } = useTaleStructure(taleId)
   const { data: reference, isLoading: referenceLoading } = useTaleReference(taleId)
 
-  const activeScene = structure?.scenes?.find((s) => s.id === activeSceneId)
+  const activeSceneMeta = structure?.scenes?.find((s) => s.id === activeSceneId)
     || structure?.scenes?.[0]
 
-  const autosave = useAutosave(activeScene?.id, taleId)
+  const {
+    data: sceneContent,
+    isPending: sceneContentPending,
+    isError: sceneContentError,
+    error: sceneContentErrorObj,
+  } = useSceneContent(activeSceneMeta?.id)
+
+  const activeScene =
+    activeSceneMeta && sceneContent && sceneContent.id === activeSceneMeta.id
+      ? {
+          ...activeSceneMeta,
+          content: sceneContent.content,
+          plain_text: sceneContent.plain_text,
+        }
+      : null
+
+  const sceneBodyReady = !!activeScene
+
+  const autosave = useAutosave(activeSceneMeta?.id, taleId, {
+    enabled: sceneBodyReady,
+  })
 
   useEffect(() => {
     const scenes = structure?.scenes
@@ -63,8 +84,8 @@ const TaleEditorPage = () => {
   }, [activeSceneId, structure?.scenes])
 
   useEffect(() => {
-    setLiveWordCount(activeScene?.word_count ?? 0)
-  }, [activeScene?.id, activeScene?.word_count])
+    setLiveWordCount(activeSceneMeta?.word_count ?? 0)
+  }, [activeSceneMeta?.id, activeSceneMeta?.word_count])
 
   useEffect(() => {
     if (isComicTale(tale) && mode === TALE_MODES.BEAT_SHEET) {
@@ -175,24 +196,41 @@ const TaleEditorPage = () => {
             taleId={taleId}
             tale={tale}
             chapters={structure?.chapters || []}
-            activeSceneId={activeScene?.id}
+            activeSceneId={activeSceneMeta?.id}
             onSelectScene={handleSelectScene}
             totalScenes={totalScenes}
           />
 
           <main className="flex flex-1 flex-col overflow-hidden">
-            <SceneEditor
-              key={activeScene?.id}
-              scene={activeScene}
-              tale={tale}
-              taleId={taleId}
-              onWordCountChange={setLiveWordCount}
-              autosave={autosave}
-            />
+            {!activeSceneMeta ? (
+              <div className="flex flex-1 items-center justify-center text-cream/40">
+                Select a scene to write.
+              </div>
+            ) : sceneContentError ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
+                <p className="text-error">Could not load scene content.</p>
+                <p className="text-sm text-cream/40">
+                  {sceneContentErrorObj?.message || 'Try selecting the scene again.'}
+                </p>
+              </div>
+            ) : sceneContentPending || !activeScene ? (
+              <div className="flex flex-1 items-center justify-center text-cream/40">
+                Loading scene…
+              </div>
+            ) : (
+              <SceneEditor
+                key={activeScene.id}
+                scene={activeScene}
+                tale={tale}
+                taleId={taleId}
+                onWordCountChange={setLiveWordCount}
+                autosave={autosave}
+              />
+            )}
           </main>
 
           <Inspector
-            scene={activeScene}
+            scene={activeSceneMeta}
             tale={tale}
             taleId={taleId}
             liveWordCount={liveWordCount}

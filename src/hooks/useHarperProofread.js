@@ -1,8 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { getHarperLinter, prefetchHarperLinter, freeLint } from '../lib/harper/linter'
 import { buildPlainTextMap, spanToPositions, splitInlineRanges } from '../lib/harper/textMap'
 import { serializeHarperLint, applySerializedSuggestion } from '../lib/harper/serialize'
-import { fetchHarperDictionary, saveHarperDictionary, isWordInHarperDictionary, normalizeHarperWord } from '../lib/harper/dictionary'
+import {
+  saveHarperDictionary,
+  isWordInHarperDictionary,
+  normalizeHarperWord,
+  fetchHarperDictionary,
+} from '../lib/harper/dictionary'
+import {
+  getHarperLinterSyncedTaleId,
+  markHarperLinterDictionarySynced,
+} from '../lib/harper/linterDictionary'
 import {
   readProofreadEnabled,
   writeProofreadEnabled,
@@ -10,10 +20,12 @@ import {
   writeIgnoredLintsJson,
 } from '../lib/harper/prefs'
 import { setHarperLints, clearHarperLints } from '../lib/editor/harperProofread'
+import { harperDictionaryQueryKey } from './useHarperDictionary'
 
 const DEBOUNCE_MS = 500
 
 export function useHarperProofread(editor, sceneId, taleId) {
+  const queryClient = useQueryClient()
   const [enabled, setEnabledState] = useState(readProofreadEnabled)
   const [loading, setLoading] = useState(false)
   const [issueCount, setIssueCount] = useState(0)
@@ -22,7 +34,6 @@ export function useHarperProofread(editor, sceneId, taleId) {
   const [engineError, setEngineError] = useState(null)
 
   const dictionaryRef = useRef([])
-  const loadedTaleIdRef = useRef(null)
   const ignoredLintsReadyRef = useRef(false)
   const requestIdRef = useRef(0)
   const debounceRef = useRef(null)
@@ -59,18 +70,25 @@ export function useHarperProofread(editor, sceneId, taleId) {
       ignoredLintsReadyRef.current = true
     }
 
-    if (loadedTaleIdRef.current !== currentTaleId) {
-      const words = currentTaleId
-        ? await fetchHarperDictionary(currentTaleId).catch(() => [])
-        : []
-      dictionaryRef.current = words
+    const words = currentTaleId
+      ? await queryClient
+          .fetchQuery({
+            queryKey: harperDictionaryQueryKey(currentTaleId),
+            queryFn: () => fetchHarperDictionary(currentTaleId),
+            staleTime: 1000 * 60 * 5,
+          })
+          .catch(() => [])
+      : []
+    dictionaryRef.current = words
+
+    if (getHarperLinterSyncedTaleId() !== currentTaleId) {
       await linter.clearWords()
       if (words.length) await linter.importWords(words)
-      loadedTaleIdRef.current = currentTaleId
+      markHarperLinterDictionarySynced(currentTaleId)
     }
 
     return linter
-  }, [])
+  }, [queryClient])
 
   const runLint = useCallback(
     async (ed) => {
@@ -279,12 +297,14 @@ export function useHarperProofread(editor, sceneId, taleId) {
       dictionaryRef.current = nextWords
       const saved = await saveHarperDictionary(currentTaleId, nextWords)
       dictionaryRef.current = saved
+      queryClient.setQueryData(harperDictionaryQueryKey(currentTaleId), saved)
 
       // importWords is a significant op — resync the full dictionary so the
       // in-memory engine matches what we just persisted (append-only single-word
       // import is unreliable for clearing existing underlines).
       await linter.clearWords()
       if (saved.length) await linter.importWords(saved)
+      markHarperLinterDictionarySynced(currentTaleId)
 
       if (debounceRef.current) {
         clearTimeout(debounceRef.current)
@@ -302,12 +322,13 @@ export function useHarperProofread(editor, sceneId, taleId) {
         const linter = await getHarperLinter()
         await linter.clearWords()
         if (previous.length) await linter.importWords(previous)
+        markHarperLinterDictionarySynced(currentTaleId)
       } catch {
         // best-effort rollback
       }
       setActionError(err.message || 'Could not save dictionary word.')
     }
-  }, [editor, activeLint, prepareSession, closePopover, runLint])
+  }, [editor, activeLint, prepareSession, closePopover, runLint, queryClient])
 
   return {
     enabled,

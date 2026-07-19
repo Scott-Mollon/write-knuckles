@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { writeDb } from '../clients/supabase'
 import { contentToPlainText, countWords, normalizeContentForSave } from '../lib/editor/plainText'
+import { sceneContentQueryKey } from './useSceneContent'
+import { taleSceneBodiesQueryKey } from '../lib/scenes/fetchTaleSceneBodies'
 
 /**
  * Persist TipTap content replacements for one or more scenes in a tale.
@@ -37,29 +39,52 @@ export const useReplaceInScenes = (taleId) => {
       return results
     },
     onSuccess: (results) => {
+      const byId = new Map(results.map((r) => [r.sceneId, r]))
+
       queryClient.setQueryData(['tale-structure', taleId], (old) => {
         if (!old) return old
-        const byId = new Map(results.map((r) => [r.sceneId, r]))
-        const patch = (s) => {
+        const patchMeta = (s) => {
           const next = byId.get(s.id)
           if (!next) return s
           return {
             ...s,
-            content: next.content,
-            plain_text: next.plain_text,
             word_count: next.word_count,
             updated_at: next.updated_at,
           }
         }
         return {
           ...old,
-          scenes: old.scenes.map(patch),
+          scenes: old.scenes.map(patchMeta),
           chapters: old.chapters.map((ch) => ({
             ...ch,
-            scenes: ch.scenes.map(patch),
+            scenes: ch.scenes.map(patchMeta),
           })),
         }
       })
+
+      queryClient.setQueryData(taleSceneBodiesQueryKey(taleId), (old) => {
+        if (!Array.isArray(old)) return old
+        return old.map((body) => {
+          const next = byId.get(body.id)
+          if (!next) return body
+          return {
+            ...body,
+            content: next.content,
+            plain_text: next.plain_text,
+            updated_at: next.updated_at,
+          }
+        })
+      })
+
+      for (const result of results) {
+        queryClient.setQueryData(sceneContentQueryKey(result.sceneId), {
+          id: result.sceneId,
+          content: result.content,
+          plain_text: result.plain_text,
+          updated_at: result.updated_at,
+        })
+      }
+
       queryClient.invalidateQueries({ queryKey: ['tales'] })
       queryClient.removeQueries({ queryKey: ['scene-search', taleId] })
     },

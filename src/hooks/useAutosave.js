@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { writeDb } from '../clients/supabase'
 import { contentToPlainText, countWords, normalizeContentForSave } from '../lib/editor/plainText'
+import { sceneContentQueryKey } from './useSceneContent'
+import { taleSceneBodiesQueryKey } from '../lib/scenes/fetchTaleSceneBodies'
 
 export const SAVE_STATES = {
   IDLE: 'idle',
@@ -11,13 +13,31 @@ export const SAVE_STATES = {
   ERROR: 'error',
 }
 
-export const useAutosave = (sceneId, taleId, debounceMs = 1500) => {
+/**
+ * @param {string | null | undefined} sceneId
+ * @param {string | null | undefined} taleId
+ * @param {{ enabled?: boolean, debounceMs?: number }} [options]
+ * `enabled` should be true only after scene body content has loaded for `sceneId`.
+ */
+export const useAutosave = (sceneId, taleId, options = {}) => {
+  const { enabled = true, debounceMs = 1500 } = options
   const queryClient = useQueryClient()
   const timerRef = useRef(null)
-  const pendingContentRef = useRef(null)
+  /** @type {React.MutableRefObject<{ sceneId: string, content: unknown } | null>} */
+  const pendingRef = useRef(null)
+  const enabledRef = useRef(enabled)
+  enabledRef.current = enabled
   const [saveState, setSaveState] = useState(SAVE_STATES.IDLE)
 
-  const patchStructureCache = useCallback(
+  const clearPending = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
+    pendingRef.current = null
+  }, [])
+
+  const patchStructureMeta = useCallback(
     (sceneIdToPatch, patch) => {
       queryClient.setQueryData(['tale-structure', taleId], (old) => {
         if (!old) return old
@@ -36,66 +56,107 @@ export const useAutosave = (sceneId, taleId, debounceMs = 1500) => {
   )
 
   const { mutateAsync } = useMutation({
-    mutationFn: async (content) => {
+    mutationFn: async ({ sceneId: targetSceneId, content }) => {
       const normalizedContent = normalizeContentForSave(content)
       const plain_text = contentToPlainText(normalizedContent)
       const word_count = countWords(plain_text)
+      const updated_at = new Date().toISOString()
       const { error } = await writeDb
         .from('scenes')
         .update({
           content: normalizedContent,
           plain_text,
           word_count,
-          updated_at: new Date().toISOString(),
+          updated_at,
         })
-        .eq('id', sceneId)
+        .eq('id', targetSceneId)
 
       if (error) throw error
-      return { content: normalizedContent, plain_text, word_count }
+      return {
+        sceneId: targetSceneId,
+        content: normalizedContent,
+        plain_text,
+        word_count,
+        updated_at,
+      }
     },
     onSuccess: (data) => {
       setSaveState(SAVE_STATES.SAVED)
-      patchStructureCache(sceneId, data)
+      queryClient.setQueryData(sceneContentQueryKey(data.sceneId), {
+        id: data.sceneId,
+        content: data.content,
+        plain_text: data.plain_text,
+        updated_at: data.updated_at,
+      })
+      queryClient.setQueryData(taleSceneBodiesQueryKey(taleId), (old) => {
+        if (!Array.isArray(old)) return old
+        return old.map((body) =>
+          body.id === data.sceneId
+            ? {
+                ...body,
+                content: data.content,
+                plain_text: data.plain_text,
+                updated_at: data.updated_at,
+              }
+            : body,
+        )
+      })
+      patchStructureMeta(data.sceneId, {
+        word_count: data.word_count,
+        updated_at: data.updated_at,
+      })
       queryClient.invalidateQueries({ queryKey: ['tales'] })
     },
     onError: () => setSaveState(SAVE_STATES.ERROR),
   })
+
+  // Drop debounce when scene changes or content is not ready yet.
+  useEffect(() => {
+    clearPending()
+    setSaveState(SAVE_STATES.IDLE)
+  }, [sceneId, enabled, clearPending])
 
   const flush = useCallback(async () => {
     if (timerRef.current) {
       clearTimeout(timerRef.current)
       timerRef.current = null
     }
-    const content = pendingContentRef.current
-    if (content === null || content === undefined) return
-    pendingContentRef.current = null
+    const pending = pendingRef.current
+    if (!pending?.sceneId) return
+    // Flush may run while switching away; allow the queued scene id through.
+    pendingRef.current = null
     setSaveState(SAVE_STATES.SAVING)
-    await mutateAsync(content)
+    await mutateAsync(pending)
   }, [mutateAsync])
 
   const queueSave = useCallback(
     (content) => {
-      pendingContentRef.current = content
+      if (!enabledRef.current || !sceneId) return
+      pendingRef.current = { sceneId, content }
       setSaveState(SAVE_STATES.PENDING)
       if (timerRef.current) clearTimeout(timerRef.current)
       timerRef.current = setTimeout(() => {
         timerRef.current = null
-        const pending = pendingContentRef.current
-        if (pending === null || pending === undefined) return
-        pendingContentRef.current = null
+        if (!enabledRef.current) {
+          pendingRef.current = null
+          return
+        }
+        const pending = pendingRef.current
+        if (!pending?.sceneId) return
+        pendingRef.current = null
         setSaveState(SAVE_STATES.SAVING)
         mutateAsync(pending)
       }, debounceMs)
     },
-    [debounceMs, mutateAsync],
+    [debounceMs, mutateAsync, sceneId],
   )
 
   useEffect(
     () => () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
+      clearPending()
     },
-    [],
+    [clearPending],
   )
 
-  return { queueSave, flush, saveState }
+  return { queueSave, flush, saveState, enabled }
 }
