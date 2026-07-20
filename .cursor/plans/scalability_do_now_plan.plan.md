@@ -19,7 +19,7 @@ todos:
     status: completed
   - id: phase2-tale-word-count
     content: "Add tales.word_count column + trigger/backfill; simplify useTales dashboard query"
-    status: pending
+    status: completed
   - id: phase3-search-trash-caps
     content: "Search snippets + LIMIT via RPC; trash metadata-only selects; no full content until needed"
     status: pending

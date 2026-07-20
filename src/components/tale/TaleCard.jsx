@@ -8,8 +8,9 @@ const TaleCard = ({ tale, onOpenSettings, onOpenCompile }) => {
   const deleteTale = useDeleteTale()
   const comic = isComicTale(tale)
 
+  const wordCount = tale.word_count ?? 0
   const progress = tale.target_word_count
-    ? Math.min(100, Math.round((tale.word_count / tale.target_word_count) * 100))
+    ? Math.min(100, Math.round((wordCount / tale.target_word_count) * 100))
     : 0
 
   const stopCardNavigation = (event) => {
@@ -32,13 +33,17 @@ const TaleCard = ({ tale, onOpenSettings, onOpenCompile }) => {
         <Link to={`/tale/${tale.id}`} className="min-w-0 flex-1">
           <h2 className="font-ui text-xl text-cream hover:text-bronze">{tale.title}</h2>
           {tale.genre && <p className="text-sm text-cream/50">{tale.genre}</p>}
-          {!comic && (
+          {comic ? (
+            <p className="mt-3 text-sm text-cream/60">
+              {wordCount.toLocaleString()} words
+            </p>
+          ) : (
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <div className="h-2 min-w-[8rem] max-w-xs flex-1 bg-ink">
                 <div className="h-full bg-bronze transition-all" style={{ width: `${progress}%` }} />
               </div>
               <span className="text-sm text-cream/60">
-                {tale.word_count.toLocaleString()} / {tale.target_word_count?.toLocaleString()} words
+                {wordCount.toLocaleString()} / {tale.target_word_count?.toLocaleString()} words
               </span>
             </div>
           )}

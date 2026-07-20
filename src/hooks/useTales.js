@@ -16,21 +16,13 @@ export const useTales = () => {
     queryFn: async () => {
       const { data, error } = await writeDb
         .from('tales')
-        .select('*, scenes(word_count, deleted_at)')
+        .select('*')
         .eq('user_id', user.id)
         .is('archived_at', null)
         .order('updated_at', { ascending: false })
 
       if (error) throw error
-
-      return data.map((tale) => ({
-        ...tale,
-        word_count:
-          tale.scenes?.reduce(
-            (sum, s) => (s.deleted_at ? sum : sum + (s.word_count || 0)),
-            0,
-          ) || 0,
-      }))
+      return data
     },
     enabled: !!user?.id,
   })
