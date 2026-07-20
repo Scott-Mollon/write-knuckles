@@ -3,7 +3,7 @@ name: Scalability do-now plan
 overview: "Ship three load-guardrails before user growth: (1) lazy-load scene bodies so editor open fetches outline metadata only, (2) denormalize tale word_count so the dashboard stops nesting every scene, (3) cap search/trash payloads so bulk modes do not reintroduce whole-manuscript downloads."
 todos:
   - id: phase1-lazy-scenes
-    content: "Structure-only outline + useSceneContent hook; wire Write editor; on-demand fetch for compile / find-replace"
+    content: Structure-only outline + useSceneContent hook; wire Write editor; on-demand fetch for compile / find-replace
     status: completed
   - id: phase1a-structure-columns
     content: "1A: useTaleStructure selects SCENE_STRUCTURE_COLUMNS (no content/plain_text)"
@@ -18,17 +18,17 @@ todos:
     content: "1D: On-demand scene bodies for compile / find-replace"
     status: completed
   - id: phase2-tale-word-count
-    content: "Add tales.word_count column + trigger/backfill; simplify useTales dashboard query"
+    content: Add tales.word_count column + trigger/backfill; simplify useTales dashboard query
     status: completed
   - id: phase3-search-trash-caps
-    content: "Search snippets + LIMIT via RPC; trash metadata-only selects; no full content until needed"
-    status: in_progress
+    content: "Trash metadata-only; remove unused search_scenes RPC + useSceneSearch"
+    status: completed
   - id: phase3a-trash-metadata
     content: "3A: Trash selects metadata only (no content/plain_text/bio/notes/body)"
     status: completed
   - id: phase3b-search-rpc-caps
-    content: "3B: search_scenes snippets + LIMIT 50"
-    status: pending
+    content: "3B: Drop unused write.search_scenes RPC and useSceneSearch hook"
+    status: completed
 isProject: false
 ---
 
@@ -52,15 +52,19 @@ flowchart TD
   dash[Dashboard] --> wc[tales.word_count only]
 ```
 
+
+
 ## Current hot paths (baseline)
 
-| Path | Today | Problem |
-|------|-------|---------|
-| Editor open | [`useTaleStructure`](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useTaleStructure.js) `scenes.select('*')` | Downloads every TipTap JSON + `plain_text` |
-| Dashboard | [`useTales`](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useTales.js) `scenes(word_count, deleted_at)` | Nested scene rows only to sum words |
-| Search / replace | [`SceneSearchPanel`](c:\Users\scott\Documents\code\write-knuckles\src\components\research\SceneSearchPanel.jsx) client `findInScenes(scenes)` | Assumes all bodies already in memory |
-| Trash | [`useTaleTrash`](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useTaleTrash.js) `select('*')` | Deleted scenes include full content |
-| FTS RPC | [`write.search_scenes`](c:\Users\scott\Documents\code\write-knuckles\supabase\migrations\20260715010000_soft_delete_entities.sql) | Returns full `plain_text`, unbounded |
+
+| Path             | Today                                                                                                                                         | Problem                                    |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Editor open      | `[useTaleStructure](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useTaleStructure.js)` `scenes.select('*')`                         | Downloads every TipTap JSON + `plain_text` |
+| Dashboard        | `[useTales](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useTales.js)` `scenes(word_count, deleted_at)`                             | Nested scene rows only to sum words        |
+| Search / replace | `[SceneSearchPanel](c:\Users\scott\Documents\code\write-knuckles\src\components\research\SceneSearchPanel.jsx)` client `findInScenes(scenes)` | Assumes all bodies already in memory       |
+| Trash            | `[useTaleTrash](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useTaleTrash.js)` `select('*')`                                        | Deleted scenes include full content        |
+| FTS RPC          | `[write.search_scenes](c:\Users\scott\Documents\code\write-knuckles\supabase\migrations\20260715010000_soft_delete_entities.sql)`             | Returns full `plain_text`, unbounded       |
+
 
 Live prod snapshot (2026-07-17): max tale ~1.1 MB content+plain / 65 scenes — already the shape that breaks first as novels grow.
 
@@ -72,7 +76,7 @@ Live prod snapshot (2026-07-17): max tale ~1.1 MB content+plain / 65 scenes — 
 
 ### 1A. Structure query (metadata only)
 
-Update [`useTaleStructure.js`](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useTaleStructure.js):
+Update `[useTaleStructure.js](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useTaleStructure.js)`:
 
 - Chapters: keep needed columns (or `*` if small — chapters are tiny).
 - Scenes: **exclude** `content` and `plain_text`. Explicit select, e.g.:
@@ -89,7 +93,7 @@ Rack, Story Board, Beat Sheet, Inspector word counts keep working off metadata.
 
 ### 1B. `useSceneContent(sceneId)` hook
 
-New hook (e.g. [`src/hooks/useSceneContent.js`](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useSceneContent.js)):
+New hook (e.g. `[src/hooks/useSceneContent.js](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useSceneContent.js)`):
 
 - Query key: `['scene-content', sceneId]`
 - `select('id, content, plain_text, updated_at')` for one scene
@@ -98,13 +102,13 @@ New hook (e.g. [`src/hooks/useSceneContent.js`](c:\Users\scott\Documents\code\wr
 
 ### 1C. Wire Write mode
 
-[`TaleEditorPage.jsx`](c:\Users\scott\Documents\code\write-knuckles\src\pages\TaleEditorPage.jsx) + [`SceneEditor.jsx`](c:\Users\scott\Documents\code\write-knuckles\src\components\editor\SceneEditor.jsx):
+`[TaleEditorPage.jsx](c:\Users\scott\Documents\code\write-knuckles\src\pages\TaleEditorPage.jsx)` + `[SceneEditor.jsx](c:\Users\scott\Documents\code\write-knuckles\src\components\editor\SceneEditor.jsx)`:
 
 - Merge structure metadata + fetched content for the active scene
 - Show a short loading state when switching scenes before content arrives
 - Keep existing flush-on-switch behavior in `handleSelectScene`
 
-[`useAutosave.js`](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useAutosave.js):
+`[useAutosave.js](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useAutosave.js)`:
 
 - On success, patch `['scene-content', sceneId]` **and** structure metadata (`word_count`, `updated_at`)
 - Do **not** require structure cache to hold `content`
@@ -113,11 +117,13 @@ New hook (e.g. [`src/hooks/useSceneContent.js`](c:\Users\scott\Documents\code\wr
 
 These currently assume `scene.content` is already on the structure object:
 
-| Consumer | Approach |
-|----------|----------|
-| Compile ([`TaleCompileModal`](c:\Users\scott\Documents\code\write-knuckles\src\components\tale\TaleCompileModal.jsx) → [`buildManuscriptModel`](c:\Users\scott\Documents\code\write-knuckles\src\lib\compile\buildManuscriptModel.js)) | Before build: load all (or scoped) scene `content`/`plain_text` for the tale in one query, merge onto chapters, then compile |
-| Find/replace ([`SceneSearchPanel`](c:\Users\scott\Documents\code\write-knuckles\src\components\research\SceneSearchPanel.jsx) + [`findReplace.js`](c:\Users\scott\Documents\code\write-knuckles\src\lib\editor\findReplace.js)) | On Search mode entry or first query ≥2 chars: fetch bodies once into a React Query cache (`['tale-scene-bodies', taleId]`), run client find/replace against that; invalidate on replace success |
-| [`DashboardTaleModals`](c:\Users\scott\Documents\code\write-knuckles\src\components\tale\DashboardTaleModals.jsx) | Uses structure only if possible; if it needs bodies, same on-demand fetch |
+
+| Consumer                                                                                                                                                                                                                               | Approach                                                                                                                                                                                        |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Compile (`[TaleCompileModal](c:\Users\scott\Documents\code\write-knuckles\src\components\tale\TaleCompileModal.jsx)` → `[buildManuscriptModel](c:\Users\scott\Documents\code\write-knuckles\src\lib\compile\buildManuscriptModel.js)`) | Before build: load all (or scoped) scene `content`/`plain_text` for the tale in one query, merge onto chapters, then compile                                                                    |
+| Find/replace (`[SceneSearchPanel](c:\Users\scott\Documents\code\write-knuckles\src\components\research\SceneSearchPanel.jsx)` + `[findReplace.js](c:\Users\scott\Documents\code\write-knuckles\src\lib\editor\findReplace.js)`)        | On Search mode entry or first query ≥2 chars: fetch bodies once into a React Query cache (`['tale-scene-bodies', taleId]`), run client find/replace against that; invalidate on replace success |
+| `[DashboardTaleModals](c:\Users\scott\Documents\code\write-knuckles\src\components\tale\DashboardTaleModals.jsx)`                                                                                                                      | Uses structure only if possible; if it needs bodies, same on-demand fetch                                                                                                                       |
+
 
 **Build decision (locked):** Keep client-side find/replace for now (preserves match-case / partial-match UX). Do **not** rewrite Search onto `search_scenes` in Phase 1. Phase 3 still caps the unused/underused FTS RPC and trash.
 
@@ -146,7 +152,7 @@ These currently assume `scene.content` is already on the structure object:
 
 ### 2A. Migration
 
-New migration via `supabase migration new tale_word_count` (per [supabase-migrations rule](c:\Users\scott\Documents\code\write-knuckles\.cursor\rules\supabase-migrations.mdc)):
+New migration via `supabase migration new tale_word_count` (per [supabase-migrations rule](c:\Users\scott\Documents\code\write-knuckles.cursor\rules\supabase-migrations.mdc)):
 
 1. `alter table write.tales add column word_count int not null default 0`
 2. Backfill:
@@ -160,22 +166,22 @@ set word_count = coalesce((
 ), 0);
 ```
 
-3. Trigger (or triggers) to keep in sync on:
-   - `scenes` INSERT / UPDATE of `word_count` or `deleted_at` / hard DELETE
-   - Soft-delete and restore paths that set `deleted_at`
-4. Prefer one `SECURITY INVOKER` function that recomputes `sum(word_count)` for `tale_id` and assigns `tales.word_count` — simple and correct; optimize later if needed.
+1. Trigger (or triggers) to keep in sync on:
+  - `scenes` INSERT / UPDATE of `word_count` or `deleted_at` / hard DELETE
+  - Soft-delete and restore paths that set `deleted_at`
+2. Prefer one `SECURITY INVOKER` function that recomputes `sum(word_count)` for `tale_id` and assigns `tales.word_count` — simple and correct; optimize later if needed.
 
 Also bump `tales.updated_at` only if product already expects that on scene edits (autosave already updates scene + invalidates tales — confirm we do not double-invalidate oddly).
 
 ### 2B. Client
 
-[`useTales.js`](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useTales.js):
+`[useTales.js](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useTales.js)`:
 
 - Change select to tale columns only (include `word_count`)
 - Remove nested `scenes(word_count, deleted_at)` and client `reduce`
 - Create-tale path: new tale stays `0` until first scene words exist (default OK)
 
-[`useAutosave`](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useAutosave.js) / scene soft-delete mutations: keep `invalidateQueries(['tales'])` so dashboard refreshes (or optimistically patch tale word_count if easy).
+`[useAutosave](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useAutosave.js)` / scene soft-delete mutations: keep `invalidateQueries(['tales'])` so dashboard refreshes (or optimistically patch tale word_count if easy).
 
 ### Phase 2 acceptance
 
@@ -197,41 +203,41 @@ Also bump `tales.updated_at` only if product already expects that on scene edits
 
 ### 3A. Trash metadata only
 
-[`useTaleTrash.js`](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useTaleTrash.js):
+`[useTaleTrash.js](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useTaleTrash.js)`:
 
 - Scenes: select metadata only (title, deleted_at, chapter_id, word_count, …) — **not** `content` / `plain_text`
 - Other entities: drop unused wide columns if any; keep what TrashPanel labels need
 - Restore / permanent delete already use ids only — no content required
 
-### 3B. FTS RPC payload cap
+### 3B. Remove unused FTS RPC
 
-Even though Write Search is client-side today, [`write.search_scenes`](c:\Users\scott\Documents\code\write-knuckles\supabase\migrations\20260715010000_soft_delete_entities.sql) is a footgun if anything calls it later ([`useSceneSearch`](c:\Users\scott\Documents\code\write-knuckles\src\hooks\useSceneSearch.js) exists).
+Write Search is client-side (`useTaleSceneBodies` + `findInScenes`). The unused
+`write.search_scenes` RPC and `useSceneSearch` hook were a payload footgun
+(full `plain_text`, no limit).
 
-Migration:
-
-- Replace full `plain_text` with a short snippet (`ts_headline` or `left(plain_text, N)`)
-- Add `limit 50` (or similar) ordered by rank
-- Keep return shape compatible or update `useSceneSearch` consumers in the same PR
-
-**Build decision:** Limit = 50; snippet ≈ 200–280 chars. Document in migration comment.
+- Migration: `drop function write.search_scenes(uuid, text)`
+- Delete `src/hooks/useSceneSearch.js`
+- Keep `idx_scenes_plain_text` for a possible future server search
 
 ### 3C. Optional follow-up in same phase (if cheap)
 
-When Search mode loads `['tale-scene-bodies', taleId]`, show a lightweight progress state for large tales so users understand the one-time fetch. Not a new architecture — UX only.
+When Search mode loads `['tale-scene-bodies', taleId]`, show a lightweight progress state for large tales so users understand the one-time fetch. Not a new architecture — UX only. (Shipped with Phase 1D.)
 
 ### Phase 3 acceptance
 
 - [ ] Trash network responses contain no TipTap JSON
-- [ ] `search_scenes` returns snippets + ≤50 rows
+- [ ] `write.search_scenes` dropped; `useSceneSearch` removed
 - [ ] Trash restore / delete still work
+
+
 
 ---
 
 ## Suggested PR / commit sequence
 
-1. **PR A — Phase 1** (largest; most UX risk) — lazy content + compile/search on-demand bodies  
-2. **PR B — Phase 2** — migration + `useTales` simplification  
-3. **PR C — Phase 3** — trash selects + `search_scenes` limit/snippet  
+1. **PR A — Phase 1** (largest; most UX risk) — lazy content + compile/search on-demand bodies
+2. **PR B — Phase 2** — migration + `useTales` simplification
+3. **PR C — Phase 3** — trash metadata selects + drop unused `search_scenes`
 
 Do not combine A+B unless needed; Phase 2 is small and easy to review alone.
 

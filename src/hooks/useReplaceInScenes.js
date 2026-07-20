@@ -86,7 +86,6 @@ export const useReplaceInScenes = (taleId) => {
       }
 
       queryClient.invalidateQueries({ queryKey: ['tales'] })
-      queryClient.removeQueries({ queryKey: ['scene-search', taleId] })
     },
   })
 }
