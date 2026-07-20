@@ -4,6 +4,8 @@ import {
   useUpdateTaleCompilePreferences,
   useUpdateTaleScriptStylePreferences,
 } from '../../hooks/useTales'
+import { useEditorProseDefaults } from '../../hooks/useEditorProseDefaults'
+import { useEditorTabSize } from '../../hooks/useEditorTabSize'
 import { validateCompileOptions } from '../../lib/compile/chapterHeading.js'
 import {
   getTaleCompilePreferences,
@@ -20,12 +22,14 @@ import BeatSheetPicker from '../beats/BeatSheetPicker'
 import CompileSettingsPanel from './CompileSettingsPanel'
 import ScriptStyleSettingsPanel from './ScriptStyleSettingsPanel'
 import TaleCoverEditor from './TaleCoverEditor'
+import WritingDefaultsPanel from './WritingDefaultsPanel'
 
 const fieldClass =
   'w-full rounded border border-bronze-dark/50 bg-ink px-3 py-2 text-cream placeholder:text-cream/30 focus:border-bronze focus:outline-none'
 
 const TABS = {
   tale: 'tale',
+  writing: 'writing',
   compile: 'compile',
   script: 'script',
 }
@@ -49,6 +53,8 @@ const TaleSettingsModal = ({
   const updateTale = useUpdateTale(taleId)
   const updateCompilePreferences = useUpdateTaleCompilePreferences(taleId)
   const updateScriptStyles = useUpdateTaleScriptStylePreferences(taleId)
+  const { proseFont, setProseFont, proseFontSize, setProseFontSize } = useEditorProseDefaults()
+  const { tabSize, setTabSize } = useEditorTabSize()
 
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
@@ -160,8 +166,8 @@ const TaleSettingsModal = ({
     variant === 'compile-only'
       ? 'Content and page layout for compiling this tale.'
       : comic
-        ? 'Update your script, styles, and compile settings.'
-        : 'Update your manuscript and compile settings.'
+        ? 'Update your script, styles, writing defaults, and compile settings.'
+        : 'Update your manuscript, writing defaults, and compile settings.'
 
   const tabBtnClass = (tab) =>
     `border-b-2 px-3 py-2 font-ui text-xs uppercase transition ${
@@ -202,6 +208,13 @@ const TaleSettingsModal = ({
           <div className="mb-6 flex flex-wrap gap-2 border-b border-bronze-dark/30">
             <button type="button" onClick={() => setActiveTab(TABS.tale)} className={tabBtnClass(TABS.tale)}>
               Tale
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab(TABS.writing)}
+              className={tabBtnClass(TABS.writing)}
+            >
+              Writing
             </button>
             {comic && (
               <button
@@ -324,6 +337,28 @@ const TaleSettingsModal = ({
               </button>
             </div>
           </form>
+        )}
+
+        {activeTab === TABS.writing && showTaleTab && (
+          <div className="space-y-5">
+            <WritingDefaultsPanel
+              proseFont={proseFont}
+              onProseFontChange={setProseFont}
+              proseFontSize={proseFontSize}
+              onProseFontSizeChange={setProseFontSize}
+              tabSize={tabSize}
+              onTabSizeChange={setTabSize}
+            />
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="border-2 border-bronze-dark px-6 py-2 font-ui text-sm uppercase text-bronze hover:border-bronze"
+              >
+                Done
+              </button>
+            </div>
+          </div>
         )}
 
         {activeTab === TABS.script && comic && showTaleTab && (

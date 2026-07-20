@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   DEFAULT_SCENE_PROSE_FONT,
   isValidSceneFontFamily,
@@ -6,6 +6,7 @@ import {
 
 const FONT_STORAGE_KEY = 'write-knuckles-editor-prose-font'
 const SIZE_STORAGE_KEY = 'write-knuckles-editor-prose-size'
+const SYNC_EVENT = 'write-knuckles-prose-defaults'
 
 export const DEFAULT_PROSE_FONT_SIZE = '16px'
 
@@ -49,6 +50,16 @@ export const useEditorProseDefaults = () => {
   const [proseFont, setProseFontState] = useState(readStoredProseFont)
   const [proseFontSize, setProseFontSizeState] = useState(readStoredProseFontSize)
 
+  useEffect(() => {
+    const onSync = (event) => {
+      const { proseFont: nextFont, proseFontSize: nextSize } = event.detail ?? {}
+      if (nextFont !== undefined) setProseFontState(nextFont)
+      if (nextSize !== undefined) setProseFontSizeState(nextSize)
+    }
+    window.addEventListener(SYNC_EVENT, onSync)
+    return () => window.removeEventListener(SYNC_EVENT, onSync)
+  }, [])
+
   const setProseFont = useCallback((next) => {
     if (!isValidSceneFontFamily(next)) return
     setProseFontState(next)
@@ -57,6 +68,7 @@ export const useEditorProseDefaults = () => {
     } catch {
       // ignore
     }
+    window.dispatchEvent(new CustomEvent(SYNC_EVENT, { detail: { proseFont: next } }))
   }, [])
 
   const setProseFontSize = useCallback((next) => {
@@ -67,6 +79,7 @@ export const useEditorProseDefaults = () => {
     } catch {
       // ignore
     }
+    window.dispatchEvent(new CustomEvent(SYNC_EVENT, { detail: { proseFontSize: next } }))
   }, [])
 
   return {

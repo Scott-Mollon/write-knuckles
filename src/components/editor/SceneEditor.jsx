@@ -16,7 +16,6 @@ import { useTaleImageUpload } from '../../hooks/useTaleImageUpload'
 import { validateImageFile } from '../../lib/images/storage'
 import { getTaleType, isComicTale } from '../../lib/taleTerminology'
 import EditorToolbar from './EditorToolbar'
-import EditorDefaultsDialog from './EditorDefaultsDialog'
 import ImageBubbleMenu from './ImageBubbleMenu'
 import HarperSuggestionPopover from './HarperSuggestionPopover'
 import { useHarperProofread } from '../../hooks/useHarperProofread'
@@ -31,13 +30,12 @@ const SAVE_LABELS = {
 
 const SceneEditor = ({ scene, tale, taleId, onWordCountChange, autosave }) => {
   const { theme, toggleTheme, isLight } = useEditorTheme()
-  const { tabSize, setTabSize } = useEditorTabSize()
-  const { proseFont, setProseFont, proseFontSize, setProseFontSize } = useEditorProseDefaults()
+  const { tabSize } = useEditorTabSize()
+  const { proseFont, proseFontSize } = useEditorProseDefaults()
   const updateMeta = useUpdateSceneMeta(taleId)
   const uploadImage = useTaleImageUpload()
   const [imageError, setImageError] = useState(null)
   const [title, setTitle] = useState(scene?.title || '')
-  const [defaultsOpen, setDefaultsOpen] = useState(false)
   const allowSaveRef = useRef(false)
   const comic = isComicTale(tale)
   const taleType = getTaleType(tale)
@@ -257,7 +255,6 @@ const SceneEditor = ({ scene, tale, taleId, onWordCountChange, autosave }) => {
         isLight={isLight}
         onToggleTheme={toggleTheme}
         proseFont={proseFont}
-        onOpenDefaults={() => setDefaultsOpen(true)}
         taleId={taleId}
         sceneId={scene.id}
         taleType={taleType}
@@ -268,18 +265,6 @@ const SceneEditor = ({ scene, tale, taleId, onWordCountChange, autosave }) => {
         proofreadIssueCount={proofreadIssueCount}
         onToggleProofread={toggleProofread}
       />
-
-      {defaultsOpen && (
-        <EditorDefaultsDialog
-          onClose={() => setDefaultsOpen(false)}
-          proseFont={proseFont}
-          onProseFontChange={setProseFont}
-          proseFontSize={proseFontSize}
-          onProseFontSizeChange={setProseFontSize}
-          tabSize={tabSize}
-          onTabSizeChange={setTabSize}
-        />
-      )}
 
       {imageError && (
         <p className="border-b border-bronze-dark/30 bg-error/10 px-6 py-2 text-sm text-error" role="alert">
