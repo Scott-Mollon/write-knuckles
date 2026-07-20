@@ -480,6 +480,27 @@ grant execute on function write.link_approved_user() to authenticated;
 grant execute on function write.list_registered_users() to authenticated;
 grant execute on function write.search_scenes(uuid, text) to authenticated;
 
+-- Must exist before RLS policies that call it (reference_images).
+create or replace function write.can_access_tale(p_tale_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = write, public, auth
+as $$
+  select p_tale_id is not null
+    and write.is_approved_user()
+    and exists (
+      select 1 from write.tales t
+      where t.id = p_tale_id and t.user_id = auth.uid()
+    );
+$$;
+
+comment on function write.can_access_tale(uuid) is
+  'True when the signed-in approved user owns the tale. Add collaborator OR branch later.';
+
+grant execute on function write.can_access_tale(uuid) to authenticated;
+
 create or replace function write.delete_my_account()
 returns void
 language plpgsql
@@ -895,24 +916,6 @@ $$;
 comment on function write.tale_id_from_storage_path(text) is
   'Extracts tale_id (2nd path segment) from write-tale-images object keys.';
 
-create or replace function write.can_access_tale(p_tale_id uuid)
-returns boolean
-language sql
-stable
-security definer
-set search_path = write, public, auth
-as $$
-  select p_tale_id is not null
-    and write.is_approved_user()
-    and exists (
-      select 1 from write.tales t
-      where t.id = p_tale_id and t.user_id = auth.uid()
-    );
-$$;
-
-comment on function write.can_access_tale(uuid) is
-  'True when the signed-in approved user owns the tale. Add collaborator OR branch later.';
-
 create or replace function write.can_access_storage_path(p_path text)
 returns boolean
 language sql
@@ -929,7 +932,6 @@ comment on function write.can_access_storage_path(text) is
   'Validates write-tale-images object paths against user ownership and tale access.';
 
 grant execute on function write.tale_id_from_storage_path(text) to authenticated;
-grant execute on function write.can_access_tale(uuid) to authenticated;
 grant execute on function write.can_access_storage_path(text) to authenticated;
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)

@@ -5,6 +5,8 @@ drop policy if exists "Approved tale owners upload tale exports" on storage.obje
 drop policy if exists "Approved tale owners update tale exports" on storage.objects;
 drop policy if exists "Approved tale owners delete tale exports" on storage.objects;
 
+-- Newer Supabase blocks direct SQL deletes on storage.* unless this is set.
+set local storage.allow_delete_query = 'true';
 delete from storage.objects where bucket_id = 'write-tale-exports';
 delete from storage.buckets where id = 'write-tale-exports';
 
