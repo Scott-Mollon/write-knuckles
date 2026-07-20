@@ -4,9 +4,26 @@ import { canCreateTale, freeTaleLimitMessage } from '../constants/account'
 import { useAuth } from '../contexts/AuthContext'
 import { useCurrentPlanTaleLimit } from '../hooks/usePlanLimits'
 import { useTales } from '../hooks/useTales'
+import {
+  DEFAULT_TALE_SORT,
+  TALE_SORT,
+  sortTales,
+} from '../lib/tales/sortTales'
 import TaleCard from '../components/tale/TaleCard'
 import DashboardTaleModals from '../components/tale/DashboardTaleModals'
 import Loading from './Loading'
+
+const SORT_STORAGE_KEY = 'write-knuckles-tales-sort'
+
+const readStoredSort = () => {
+  try {
+    const stored = localStorage.getItem(SORT_STORAGE_KEY)
+    if (Object.values(TALE_SORT).includes(stored)) return stored
+  } catch {
+    // ignore
+  }
+  return DEFAULT_TALE_SORT
+}
 
 const DashboardPage = () => {
   const { plan } = useAuth()
@@ -18,6 +35,7 @@ const DashboardPage = () => {
   } = useCurrentPlanTaleLimit()
   const [settingsTale, setSettingsTale] = useState(null)
   const [compileTale, setCompileTale] = useState(null)
+  const [sortMode, setSortMode] = useState(readStoredSort)
 
   if (isLoading || limitsLoading) return <Loading />
 
@@ -32,6 +50,16 @@ const DashboardPage = () => {
   const taleCount = tales?.length ?? 0
   const allowNewTale = canCreateTale({ plan, taleCount, maxActiveTales })
   const limitMessage = freeTaleLimitMessage(maxActiveTales)
+  const sortedTales = sortTales(tales, sortMode)
+
+  const handleSortChange = (next) => {
+    setSortMode(next)
+    try {
+      localStorage.setItem(SORT_STORAGE_KEY, next)
+    } catch {
+      // ignore
+    }
+  }
 
   return (
     <div className="mx-auto max-w-5xl p-8">
@@ -43,21 +71,37 @@ const DashboardPage = () => {
             <p className="mt-2 max-w-xl text-sm text-cream/50">{limitMessage}</p>
           )}
         </div>
-        {allowNewTale ? (
-          <Link
-            to="/new"
-            className="shrink-0 border-2 border-bronze-dark px-6 py-2 font-ui uppercase tracking-wide text-bronze hover:border-bronze hover:bg-bronze/10"
-          >
-            New Tale
-          </Link>
-        ) : (
-          <span
-            className="shrink-0 cursor-not-allowed border-2 border-bronze-dark/40 px-6 py-2 font-ui uppercase tracking-wide text-cream/30"
-            title={limitMessage}
-          >
-            New Tale
-          </span>
-        )}
+        <div className="flex shrink-0 items-center gap-3">
+          {taleCount > 0 && (
+            <label className="flex items-center gap-2">
+              <span className="font-ui text-xs uppercase tracking-wide text-cream/50">Sort</span>
+              <select
+                value={sortMode}
+                onChange={(e) => handleSortChange(e.target.value)}
+                className="rounded border border-bronze-dark/50 bg-ink px-2 py-1.5 font-ui text-sm text-cream focus:border-bronze focus:outline-none"
+              >
+                <option value={TALE_SORT.NEWEST}>Newest</option>
+                <option value={TALE_SORT.OLDEST}>Oldest</option>
+                <option value={TALE_SORT.TITLE}>Title A–Z</option>
+              </select>
+            </label>
+          )}
+          {allowNewTale ? (
+            <Link
+              to="/new"
+              className="border-2 border-bronze-dark px-6 py-2 font-ui uppercase tracking-wide text-bronze hover:border-bronze hover:bg-bronze/10"
+            >
+              New Tale
+            </Link>
+          ) : (
+            <span
+              className="cursor-not-allowed border-2 border-bronze-dark/40 px-6 py-2 font-ui uppercase tracking-wide text-cream/30"
+              title={limitMessage}
+            >
+              New Tale
+            </span>
+          )}
+        </div>
       </div>
 
       {taleCount === 0 ? (
@@ -73,7 +117,7 @@ const DashboardPage = () => {
         </div>
       ) : (
         <div className="grid gap-4">
-          {tales.map((tale) => (
+          {sortedTales.map((tale) => (
             <TaleCard
               key={tale.id}
               tale={tale}
