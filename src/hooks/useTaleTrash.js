@@ -1,6 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { writeDb } from '../clients/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import {
+  TRASH_CHAPTER_COLUMNS,
+  TRASH_CHARACTER_COLUMNS,
+  TRASH_LOCATION_COLUMNS,
+  TRASH_RESEARCH_COLUMNS,
+  TRASH_SCENE_COLUMNS,
+} from '../lib/trash/columns'
 
 const byDeletedAtDesc = (a, b) => {
   const aTime = a.deleted_at ? new Date(a.deleted_at).getTime() : 0
@@ -18,31 +25,31 @@ export const useTaleTrash = (taleId) => {
         await Promise.all([
           writeDb
             .from('chapters')
-            .select('*')
+            .select(TRASH_CHAPTER_COLUMNS)
             .eq('tale_id', taleId)
             .not('deleted_at', 'is', null)
             .order('deleted_at', { ascending: false }),
           writeDb
             .from('scenes')
-            .select('*')
+            .select(TRASH_SCENE_COLUMNS)
             .eq('tale_id', taleId)
             .not('deleted_at', 'is', null)
             .order('deleted_at', { ascending: false }),
           writeDb
             .from('characters')
-            .select('*')
+            .select(TRASH_CHARACTER_COLUMNS)
             .eq('tale_id', taleId)
             .not('deleted_at', 'is', null)
             .order('deleted_at', { ascending: false }),
           writeDb
             .from('locations')
-            .select('*')
+            .select(TRASH_LOCATION_COLUMNS)
             .eq('tale_id', taleId)
             .not('deleted_at', 'is', null)
             .order('deleted_at', { ascending: false }),
           writeDb
             .from('research_items')
-            .select('*')
+            .select(TRASH_RESEARCH_COLUMNS)
             .eq('tale_id', taleId)
             .not('deleted_at', 'is', null)
             .order('deleted_at', { ascending: false }),

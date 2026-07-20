@@ -22,6 +22,12 @@ todos:
     status: completed
   - id: phase3-search-trash-caps
     content: "Search snippets + LIMIT via RPC; trash metadata-only selects; no full content until needed"
+    status: in_progress
+  - id: phase3a-trash-metadata
+    content: "3A: Trash selects metadata only (no content/plain_text/bio/notes/body)"
+    status: completed
+  - id: phase3b-search-rpc-caps
+    content: "3B: search_scenes snippets + LIMIT 50"
     status: pending
 isProject: false
 ---
