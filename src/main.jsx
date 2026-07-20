@@ -23,6 +23,7 @@ const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const TermsPage = lazy(() => import('./pages/TermsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const FeatureRequestPage = lazy(() => import('./pages/FeatureRequestPage'))
+const HelpPage = lazy(() => import('./pages/HelpPage'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -83,6 +84,14 @@ const AppShell = () => {
             element={
               <ProtectedRoute>
                 <FeatureRequestPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/help"
+            element={
+              <ProtectedRoute>
+                <HelpPage />
               </ProtectedRoute>
             }
           />

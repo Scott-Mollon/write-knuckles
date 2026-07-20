@@ -1,0 +1,50 @@
+/* Help docs layout — explicit sticky sidebar (avoids flex items-start killing sticky) */
+
+.help-page__layout {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.help-page__sidebar {
+  display: none;
+}
+
+.help-page__mobile-toc {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .help-page__mobile-toc {
+    display: none;
+  }
+
+  .help-page__layout {
+    flex-direction: row;
+    align-items: stretch; /* aside must match article height for sticky to work */
+    gap: 2.5rem;
+  }
+
+  .help-page__sidebar {
+    display: block;
+    width: 15rem;
+    flex-shrink: 0;
+  }
+
+  .help-page__sidebar-sticky {
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+    padding: 1rem;
+    border: 1px solid rgba(114, 106, 43, 0.5);
+    border-radius: 0.25rem;
+    background-color: rgba(42, 34, 24, 0.3);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  }
+
+  .help-page__article {
+    flex: 1;
+    min-width: 0;
+  }
+}

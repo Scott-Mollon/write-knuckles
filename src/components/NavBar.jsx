@@ -105,6 +105,17 @@ const NavBar = () => {
                     className="block w-full px-3 py-2 text-left normal-case hover:bg-surface/40 hover:text-bronze"
                     onClick={() => {
                       setMenuOpen(false)
+                      navigate('/help')
+                    }}
+                  >
+                    Help
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="block w-full px-3 py-2 text-left normal-case hover:bg-surface/40 hover:text-bronze"
+                    onClick={() => {
+                      setMenuOpen(false)
                       window.open(KOFI_SUPPORT, '_blank', 'noopener,noreferrer')
                     }}
                   >
