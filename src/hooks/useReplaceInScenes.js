@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { writeDb } from '../clients/supabase'
+import { mapAbuseError } from '../lib/abuseErrors'
 import { contentToPlainText, countWords, normalizeContentForSave } from '../lib/editor/plainText'
 import { sceneContentQueryKey } from './useSceneContent'
 import { taleSceneBodiesQueryKey } from '../lib/scenes/fetchTaleSceneBodies'
@@ -31,7 +32,7 @@ export const useReplaceInScenes = (taleId) => {
             })
             .eq('id', sceneId)
 
-          if (error) throw error
+          if (error) throw mapAbuseError(error)
           return { sceneId, content: normalizedContent, plain_text, word_count, updated_at }
         }),
       )

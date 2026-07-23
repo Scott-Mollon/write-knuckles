@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { writeDb } from '../clients/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { mapAbuseError } from '../lib/abuseErrors'
 
 const invalidateStructure = (queryClient, taleId) => {
   queryClient.invalidateQueries({ queryKey: ['tale-structure', taleId] })
@@ -105,7 +106,7 @@ export const useCreateScene = (taleId) => {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) throw mapAbuseError(error)
       return data
     },
     onSuccess: () => invalidateStructure(queryClient, taleId),

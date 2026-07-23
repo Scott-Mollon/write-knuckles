@@ -11,6 +11,7 @@ import { STORY_BOARD_VIEWS } from '../../constants/taleEditor'
 import { useCreateChapter, useCreateScene } from '../../hooks/useSceneMutations'
 import { useCreateBeatLink, useDeleteBeatLink } from '../../hooks/useBeatLinks'
 import { confirmUnlink } from '../../lib/confirmAction'
+import { actionErrorMessage } from '../../lib/abuseErrors'
 import { formatSceneLabel, nextDefaultSceneTitle } from '../../lib/scenes'
 import { getTaleTerminology, isComicTale } from '../../lib/taleTerminology'
 import BeatBoardView from './BeatBoardView'
@@ -31,6 +32,7 @@ const StoryBoard = ({
   const [view, setView] = useState(
     comic ? STORY_BOARD_VIEWS.CHAPTER : STORY_BOARD_VIEWS.CHAPTER,
   )
+  const [actionError, setActionError] = useState(null)
   const createChapter = useCreateChapter(taleId)
   const createScene = useCreateScene(taleId)
   const createLink = useCreateBeatLink(taleId)
@@ -46,26 +48,36 @@ const StoryBoard = ({
   )
 
   const handleAddChapter = async () => {
-    const count = chapters.length
-    const chapter = await createChapter.mutateAsync({
-      title: '',
-      sortOrder: count,
-    })
-    await createScene.mutateAsync({
-      chapterId: chapter.id,
-      title: terms.defaultSceneTitle,
-      sortOrder: 0,
-    })
+    setActionError(null)
+    try {
+      const count = chapters.length
+      const chapter = await createChapter.mutateAsync({
+        title: '',
+        sortOrder: count,
+      })
+      await createScene.mutateAsync({
+        chapterId: chapter.id,
+        title: terms.defaultSceneTitle,
+        sortOrder: 0,
+      })
+    } catch (err) {
+      setActionError(actionErrorMessage(err, `Could not add ${terms.chapter.toLowerCase()}.`))
+    }
   }
 
   const handleAddScene = async (chapterId) => {
-    const chapter = chapters.find((ch) => ch.id === chapterId)
-    const sortOrder = chapter?.scenes?.length || 0
-    await createScene.mutateAsync({
-      chapterId,
-      title: nextDefaultSceneTitle(sortOrder, tale),
-      sortOrder,
-    })
+    setActionError(null)
+    try {
+      const chapter = chapters.find((ch) => ch.id === chapterId)
+      const sortOrder = chapter?.scenes?.length || 0
+      await createScene.mutateAsync({
+        chapterId,
+        title: nextDefaultSceneTitle(sortOrder, tale),
+        sortOrder,
+      })
+    } catch (err) {
+      setActionError(actionErrorMessage(err, `Could not add ${terms.scene.toLowerCase()}.`))
+    }
   }
 
   const handleUnlink = async (beatKey, sceneId) => {
@@ -141,6 +153,12 @@ const StoryBoard = ({
           {terms.addChapter}
         </button>
       </div>
+
+      {actionError && (
+        <div className="shrink-0 border-b border-error/40 bg-error/10 px-6 py-2 text-sm text-error">
+          {actionError}
+        </div>
+      )}
 
       {!comic && effectiveView === STORY_BOARD_VIEWS.BEAT && beats.length > 0 ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleBeatDragEnd}>

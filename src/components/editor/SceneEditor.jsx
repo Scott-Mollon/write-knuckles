@@ -196,7 +196,10 @@ const SceneEditor = ({ scene, tale, taleId, onWordCountChange, autosave }) => {
     )
   }
 
-  const saveLabel = SAVE_LABELS[autosave.saveState]
+  const saveLabel =
+    autosave.saveState === SAVE_STATES.ERROR && autosave.saveError
+      ? autosave.saveError
+      : SAVE_LABELS[autosave.saveState]
 
   const saveTitle = () => {
     if (!scene) return

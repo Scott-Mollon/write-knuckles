@@ -49,6 +49,11 @@ const GettingStarted = () => (
       disabled until you delete a tale or upgrade. Paid and Complimentary plans are not limited
       this way. Your plan appears in Profile (user menu).
     </p>
+    <p>
+      Separately, every account has safety caps on how large a single scene can be and how much
+      total scene storage a manuscript library can use. Soft-deleted scenes in Trash still count
+      until you permanently delete them.
+    </p>
 
     <p>
       <strong>Delete tale</strong> permanently removes the tale and its content. Prefer Trash

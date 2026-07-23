@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { writeDb } from '../clients/supabase'
+import { formatAbuseError, mapAbuseError } from '../lib/abuseErrors'
 import { contentToPlainText, countWords, normalizeContentForSave } from '../lib/editor/plainText'
 import { sceneContentQueryKey } from './useSceneContent'
 import { taleSceneBodiesQueryKey } from '../lib/scenes/fetchTaleSceneBodies'
@@ -28,6 +29,7 @@ export const useAutosave = (sceneId, taleId, options = {}) => {
   const enabledRef = useRef(enabled)
   enabledRef.current = enabled
   const [saveState, setSaveState] = useState(SAVE_STATES.IDLE)
+  const [saveError, setSaveError] = useState(null)
 
   const clearPending = useCallback(() => {
     if (timerRef.current) {
@@ -71,7 +73,7 @@ export const useAutosave = (sceneId, taleId, options = {}) => {
         })
         .eq('id', targetSceneId)
 
-      if (error) throw error
+      if (error) throw mapAbuseError(error)
       return {
         sceneId: targetSceneId,
         content: normalizedContent,
@@ -81,6 +83,7 @@ export const useAutosave = (sceneId, taleId, options = {}) => {
       }
     },
     onSuccess: (data) => {
+      setSaveError(null)
       setSaveState(SAVE_STATES.SAVED)
       queryClient.setQueryData(sceneContentQueryKey(data.sceneId), {
         id: data.sceneId,
@@ -107,12 +110,20 @@ export const useAutosave = (sceneId, taleId, options = {}) => {
       })
       queryClient.invalidateQueries({ queryKey: ['tales'] })
     },
-    onError: () => setSaveState(SAVE_STATES.ERROR),
+    onError: (error) => {
+      setSaveError(
+        formatAbuseError(error) ||
+          (error instanceof Error ? error.message : null) ||
+          'Save failed — retry by editing',
+      )
+      setSaveState(SAVE_STATES.ERROR)
+    },
   })
 
   // Drop debounce when scene changes or content is not ready yet.
   useEffect(() => {
     clearPending()
+    setSaveError(null)
     setSaveState(SAVE_STATES.IDLE)
   }, [sceneId, enabled, clearPending])
 
@@ -158,5 +169,5 @@ export const useAutosave = (sceneId, taleId, options = {}) => {
     [clearPending],
   )
 
-  return { queueSave, flush, saveState, enabled }
+  return { queueSave, flush, saveState, saveError, enabled }
 }

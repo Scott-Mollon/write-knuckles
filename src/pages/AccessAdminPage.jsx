@@ -9,6 +9,7 @@ import {
 } from '../hooks/useApprovedUsers'
 import { useAdminUsageStats } from '../hooks/useAdminUsageStats'
 import { usePlanLimits, useSetFreeTaleLimit } from '../hooks/usePlanLimits'
+import { useAbuseGuards, useUpdateAbuseGuards } from '../hooks/useAbuseGuards'
 import {
   PLAN_COMPLIMENTARY,
   PLAN_FREE,
@@ -206,6 +207,214 @@ const PlanLimitsCard = ({ limits, isLoading, error }) => {
   )
 }
 
+const formatBytesInput = (value) => String(value ?? '')
+
+const parsePositiveInt = (raw, label) => {
+  const parsed = Number(raw)
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw new Error(`${label} must be a whole number of 0 or greater.`)
+  }
+  return parsed
+}
+
+const AbuseGuardsCard = ({ guards, isLoading, error }) => {
+  const updateGuards = useUpdateAbuseGuards()
+  const [maxScenes, setMaxScenes] = useState('')
+  const [maxSceneBytes, setMaxSceneBytes] = useState('')
+  const [maxUserBytes, setMaxUserBytes] = useState('')
+  const [sceneInserts, setSceneInserts] = useState('')
+  const [sceneUpdates, setSceneUpdates] = useState('')
+  const [chapterInserts, setChapterInserts] = useState('')
+  const [formError, setFormError] = useState(null)
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    if (!guards) return
+    setMaxScenes(formatBytesInput(guards.max_scenes_per_tale))
+    setMaxSceneBytes(formatBytesInput(guards.max_scene_bytes))
+    setMaxUserBytes(formatBytesInput(guards.max_user_content_bytes))
+    setSceneInserts(formatBytesInput(guards.scene_inserts_per_minute))
+    setSceneUpdates(formatBytesInput(guards.scene_updates_per_minute))
+    setChapterInserts(formatBytesInput(guards.chapter_inserts_per_minute))
+  }, [guards])
+
+  const handleSave = async (e) => {
+    e.preventDefault()
+    setFormError(null)
+    setSaved(false)
+
+    let patch
+    try {
+      patch = {
+        max_scenes_per_tale: parsePositiveInt(maxScenes, 'Max scenes per tale'),
+        max_scene_bytes: parsePositiveInt(maxSceneBytes, 'Max scene bytes'),
+        max_user_content_bytes: parsePositiveInt(maxUserBytes, 'Max user content bytes'),
+        scene_inserts_per_minute: parsePositiveInt(sceneInserts, 'Scene inserts / minute'),
+        scene_updates_per_minute: parsePositiveInt(sceneUpdates, 'Scene updates / minute'),
+        chapter_inserts_per_minute: parsePositiveInt(chapterInserts, 'Chapter inserts / minute'),
+      }
+    } catch (err) {
+      setFormError(err.message)
+      return
+    }
+
+    if (!(await confirmAction('Update abuse guard ceilings for all accounts?'))) {
+      return
+    }
+
+    try {
+      await updateGuards.mutateAsync(patch)
+      setSaved(true)
+    } catch (err) {
+      setFormError(err.message || 'Failed to update abuse guards.')
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <section className="mb-10 rounded border border-bronze-dark/50 bg-surface/30 p-4">
+        <h2 className="mb-2 font-ui text-sm uppercase text-bronze">Abuse guards</h2>
+        <p className="text-sm text-cream/40">Loading abuse guards…</p>
+      </section>
+    )
+  }
+
+  if (error || !guards) {
+    return (
+      <section className="mb-10 rounded border border-bronze-dark/50 bg-surface/30 p-4">
+        <h2 className="mb-2 font-ui text-sm uppercase text-bronze">Abuse guards</h2>
+        <p className="text-sm text-error">
+          Could not load abuse guards. Ensure the abuse_resource_quotas migration is applied.
+        </p>
+      </section>
+    )
+  }
+
+  const fieldClass =
+    'rounded border border-bronze-dark/50 bg-ink px-3 py-2 text-cream focus:border-bronze focus:outline-none'
+
+  return (
+    <section className="mb-10 rounded border border-bronze-dark/50 bg-surface/30 p-4">
+      <h2 className="mb-4 font-ui text-sm uppercase text-bronze">Abuse guards</h2>
+      <form onSubmit={handleSave} className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <label className="flex flex-col gap-1">
+            <span className="text-xs uppercase tracking-wide text-cream/50">
+              Max scenes / tale
+            </span>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              value={maxScenes}
+              onChange={(e) => {
+                setSaved(false)
+                setMaxScenes(e.target.value)
+              }}
+              className={fieldClass}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs uppercase tracking-wide text-cream/50">
+              Max scene bytes
+            </span>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              value={maxSceneBytes}
+              onChange={(e) => {
+                setSaved(false)
+                setMaxSceneBytes(e.target.value)
+              }}
+              className={fieldClass}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs uppercase tracking-wide text-cream/50">
+              Max user content bytes
+            </span>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              value={maxUserBytes}
+              onChange={(e) => {
+                setSaved(false)
+                setMaxUserBytes(e.target.value)
+              }}
+              className={fieldClass}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs uppercase tracking-wide text-cream/50">
+              Scene inserts / min
+            </span>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              value={sceneInserts}
+              onChange={(e) => {
+                setSaved(false)
+                setSceneInserts(e.target.value)
+              }}
+              className={fieldClass}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs uppercase tracking-wide text-cream/50">
+              Scene updates / min
+            </span>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              value={sceneUpdates}
+              onChange={(e) => {
+                setSaved(false)
+                setSceneUpdates(e.target.value)
+              }}
+              className={fieldClass}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs uppercase tracking-wide text-cream/50">
+              Chapter inserts / min
+            </span>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              value={chapterInserts}
+              onChange={(e) => {
+                setSaved(false)
+                setChapterInserts(e.target.value)
+              }}
+              className={fieldClass}
+            />
+          </label>
+        </div>
+        <button
+          type="submit"
+          disabled={updateGuards.isPending}
+          className="w-fit border border-bronze bg-bronze/20 px-4 py-2 font-ui text-sm uppercase text-bronze hover:bg-bronze/30 disabled:opacity-50"
+        >
+          {updateGuards.isPending ? 'Saving…' : 'Save'}
+        </button>
+      </form>
+      {formError && <p className="mt-2 text-sm text-error">{formError}</p>}
+      {saved && !formError && (
+        <p className="mt-2 text-sm text-bronze">Abuse guards updated.</p>
+      )}
+      <p className="mt-2 text-xs text-cream/40">
+        Quotas apply to all plans. Soft-deleted scenes still count toward storage and scene caps
+        until permanently deleted. Per-minute fields are stored for rate limits (phase 2).
+      </p>
+    </section>
+  )
+}
+
 const getApprovalForEmail = (approvals, email) => {
   const key = email?.toLowerCase()
   if (!key) return null
@@ -235,6 +444,11 @@ const AccessAdminPage = () => {
     isLoading: planLimitsLoading,
     error: planLimitsError,
   } = usePlanLimits()
+  const {
+    data: abuseGuards,
+    isLoading: abuseGuardsLoading,
+    error: abuseGuardsError,
+  } = useAbuseGuards()
   const approveUser = useApproveUser()
   const setUserAccess = useSetUserAccess()
   const setUserPlan = useSetUserPlan()
@@ -346,6 +560,12 @@ const AccessAdminPage = () => {
         limits={planLimits}
         isLoading={planLimitsLoading}
         error={planLimitsError}
+      />
+
+      <AbuseGuardsCard
+        guards={abuseGuards}
+        isLoading={abuseGuardsLoading}
+        error={abuseGuardsError}
       />
 
       <form onSubmit={handleApproveByEmail} className="mb-10 rounded border border-bronze-dark/50 bg-surface/30 p-4">

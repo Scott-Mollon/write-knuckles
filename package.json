@@ -10,7 +10,7 @@
     "build:staging": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --test src/lib/editor/findReplace.test.js src/lib/taleTerminology.test.js src/lib/editor/comicScriptNumbering.test.js src/lib/compile/compileScriptStyles.test.js src/lib/compile/tiptapToHtml.test.js src/lib/harper/dictionary.test.js src/lib/harper/dictionaryManagement.test.js src/lib/auth/passwordPolicy.test.js src/constants/account.test.js",
+    "test": "node --test src/lib/editor/findReplace.test.js src/lib/taleTerminology.test.js src/lib/editor/comicScriptNumbering.test.js src/lib/compile/compileScriptStyles.test.js src/lib/compile/tiptapToHtml.test.js src/lib/harper/dictionary.test.js src/lib/harper/dictionaryManagement.test.js src/lib/auth/passwordPolicy.test.js src/constants/account.test.js src/lib/abuseErrors.test.js",
     "supabase:status": "node scripts/supabase-env.mjs status",
     "supabase:staging": "node scripts/supabase-env.mjs staging",
     "supabase:prod": "node scripts/supabase-env.mjs prod"

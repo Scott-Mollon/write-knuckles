@@ -25,6 +25,7 @@ import {
 } from '../../hooks/useSceneMutations'
 import ChapterTitleInput from '../chapters/ChapterTitleInput'
 import { confirmDelete } from '../../lib/confirmAction'
+import { actionErrorMessage } from '../../lib/abuseErrors'
 import { getScenePovColor } from '../../lib/scenePov'
 import { nextDefaultSceneTitle } from '../../lib/scenes'
 import { getTaleTerminology } from '../../lib/taleTerminology'
@@ -167,6 +168,7 @@ const SortableChapter = ({
 
 const Rack = ({ taleId, tale, chapters, activeSceneId, onSelectScene, totalScenes }) => {
   const [localChapters, setLocalChapters] = useState(chapters)
+  const [actionError, setActionError] = useState(null)
   const terms = getTaleTerminology(tale)
 
   useEffect(() => {
@@ -295,27 +297,37 @@ const Rack = ({ taleId, tale, chapters, activeSceneId, onSelectScene, totalScene
   }
 
   const handleAddChapter = async () => {
-    const count = localChapters.length
-    const chapter = await createChapter.mutateAsync({
-      title: '',
-      sortOrder: count,
-    })
-    await createScene.mutateAsync({
-      chapterId: chapter.id,
-      title: terms.defaultSceneTitle,
-      sortOrder: 0,
-    })
+    setActionError(null)
+    try {
+      const count = localChapters.length
+      const chapter = await createChapter.mutateAsync({
+        title: '',
+        sortOrder: count,
+      })
+      await createScene.mutateAsync({
+        chapterId: chapter.id,
+        title: terms.defaultSceneTitle,
+        sortOrder: 0,
+      })
+    } catch (err) {
+      setActionError(actionErrorMessage(err, `Could not add ${terms.chapter.toLowerCase()}.`))
+    }
   }
 
   const handleAddScene = async (chapterId) => {
-    const chapter = localChapters.find((ch) => ch.id === chapterId)
-    const sortOrder = chapter?.scenes?.length || 0
-    const scene = await createScene.mutateAsync({
-      chapterId,
-      title: nextDefaultSceneTitle(sortOrder, tale),
-      sortOrder,
-    })
-    onSelectScene(scene.id)
+    setActionError(null)
+    try {
+      const chapter = localChapters.find((ch) => ch.id === chapterId)
+      const sortOrder = chapter?.scenes?.length || 0
+      const scene = await createScene.mutateAsync({
+        chapterId,
+        title: nextDefaultSceneTitle(sortOrder, tale),
+        sortOrder,
+      })
+      onSelectScene(scene.id)
+    } catch (err) {
+      setActionError(actionErrorMessage(err, `Could not add ${terms.scene.toLowerCase()}.`))
+    }
   }
 
   const handleDeleteChapter = async (chapter) => {
@@ -356,12 +368,18 @@ const Rack = ({ taleId, tale, chapters, activeSceneId, onSelectScene, totalScene
         <button
           type="button"
           onClick={handleAddChapter}
-          disabled={createChapter.isPending}
+          disabled={createChapter.isPending || createScene.isPending}
           className="text-xs text-bronze hover:text-cream disabled:opacity-50"
         >
           {terms.addChapter}
         </button>
       </div>
+
+      {actionError && (
+        <div className="shrink-0 border-b border-error/40 bg-error/10 px-3 py-2 text-xs text-error">
+          {actionError}
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto p-3">
         <DndContext
